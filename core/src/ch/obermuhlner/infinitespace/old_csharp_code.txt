@@ -1,0 +1,1743 @@
+using UnityEngine;
+using System.Collections;
+using System.Collections.Generic;
+
+[RequireComponent (typeof (Rigidbody))]
+public class SpaceshipControl : MonoBehaviour {
+
+	public enum ControlType { Simple1, Simple2, Realistic1, Realistic2 };
+
+	public ControlType controlType = ControlType.Simple1;
+
+	public bool invertHoriz = false;
+	public bool invertVert = false;
+
+	public float speed = 1;
+
+	public float turnSpeed = 0.5f;
+
+	public float fastFactor = 5;
+
+	public int universeIndex = 0;
+
+	private Generator generator = new Generator();
+
+	private static Dictionary<GameObject, Node> gameObjectToNode = new Dictionary<GameObject, Node>();
+
+	private static float MAX_DISTANCE = 1000;
+
+	private static double SIZE_FACTOR = 1 / Generator.SUN_RADIUS / 10;
+	private static double SIZE_STAR_ZOOM_FACTOR = 10;
+	private static double SIZE_ZOOM_FACTOR = 1000;
+	private static float SIZE_MOON_ORBIT_ZOOM_FACTOR = 20;
+	//private static double SIZE_STAR_ZOOM_FACTOR = 1;
+	//private static double SIZE_ZOOM_FACTOR = 1;
+
+	private static Color starBlue = new Color(0.7f, 0.8f, 1.0f, 1.0f);
+	private static Color starWhite = new Color(0.8f, 0.7f, 1.0f, 1.0f);
+	private static Color starYellow = new Color(1.0f, 1.0f, 1.0f, 1.0f);
+	private static Color starRed = new Color(1.0f, 0.8f, 0.7f, 1.0f);
+
+	float axisHorizontal = 0;
+	float axisVertical = 0;
+	float axisLookHorizontal = 0;
+	float axisLookVertical = 0;
+
+	bool buttonX = false;
+
+	void OnGUI() {
+		float buttonSize = System.Math.Min(Screen.width, Screen.height) / 10;
+		float buttonDist = buttonSize / 5;
+		float buttonStep = buttonSize + buttonDist;
+
+		GUI.skin.label.fontSize = (int) (buttonSize * 0.3f);
+		GUI.skin.button.fontSize = (int) (buttonSize * 0.3f);
+
+		if (GUI.Button (new Rect (Screen.width-2*buttonStep,10,buttonSize,buttonSize), "-")) {
+			PrevUniverse();
+		}
+		if (GUI.Button (new Rect (Screen.width-1*buttonStep,10,buttonSize,buttonSize), "+")) {
+			NextUniverse();
+		}
+
+		Node selectedNode = null;
+		Texture2D crosshairTexture = (Texture2D) Resources.Load("Textures/" + "crosshair");
+		if (GUI.Button (new Rect(Screen.width-1*buttonStep,10+1*buttonSize,buttonSize,buttonSize), crosshairTexture)) {
+			buttonX = !buttonX;
+		}
+		if (buttonX) {
+			Camera camera = GetComponentInChildren<Camera>();
+			foreach(GameObject gameObject in gameObjectToNode.Keys) {
+				if (gameObjectToNode[gameObject] is Planet) {
+					Vector3 screenPosition = camera.WorldToScreenPoint(gameObject.transform.position);
+					if (screenPosition.z > 0) {
+						RaycastHit hit;
+						Vector3 direction = gameObject.transform.position - transform.position;
+						if (Physics.Raycast(transform.position, direction, out hit, MAX_DISTANCE)) {
+							if (hit.collider.gameObject == gameObject) {
+								if (GuiRepeatButton(new Rect(screenPosition.x-50, Screen.height-screenPosition.y-50, 100, 100), crosshairTexture)) {
+									selectedNode = gameObjectToNode[gameObject];
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+
+		axisHorizontal = 0;
+		if (GUI.RepeatButton (new Rect (10+0*buttonStep,Screen.height-10-2*buttonStep,buttonSize,buttonSize), "A")) {
+			axisHorizontal = -1;
+		}
+		if (GUI.RepeatButton (new Rect (10+2*buttonStep,Screen.height-10-2*buttonStep,buttonSize,buttonSize), "D")) {
+			axisHorizontal = 1;
+		}
+
+		axisVertical = 0;
+		if (GUI.RepeatButton (new Rect (10+1*buttonStep,Screen.height-10-3*buttonStep,buttonSize,buttonSize), "W")) {
+			axisVertical = 1;
+		}
+		if (GUI.RepeatButton (new Rect (10+1*buttonStep,Screen.height-10-1*buttonStep,buttonSize,buttonSize), "S")) {
+			axisVertical = -1;
+		}
+		
+		axisLookHorizontal = 0;
+		if (GUI.RepeatButton (new Rect (Screen.width-3*buttonStep,Screen.height-10-2*buttonStep,buttonSize,buttonSize), "<")) {
+			axisLookHorizontal = -1f;
+		}
+		if (GUI.RepeatButton (new Rect (Screen.width-1*buttonStep,Screen.height-10-2*buttonStep,buttonSize,buttonSize), ">")) {
+			axisLookHorizontal = 1f;
+		}
+		
+		axisLookVertical = 0;
+		if (GUI.RepeatButton (new Rect (Screen.width-2*buttonStep,Screen.height-10-3*buttonStep,buttonSize,buttonSize), "^")) {
+			axisLookVertical = -1f;
+		}
+		if (GUI.RepeatButton (new Rect (Screen.width-2*buttonStep,Screen.height-10-1*buttonStep,buttonSize,buttonSize), "V")) {
+			axisLookVertical = 1f;
+		}
+
+		float textY = 10;
+		float textHeight = 20;
+		if (selectedNode != null) {
+			GUI.Label (new Rect(10, textY+=textHeight, 200, textHeight), "ID = " + selectedNode.seed.ToString ());
+			Planet planet = selectedNode as Planet;
+			if (planet != null) {
+				GUI.Label (new Rect(10, textY+=textHeight, 200, textHeight), "radius = " + ValueToString(planet.radius, Generator.EARTH_RADIUS, "m"));
+				GUI.Label (new Rect(10, textY+=textHeight, 200, textHeight), "mass = " + ValueToString(planet.mass, Generator.EARTH_MASS, "kg"));
+				GUI.Label (new Rect(10, textY+=textHeight, 200, textHeight), "rotation = " + ValueToString(planet.rotation, Generator.EARTH_PERIOD, "s"));
+				GUI.Label (new Rect(10, textY+=textHeight, 200, textHeight), "orbit = " + ValueToString(planet.orbitRadius, Generator.EARTH_ORBIT_RADIUS, "m"));
+				GUI.Label (new Rect(10, textY+=textHeight, 200, textHeight), "orbit period = " + ValueToString(planet.orbitRevolution, Generator.EARTH_ORBIT_PERIOD, "s"));
+			}
+		} else {
+			GUI.Label (new Rect(10, textY+=textHeight, 200, textHeight), "Speed = " + rigidbody.velocity + " " + rigidbody.velocity.magnitude);
+			GUI.Label (new Rect(10, textY+=textHeight, 200, textHeight), "Left  X = " + GetAxisHorizontal() + " Y = " + GetAxisVertical());
+			GUI.Label (new Rect(10, textY+=textHeight, 200, textHeight), "Right X = " + GetAxisLookHorizontal() + " Y = " + GetAxisLookVertical ());
+		}
+	}
+
+	bool GuiRepeatButton(Rect rect, Texture2D texture) {
+		GUI.DrawTexture (rect, texture);
+
+		if (Input.GetMouseButton (0)) {
+			if (rect.Contains(new Vector2(Input.mousePosition.x, Screen.height-Input.mousePosition.y))) {
+				return true;
+			}
+		}
+
+		foreach (Touch touch in Input.touches) {
+			Vector2 vec = touch.position;
+			vec.y = Screen.height - vec.y;
+			if (rect.Contains (vec)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	string ValueToString(double value, double referenceValue, string unit) {
+		return "" + (value / referenceValue).ToString ("0.000") + " (" + value.ToString ("0.000E+00") + " " + unit + ")";
+	}
+	
+	float GetAxisHorizontal() {
+		float v = axisHorizontal;
+		if (v == 0) {
+			v = Input.GetAxis("Horizontal");
+			if (v == 0) {
+				v = Input.GetAxis ("LeftHorizontal");
+			}
+		}
+		return v;
+	}
+	
+	float GetAxisVertical() {
+		float v = axisVertical;
+		if (v == 0) {
+			v = Input.GetAxis("Vertical");
+			if (v == 0) {
+				v = Input.GetAxis ("LeftVertical");
+			}
+		}
+		return v;
+	}
+	
+	float GetAxisLookHorizontal() {
+		if (axisLookHorizontal == 0) {
+			return Input.GetAxis("RightHorizontal");
+		} else {
+			return axisLookHorizontal;
+		}
+	}
+	
+	float GetAxisLookVertical() {
+		if (axisLookVertical == 0) {
+			return Input.GetAxis("RightVertical");
+		} else {
+			return axisLookVertical;
+		}
+	}
+
+	void Start () {
+		GenerateUniverse ();
+	}
+
+	void Update () {
+		UpdatePosition ();
+	}
+	
+	public void PrevUniverse() {
+		universeIndex--;
+		GenerateUniverse ();
+	}
+	
+	public void NextUniverse() {
+		universeIndex++;
+		GenerateUniverse ();
+	}
+
+	private static float ASTEROID_QUADRANT_SIZE = 10;
+
+	private static FieldManager<GameObject> asteroidField = new FieldManager<GameObject>(ASTEROID_QUADRANT_SIZE, new AsteroidFieldQuadrantFactory());
+	void UpdatePosition() {
+		asteroidField.UpdatePosition (transform.localPosition);
+	}
+
+
+	void FixedUpdate() {
+		float thrustHoriz = GetAxisHorizontal();
+		float thrustVert = GetAxisVertical();
+
+		float turnHoriz = GetAxisLookHorizontal();
+		float turnVert = GetAxisLookVertical();
+
+		if (invertHoriz) {
+			turnHoriz = -turnHoriz;
+		}
+		if (invertVert) {
+			turnVert = -turnVert;
+		}
+
+		bool fast = Input.GetButton ("Fire1");
+
+		float speed2 = speed;
+		if (fast) {
+			speed2 = speed2 * fastFactor;
+		}
+
+		switch(controlType) {
+		case ControlType.Realistic1:
+			rigidbody.AddRelativeForce (Vector3.forward * speed2 * thrustVert);
+			rigidbody.AddRelativeForce (Vector3.right * speed2 * thrustHoriz);
+			rigidbody.AddRelativeTorque (0, turnHoriz * turnSpeed, 0);
+			rigidbody.AddRelativeTorque (turnVert * turnSpeed, 0, 0);
+			break;
+		case ControlType.Realistic2:
+			rigidbody.AddRelativeForce (Vector3.forward * speed2 * thrustVert);
+			rigidbody.AddRelativeTorque (0, 0, thrustHoriz * turnSpeed);
+			rigidbody.AddRelativeTorque (0, turnHoriz * turnSpeed, 0);
+			rigidbody.AddRelativeTorque (turnVert * turnSpeed, 0, 0);
+			break;
+		case ControlType.Simple1: {
+			transform.Rotate(new Vector3(0,turnHoriz*turnSpeed,0), Space.World);
+			transform.Rotate(new Vector3(turnVert*turnSpeed,0,0));
+			Vector3 targetVelocity = transform.TransformDirection(new Vector3(thrustHoriz, 0, thrustVert)) * speed2;
+			var velocityChange = (targetVelocity-rigidbody.velocity);
+			//velocityChange.x = Mathf.Clamp(velocityChange.x, -maxVelocityChange, maxVelocityChange);
+			////velocityChange.y = Mathf.Clamp(velocityChange.y, -maxVelocityChange, maxVelocityChange);
+			//velocityChange.z = Mathf.Clamp(velocityChange.z, -maxVelocityChange, maxVelocityChange);
+			rigidbody.AddForce(velocityChange, ForceMode.VelocityChange);
+			break;
+		}
+		case ControlType.Simple2: {
+			transform.Rotate(new Vector3(0,turnHoriz*turnSpeed,0), Space.World);
+			transform.Rotate(new Vector3(turnVert*turnSpeed,0,0));
+			transform.Rotate(new Vector3(0,0,thrustHoriz*turnSpeed));
+			Vector3 targetVelocity = transform.TransformDirection(new Vector3(0, 0, thrustVert)) * speed2;
+			var velocityChange = (targetVelocity-rigidbody.velocity);
+			//velocityChange.x = Mathf.Clamp(velocityChange.x, -maxVelocityChange, maxVelocityChange);
+			////velocityChange.y = Mathf.Clamp(velocityChange.y, -maxVelocityChange, maxVelocityChange);
+			//velocityChange.z = Mathf.Clamp(velocityChange.z, -maxVelocityChange, maxVelocityChange);
+			rigidbody.AddForce(velocityChange, ForceMode.VelocityChange);
+			break;
+		}
+		}
+	}
+
+	void GenerateUniverse() {
+		foreach(GameObject gameObject in gameObjectToNode.Keys) {
+			GameObject.Destroy(gameObject);
+		}
+		gameObjectToNode.Clear ();
+
+		StarSystem starSystem = generator.generateStarSystem (universeIndex);
+		
+		GenerateDeep(starSystem);
+	}
+
+	void GenerateDeep(Node node) {
+		for(int i=0; i<node.childCount; i++) {
+			Node child = generator.getChild (node, i);
+
+			Star star = child as Star;
+			if (star != null) {
+				CreateStar(star);
+			}
+			Planet planet = child as Planet;
+			if (planet != null) {
+				CreatePlanet(planet);
+			}
+			AsteroidBelt belt = child as AsteroidBelt;
+			if (belt != null) {
+				CreateAsteroidBelt(belt);
+			}
+
+			GenerateDeep (child);
+		}
+	}
+
+	void CreateStar(Star star) {
+		float radius = (float)(star.radius * SIZE_FACTOR * SIZE_STAR_ZOOM_FACTOR);
+
+		string texture;
+		Color color;
+		if (star.temperature > 10000) {
+			texture = "bstar";
+			color = starBlue;
+		} else if (star.temperature > 7000) {
+			texture = "astar";
+			color = starWhite;
+		} else if (star.temperature > 5000) {
+			texture = "gstar";
+			color = starYellow;
+		} else if (star.temperature > 2000) {
+			texture = "mstar";
+			color = starRed;
+		} else {
+			texture = "browndwarf";
+			color = Color.black;
+		}
+		CreatePlanetGameObject (star, "Star " + star.seed.ToString (), radius, texture, new Vector3(0, 0, 0), color);
+	}
+
+	Vector3 CalculatePosition(OrbitingSpheroidNode node) {
+		float x = 0;
+		float y = 0;
+		float z = 0;
+
+		OrbitingSpheroidNode current = node;
+		while (current != null) {
+			float orbitRadius = CalculateOrbitRadius (current);
+			x += orbitRadius;
+			y += 0;
+			z += 0;
+			current = current.parent as OrbitingSpheroidNode;
+		}
+		return new Vector3 (x, y, z);
+	}
+
+	float CalculateOrbitRadius(OrbitingSpheroidNode node) {
+		float orbitRadius = (float) (node.orbitRadius * SIZE_FACTOR);
+		OrbitingSpheroidNode parent = node.parent as OrbitingSpheroidNode;
+		if (parent != null && !(parent is Star)) {
+			orbitRadius *= SIZE_MOON_ORBIT_ZOOM_FACTOR;
+			orbitRadius += (float) (parent.radius * SIZE_FACTOR * SIZE_ZOOM_FACTOR);
+		}
+		return orbitRadius;
+	}
+
+	void CreatePlanet(Planet planet) {
+		PseudoRandom random = planet.getPseudoRandom ();
+		float radius = (float)(planet.radius * SIZE_FACTOR * SIZE_ZOOM_FACTOR);
+
+		string texture = planet.texture;
+		if (texture == null) {
+			switch (planet.type) {
+			case Planet.Type.Gas:
+				texture = random.Next ("jupiter", "neptune", "saturn");
+				break;
+			case Planet.Type.Stone:
+				if (planet.radius < 1000E3) {
+					texture = random.Next ("phobos", "deimos");
+				} else {
+					texture = random.Next ("io", "callisto", "ganymede", "europa", "mercury", "mars", "moon");
+				}
+				break;
+			case Planet.Type.Ice:
+				texture = random.Next ("europa", "mimas");
+				break;
+			}
+		}
+
+		Vector3 position = CalculatePosition (planet);
+		float orbitRadius = CalculateOrbitRadius(planet);
+		GameObject sphere = CreatePlanetGameObject (planet, "Planet " + planet.seed.ToString () + " " + texture, radius, texture, position, Color.black);
+		CreateOrbit (sphere, CalculatePosition(planet.parent as OrbitingSpheroidNode), orbitRadius, radius/10);
+	}
+
+	void CreateAsteroidBelt(AsteroidBelt belt) {
+		PseudoRandom random = belt.getPseudoRandom ();
+
+		float orbitRadius = (float)(belt.orbitRadius * SIZE_FACTOR);
+		float width = (float)(belt.width * SIZE_FACTOR);
+		float height = (float)(belt.height * SIZE_FACTOR);
+
+		int asteroidCount = 10000;
+		float minRadiusSquare = (orbitRadius-width) * (orbitRadius-width);
+		float maxRadiusSquare = (orbitRadius+width) * (orbitRadius+width);
+		for (int i=0; i< asteroidCount; i++) {
+			float size = random.NextFloat (0.01f, 0.05f);
+			string texture = random.Next ("phobos", "deimos");
+			float x;
+			float y = random.NextFloat (-height, height);
+			float z;
+			float rSquare;
+			do {
+				x = random.NextFloat (-orbitRadius+width,orbitRadius+width);
+				z = random.NextFloat (-orbitRadius+width,orbitRadius+width);
+				rSquare = x*x+z*z;
+			} while (rSquare < minRadiusSquare || rSquare > maxRadiusSquare);
+			CreatePlanetGameObject (belt, "Asteroid " + belt.seed.ToString () + " #" + i, size, texture, new Vector3(x, y, z), Color.black);
+		}
+	}
+
+	static GameObject CreatePlanetGameObject(Node node, string name, float size, string texture, Vector3 position, Color colorLight) {
+		bool emitsLight = colorLight != null && colorLight != Color.black;
+
+		// create light
+		if (emitsLight) {
+			GameObject light = new GameObject("Light " + name);
+			gameObjectToNode.Add(light, node);
+			light.AddComponent<Light>();
+			light.transform.position = position;
+			light.light.color = colorLight;
+			light.light.range = 1000;
+
+			Component halo = light.AddComponent ("Halo");
+		}
+
+		GameObject sphere = CreateSphereGameObject (name, size, texture, position, emitsLight);
+		gameObjectToNode.Add(sphere, node);
+
+		return sphere;
+	}
+
+	static GameObject CreateAsteroidGameObject(string name, float size, string texture, Vector3 position) {
+		return CreateSphereGameObject (name, size, texture, position, false);
+	}
+
+	static GameObject CreateSphereGameObject(string name, float size, string texture, Vector3 position, bool emitsLight) {
+		// create sphere
+		GameObject sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+		sphere.name = name;
+		sphere.transform.localScale = new Vector3 (size, size, size);
+		sphere.transform.localPosition = position;
+
+		Texture2D sphereTexture = (Texture2D) Resources.Load("Textures/" + texture);
+		Material sphereMaterial = new Material(Shader.Find(emitsLight ? "Mobile/Particles/Additive" : "Mobile/Diffuse"));
+		sphereMaterial.mainTexture = sphereTexture;
+		sphere.renderer.material = sphereMaterial;
+
+		SphereCollider collider = sphere.AddComponent<SphereCollider> ();
+		collider.radius = size * 1.5f;
+		
+		Rigidbody rigidbody = sphere.AddComponent<Rigidbody> ();
+		rigidbody.useGravity = false;
+		rigidbody.isKinematic = true; // TODO false
+
+		//rigidbody.AddRelativeTorque (1.1f, 22.2f, 33.3f); // TODO rotation
+
+		return sphere;
+	}
+
+	void CreateOrbit(GameObject gameObject, Vector3 center, float radius, float lineWidth) {
+		double theta_scale = 0.05;             //Set lower to add more points
+		int size = (int) ((2 * System.Math.PI) / theta_scale) + 2; //Total number of points in circle.
+		
+		LineRenderer lineRenderer = gameObject.AddComponent<LineRenderer>();
+		lineRenderer.material = new Material(Shader.Find("Mobile/Particles/Additive"));
+		lineRenderer.SetColors(Color.blue, new Color (0f, 0f, 1f, 0.1f));
+		lineRenderer.SetWidth(lineWidth, lineWidth);
+		lineRenderer.SetVertexCount(size);
+
+		double theta = 0;
+		for (int i=0; i<size; i++) {
+			float x = (float) (radius * System.Math.Cos(theta));
+			float z = (float) (radius * System.Math.Sin(theta));
+			
+			Vector3 pos = new Vector3(center.x + x, center.y, center.z + z);
+			lineRenderer.SetPosition(i, pos);
+			theta += theta_scale;
+		}
+	}
+
+	class AsteroidFieldQuadrantFactory : FieldQuadrantFactory<GameObject> {
+		public List<GameObject> Generate (Vector3 quadrantPosition, float quadrantSize, params int[] seeds) {
+			Seed seed = new Seed (seeds);
+			PseudoRandom random = seed.getPseudoRandom();
+			int asteroidCount = (int) random.NextInt (50, 100);
+			List<GameObject> asteroids = new List<GameObject>();
+			for(int i=0; i<asteroidCount; i++) {
+				float size = random.NextFloat(0.1f, 0.2f);
+				string texture = "phobos";
+				float posX = (quadrantPosition.x + random.NextFloat (1) * quadrantSize);
+				float posY = (quadrantPosition.y + random.NextFloat (1) * quadrantSize);
+				float posZ = (quadrantPosition.z + random.NextFloat (1) * quadrantSize);
+				Vector3 position = new Vector3(posX, posY, posZ);
+				asteroids.Add (CreateAsteroidGameObject(seed.ToString () + "#" + i, size, texture, position));
+			}
+			return asteroids;
+		}
+		public void Destroy (List<GameObject> nodes) {
+			if (nodes != null) {
+				foreach (GameObject gameObject in nodes) {
+					GameObject.Destroy(gameObject);
+				}
+			}
+		}
+	}
+}
+
+/*
+class NewFieldManager<T> {
+	private float quadrantSize;
+	private FieldQuadrantFactory<T> generator;
+	private Dictionary<Seed, List<T>> quadrants = new Dictionary<Seed, List<T>>();
+	private int quadrantX = -99999;
+	private int quadrantY = -99999;
+	private int quadrantZ = -99999;
+	private int quadrantDepth = 3;
+	
+	public NewFieldManager(float quadrantSize, FieldQuadrantFactory<T> generator) {
+		this.quadrantSize = quadrantSize;
+		this.generator = generator;
+	}
+	
+	public void UpdatePosition(Vector3 position) {
+		Vector3 positionQuadrant = position / quadrantSize;
+		
+		int posQuadrantX = Mathf.RoundToInt(positionQuadrant.x);
+		int posQuadrantY = Mathf.RoundToInt(positionQuadrant.y);
+		int posQuadrantZ = Mathf.RoundToInt(positionQuadrant.z);
+		
+		if (quadrantX != posQuadrantX || quadrantY != posQuadrantY || quadrantZ != posQuadrantZ) {
+			int dx = posQuadrantX - quadrantX;
+			int dy = posQuadrantY - quadrantY;
+			int dz = posQuadrantZ - quadrantZ;
+			//Debug.Log ("FIELD POS " + position + " TO "+posQuadrantX +","+posQuadrantY +","+posQuadrantZ);
+			
+			if (dx >= quadrantDepth || dx <= -quadrantDepth || dy >= quadrantDepth || dy <= -quadrantDepth || dz >= quadrantDepth || dz <= -quadrantDepth) {
+				//Debug.Log ("FULL CREATE delta= " +dx+"," +dy+"," +dz);
+			} else {
+				//Debug.Log ("OPTIMIZED MOVE delta= " +dx+"," +dy+"," +dz);
+				if (dx > 0) {
+					for(int ix = -quadrantDepth/2; ix<dx; ix++) {
+						DestroyX(quadrantX-ix);
+					}
+				}
+			}
+			
+			quadrantX = posQuadrantX;
+			quadrantY = posQuadrantY;
+			quadrantZ = posQuadrantZ;
+		}
+	}
+
+	private void DestroyX (int qX) {
+		for (int iy=-quadrantDepth/2; iy<quadrantDepth/2; iy++) {
+			for (int iz=-quadrantDepth/2; iz<quadrantDepth/2; iz++) {
+				DestroyX (qX, quadrantY+iy, quadrantZ+iz);
+			}
+		}
+	}
+	
+	private List<T> Create(int quadrantX, int quadrantY, int quadrantZ, int posQuadrantX, int posQuadrantY, int posQuadrantZ) {
+		int qx = posQuadrantX + (quadrantX - 1);
+		int qy = posQuadrantY + (quadrantY - 1);
+		int qz = posQuadrantZ + (quadrantZ - 1);
+		Vector3 position = new Vector3 (qx - 0.5f, qy - 0.5f, qz - 0.5f) * quadrantSize;
+		//Debug.Log ("CREATE " + position + " QUADRANT "+qx +","+qy +","+qz);
+		return generator.Generate (position, quadrantSize, qx, qy, qz);
+	}
+}
+*/
+
+class FieldManager<T> {
+	private static int Q000 = 0*9+0*3+0;
+	private static int Q001 = 0*9+0*3+1;
+	private static int Q002 = 0*9+0*3+2;
+	private static int Q010 = 0*9+1*3+0;
+	private static int Q011 = 0*9+1*3+1;
+	private static int Q012 = 0*9+1*3+2;
+	private static int Q020 = 0*9+2*3+0;
+	private static int Q021 = 0*9+2*3+1;
+	private static int Q022 = 0*9+2*3+2;
+	
+	private static int Q100 = 1*9+0*3+0;
+	private static int Q101 = 1*9+0*3+1;
+	private static int Q102 = 1*9+0*3+2;
+	private static int Q110 = 1*9+1*3+0;
+	private static int Q111 = 1*9+1*3+1;
+	private static int Q112 = 1*9+1*3+2;
+	private static int Q120 = 1*9+2*3+0;
+	private static int Q121 = 1*9+2*3+1;
+	private static int Q122 = 1*9+2*3+2;
+	
+	private static int Q200 = 2*9+0*3+0;
+	private static int Q201 = 2*9+0*3+1;
+	private static int Q202 = 2*9+0*3+2;
+	private static int Q210 = 2*9+1*3+0;
+	private static int Q211 = 2*9+1*3+1;
+	private static int Q212 = 2*9+1*3+2;
+	private static int Q220 = 2*9+2*3+0;
+	private static int Q221 = 2*9+2*3+1;
+	private static int Q222 = 2*9+2*3+2;
+	
+	private float quadrantSize;
+	private FieldQuadrantFactory<T> generator;
+	private List<T>[] quadrant = new List<T>[3*3*3];
+	private int quadrantX = -99999;
+	private int quadrantY = -99999;
+	private int quadrantZ = -99999;
+
+	public FieldManager(float quadrantSize, FieldQuadrantFactory<T> generator) {
+		this.quadrantSize = quadrantSize;
+		this.generator = generator;
+	}
+
+	public void UpdatePosition(Vector3 position) {
+		Vector3 positionQuadrant = position / quadrantSize;
+
+		int posQuadrantX = Mathf.RoundToInt(positionQuadrant.x);
+		int posQuadrantY = Mathf.RoundToInt(positionQuadrant.y);
+		int posQuadrantZ = Mathf.RoundToInt(positionQuadrant.z);
+
+		if (quadrantX != posQuadrantX || quadrantY != posQuadrantY || quadrantZ != posQuadrantZ) {
+			int dx = posQuadrantX - quadrantX;
+			int dy = posQuadrantY - quadrantY;
+			int dz = posQuadrantZ - quadrantZ;
+			//Debug.Log ("FIELD POS " + position + " TO "+posQuadrantX +","+posQuadrantY +","+posQuadrantZ);
+
+			if (dx >= 2 || dx <= -2 || dy >= 2 || dy <= -2 || dz >= 2 || dz <= -2) {
+				//Debug.Log ("FULL CREATE delta= " +dx+"," +dy+"," +dz);
+				// destroy and create all quadrants
+				for(int qx = 0; qx<=2; qx++) {
+					for(int qy = 0; qy<=2; qy++) {
+						for(int qz = 0; qz<=2; qz++) {
+							int qIndex = qx*9+qy*3+qz;
+							generator.Destroy (quadrant[qIndex]);
+							quadrant[qIndex] = Create (qx, qy, qz, posQuadrantX,posQuadrantY,posQuadrantZ);
+						}
+					}
+				}
+			} else {
+				//Debug.Log ("OPTIMIZED MOVE delta= " +dx+"," +dy+"," +dz);
+				MoveQuadrants(posQuadrantX,posQuadrantY,posQuadrantZ, dx,dy, dz);
+			}
+			
+			quadrantX = posQuadrantX;
+			quadrantY = posQuadrantY;
+			quadrantZ = posQuadrantZ;
+		}
+	}
+	
+	private List<T> Create(int quadrantX, int quadrantY, int quadrantZ, int posQuadrantX, int posQuadrantY, int posQuadrantZ) {
+		int qx = posQuadrantX + (quadrantX - 1);
+		int qy = posQuadrantY + (quadrantY - 1);
+		int qz = posQuadrantZ + (quadrantZ - 1);
+		Vector3 position = new Vector3 (qx - 0.5f, qy - 0.5f, qz - 0.5f) * quadrantSize;
+		//Debug.Log ("CREATE " + position + " QUADRANT "+qx +","+qy +","+qz);
+		return generator.Generate (position, quadrantSize, qx, qy, qz);
+	}
+
+	private void Destroy (int qIndex) {
+		//Debug.Log ("DESTROY " + qIndex);
+		generator.Destroy (quadrant[qIndex]);
+	}
+
+	private void MoveQuadrants(int posQuadrantX, int posQuadrantY, int posQuadrantZ, int dx, int dy, int dz) {
+		if (dx == 0) {
+			// do nothing
+		} else if (dx == 1) {
+			Destroy (Q000);
+			Destroy (Q001);
+			Destroy (Q002);
+			Destroy (Q010);
+			Destroy (Q011);
+			Destroy (Q012);
+			Destroy (Q020);
+			Destroy (Q021);
+			Destroy (Q022);
+			
+			quadrant[Q000] = quadrant[Q100];
+			quadrant[Q001] = quadrant[Q101];
+			quadrant[Q002] = quadrant[Q102];
+			quadrant[Q010] = quadrant[Q110];
+			quadrant[Q011] = quadrant[Q111];
+			quadrant[Q012] = quadrant[Q112];
+			quadrant[Q020] = quadrant[Q120];
+			quadrant[Q021] = quadrant[Q121];
+			quadrant[Q022] = quadrant[Q122];
+			
+			quadrant[Q100] = quadrant[Q200];
+			quadrant[Q101] = quadrant[Q201];
+			quadrant[Q102] = quadrant[Q202];
+			quadrant[Q110] = quadrant[Q210];
+			quadrant[Q111] = quadrant[Q211];
+			quadrant[Q112] = quadrant[Q212];
+			quadrant[Q120] = quadrant[Q220];
+			quadrant[Q121] = quadrant[Q221];
+			quadrant[Q122] = quadrant[Q222];
+			
+			quadrant[Q200] = Create(2,0,0, posQuadrantX,posQuadrantY,posQuadrantZ);
+			quadrant[Q201] = Create(2,0,1, posQuadrantX,posQuadrantY,posQuadrantZ);
+			quadrant[Q202] = Create(2,0,2, posQuadrantX,posQuadrantY,posQuadrantZ);
+			quadrant[Q210] = Create(2,1,0, posQuadrantX,posQuadrantY,posQuadrantZ);
+			quadrant[Q211] = Create(2,1,1, posQuadrantX,posQuadrantY,posQuadrantZ);
+			quadrant[Q212] = Create(2,1,2, posQuadrantX,posQuadrantY,posQuadrantZ);
+			quadrant[Q220] = Create(2,2,0, posQuadrantX,posQuadrantY,posQuadrantZ);
+			quadrant[Q221] = Create(2,2,1, posQuadrantX,posQuadrantY,posQuadrantZ);
+			quadrant[Q222] = Create(2,2,2, posQuadrantX,posQuadrantY,posQuadrantZ);
+		} else if (dx == -1) {
+			Destroy (Q200);
+			Destroy (Q201);
+			Destroy (Q202);
+			Destroy (Q210);
+			Destroy (Q211);
+			Destroy (Q212);
+			Destroy (Q220);
+			Destroy (Q221);
+			Destroy (Q222);
+			
+			quadrant[Q200] = quadrant[Q100];
+			quadrant[Q201] = quadrant[Q101];
+			quadrant[Q202] = quadrant[Q102];
+			quadrant[Q210] = quadrant[Q110];
+			quadrant[Q211] = quadrant[Q111];
+			quadrant[Q212] = quadrant[Q112];
+			quadrant[Q220] = quadrant[Q120];
+			quadrant[Q221] = quadrant[Q121];
+			quadrant[Q222] = quadrant[Q122];
+			
+			quadrant[Q100] = quadrant[Q000];
+			quadrant[Q101] = quadrant[Q001];
+			quadrant[Q102] = quadrant[Q002];
+			quadrant[Q110] = quadrant[Q010];
+			quadrant[Q111] = quadrant[Q011];
+			quadrant[Q112] = quadrant[Q012];
+			quadrant[Q120] = quadrant[Q020];
+			quadrant[Q121] = quadrant[Q021];
+			quadrant[Q122] = quadrant[Q022];
+			
+			quadrant[Q000] = Create(0,0,0, posQuadrantX,posQuadrantY,posQuadrantZ);
+			quadrant[Q001] = Create(0,0,1, posQuadrantX,posQuadrantY,posQuadrantZ);
+			quadrant[Q002] = Create(0,0,2, posQuadrantX,posQuadrantY,posQuadrantZ);
+			quadrant[Q010] = Create(0,1,0, posQuadrantX,posQuadrantY,posQuadrantZ);
+			quadrant[Q011] = Create(0,1,1, posQuadrantX,posQuadrantY,posQuadrantZ);
+			quadrant[Q012] = Create(0,1,2, posQuadrantX,posQuadrantY,posQuadrantZ);
+			quadrant[Q020] = Create(0,2,0, posQuadrantX,posQuadrantY,posQuadrantZ);
+			quadrant[Q021] = Create(0,2,1, posQuadrantX,posQuadrantY,posQuadrantZ);
+			quadrant[Q022] = Create(0,2,2, posQuadrantX,posQuadrantY,posQuadrantZ);
+		}
+		
+		if (dy == 0) {
+			// do nothing
+		} else if (dy == 1) {
+			Destroy (Q000);
+			Destroy (Q001);
+			Destroy (Q002);
+			Destroy (Q100);
+			Destroy (Q101);
+			Destroy (Q102);
+			Destroy (Q200);
+			Destroy (Q201);
+			Destroy (Q202);
+			
+			quadrant[Q000] = quadrant[Q010];
+			quadrant[Q001] = quadrant[Q011];
+			quadrant[Q002] = quadrant[Q012];
+			quadrant[Q100] = quadrant[Q110];
+			quadrant[Q101] = quadrant[Q111];
+			quadrant[Q102] = quadrant[Q112];
+			quadrant[Q200] = quadrant[Q210];
+			quadrant[Q201] = quadrant[Q211];
+			quadrant[Q202] = quadrant[Q212];
+			
+			quadrant[Q010] = quadrant[Q020];
+			quadrant[Q011] = quadrant[Q021];
+			quadrant[Q012] = quadrant[Q022];
+			quadrant[Q110] = quadrant[Q120];
+			quadrant[Q111] = quadrant[Q121];
+			quadrant[Q112] = quadrant[Q122];
+			quadrant[Q210] = quadrant[Q220];
+			quadrant[Q211] = quadrant[Q221];
+			quadrant[Q212] = quadrant[Q222];
+			
+			quadrant[Q020] = Create(0,2,0, posQuadrantX,posQuadrantY,posQuadrantZ);
+			quadrant[Q021] = Create(0,2,1, posQuadrantX,posQuadrantY,posQuadrantZ);
+			quadrant[Q022] = Create(0,2,2, posQuadrantX,posQuadrantY,posQuadrantZ);
+			quadrant[Q120] = Create(1,2,0, posQuadrantX,posQuadrantY,posQuadrantZ);
+			quadrant[Q121] = Create(1,2,1, posQuadrantX,posQuadrantY,posQuadrantZ);
+			quadrant[Q122] = Create(1,2,2, posQuadrantX,posQuadrantY,posQuadrantZ);
+			quadrant[Q220] = Create(2,2,0, posQuadrantX,posQuadrantY,posQuadrantZ);
+			quadrant[Q221] = Create(2,2,1, posQuadrantX,posQuadrantY,posQuadrantZ);
+			quadrant[Q222] = Create(2,2,2, posQuadrantX,posQuadrantY,posQuadrantZ);
+		} else if (dy == -1) {
+			Destroy (Q020);
+			Destroy (Q021);
+			Destroy (Q022);
+			Destroy (Q120);
+			Destroy (Q121);
+			Destroy (Q122);
+			Destroy (Q220);
+			Destroy (Q221);
+			Destroy (Q222);
+			
+			quadrant[Q020] = quadrant[Q010];
+			quadrant[Q021] = quadrant[Q011];
+			quadrant[Q022] = quadrant[Q012];
+			quadrant[Q120] = quadrant[Q110];
+			quadrant[Q121] = quadrant[Q111];
+			quadrant[Q122] = quadrant[Q112];
+			quadrant[Q220] = quadrant[Q210];
+			quadrant[Q221] = quadrant[Q211];
+			quadrant[Q222] = quadrant[Q212];
+			
+			quadrant[Q010] = quadrant[Q000];
+			quadrant[Q011] = quadrant[Q001];
+			quadrant[Q012] = quadrant[Q002];
+			quadrant[Q110] = quadrant[Q100];
+			quadrant[Q111] = quadrant[Q101];
+			quadrant[Q112] = quadrant[Q102];
+			quadrant[Q210] = quadrant[Q200];
+			quadrant[Q211] = quadrant[Q201];
+			quadrant[Q212] = quadrant[Q202];
+			
+			quadrant[Q000] = Create(0,0,0, posQuadrantX,posQuadrantY,posQuadrantZ);
+			quadrant[Q001] = Create(0,0,1, posQuadrantX,posQuadrantY,posQuadrantZ);
+			quadrant[Q002] = Create(0,0,2, posQuadrantX,posQuadrantY,posQuadrantZ);
+			quadrant[Q100] = Create(1,0,0, posQuadrantX,posQuadrantY,posQuadrantZ);
+			quadrant[Q101] = Create(1,0,1, posQuadrantX,posQuadrantY,posQuadrantZ);
+			quadrant[Q102] = Create(1,0,2, posQuadrantX,posQuadrantY,posQuadrantZ);
+			quadrant[Q200] = Create(2,0,0, posQuadrantX,posQuadrantY,posQuadrantZ);
+			quadrant[Q201] = Create(2,0,1, posQuadrantX,posQuadrantY,posQuadrantZ);
+			quadrant[Q202] = Create(2,0,2, posQuadrantX,posQuadrantY,posQuadrantZ);
+		}
+		
+		if (dz == 0) {
+			// do nothing
+		} else if (dz == 1) {
+			Debug.Log ("DZ 1");
+			Destroy (Q000);
+			Destroy (Q010);
+			Destroy (Q020);
+			Destroy (Q100);
+			Destroy (Q110);
+			Destroy (Q120);
+			Destroy (Q200);
+			Destroy (Q210);
+			Destroy (Q220);
+			
+			quadrant[Q000] = quadrant[Q001];
+			quadrant[Q010] = quadrant[Q011];
+			quadrant[Q020] = quadrant[Q021];
+			quadrant[Q100] = quadrant[Q101];
+			quadrant[Q110] = quadrant[Q111];
+			quadrant[Q120] = quadrant[Q121];
+			quadrant[Q200] = quadrant[Q201];
+			quadrant[Q210] = quadrant[Q211];
+			quadrant[Q220] = quadrant[Q221];
+			
+			quadrant[Q001] = quadrant[Q002];
+			quadrant[Q011] = quadrant[Q012];
+			quadrant[Q021] = quadrant[Q022];
+			quadrant[Q101] = quadrant[Q102];
+			quadrant[Q111] = quadrant[Q112];
+			quadrant[Q121] = quadrant[Q122];
+			quadrant[Q201] = quadrant[Q202];
+			quadrant[Q211] = quadrant[Q212];
+			quadrant[Q221] = quadrant[Q222];
+
+			quadrant[Q002] = Create(0,0,2, posQuadrantX,posQuadrantY,posQuadrantZ);
+			quadrant[Q012] = Create(0,1,2, posQuadrantX,posQuadrantY,posQuadrantZ);
+			quadrant[Q022] = Create(0,2,2, posQuadrantX,posQuadrantY,posQuadrantZ);
+			quadrant[Q102] = Create(1,0,2, posQuadrantX,posQuadrantY,posQuadrantZ);
+			quadrant[Q112] = Create(1,1,2, posQuadrantX,posQuadrantY,posQuadrantZ);
+			quadrant[Q122] = Create(1,2,2, posQuadrantX,posQuadrantY,posQuadrantZ);
+			quadrant[Q202] = Create(2,0,2, posQuadrantX,posQuadrantY,posQuadrantZ);
+			quadrant[Q212] = Create(2,1,2, posQuadrantX,posQuadrantY,posQuadrantZ);
+			quadrant[Q222] = Create(2,2,2, posQuadrantX,posQuadrantY,posQuadrantZ);
+		} else if (dz == -1) {
+			Debug.Log ("DZ -1");
+			Destroy (Q002);
+			Destroy (Q012);
+			Destroy (Q022);
+			Destroy (Q102);
+			Destroy (Q112);
+			Destroy (Q122);
+			Destroy (Q202);
+			Destroy (Q212);
+			Destroy (Q222);
+			
+			quadrant[Q002] = quadrant[Q001];
+			quadrant[Q012] = quadrant[Q011];
+			quadrant[Q022] = quadrant[Q021];
+			quadrant[Q102] = quadrant[Q101];
+			quadrant[Q112] = quadrant[Q111];
+			quadrant[Q122] = quadrant[Q121];
+			quadrant[Q202] = quadrant[Q201];
+			quadrant[Q212] = quadrant[Q211];
+			quadrant[Q222] = quadrant[Q221];
+			
+			quadrant[Q001] = quadrant[Q000];
+			quadrant[Q011] = quadrant[Q010];
+			quadrant[Q021] = quadrant[Q020];
+			quadrant[Q101] = quadrant[Q100];
+			quadrant[Q111] = quadrant[Q110];
+			quadrant[Q121] = quadrant[Q120];
+			quadrant[Q201] = quadrant[Q200];
+			quadrant[Q211] = quadrant[Q210];
+			quadrant[Q221] = quadrant[Q220];
+			
+			quadrant[Q000] = Create(0,0,0, posQuadrantX,posQuadrantY,posQuadrantZ);
+			quadrant[Q010] = Create(0,1,0, posQuadrantX,posQuadrantY,posQuadrantZ);
+			quadrant[Q020] = Create(0,2,0, posQuadrantX,posQuadrantY,posQuadrantZ);
+			quadrant[Q100] = Create(1,0,0, posQuadrantX,posQuadrantY,posQuadrantZ);
+			quadrant[Q110] = Create(1,1,0, posQuadrantX,posQuadrantY,posQuadrantZ);
+			quadrant[Q120] = Create(1,2,0, posQuadrantX,posQuadrantY,posQuadrantZ);
+			quadrant[Q200] = Create(2,0,0, posQuadrantX,posQuadrantY,posQuadrantZ);
+			quadrant[Q210] = Create(2,1,0, posQuadrantX,posQuadrantY,posQuadrantZ);
+			quadrant[Q220] = Create(2,2,0, posQuadrantX,posQuadrantY,posQuadrantZ);
+		}
+	}
+}
+
+interface FieldQuadrantFactory<T> {
+	List<T> Generate (Vector3 quadrantPosition, float quadrantSize, params int[] seeds);
+	void Destroy (List<T> nodes);
+}
+
+class PseudoRandom {
+	private System.Random[] randoms;
+
+	private int index = 0;
+
+	public PseudoRandom(params int[] seeds) {
+		randoms = new System.Random[seeds.Length];
+		int seed = 123;
+		for(int i=0; i<seeds.Length; i++) {
+			seed = seed * 31 + seeds[i] + i;
+		}
+		for(int i=0; i<seeds.Length; i++) {
+			seed = seed * 31 + seeds[i] + i;
+			randoms[i] = new System.Random (seeds[i] + seed);
+		}
+	}
+
+	public int NextInt(int range) {
+		return NextInt (0, range);
+	}
+	
+	public int NextInt(int min, int max) {
+		return NextRandom().Next (min, max);
+	}
+
+	public double NextDouble(double range) {
+		return NextRandom ().NextDouble () * range;
+	}
+	
+	public double NextDouble(double min, double max) {
+		return NextRandom ().NextDouble () * (max - min) + min;
+	}
+
+	private double nextNextGaussian;
+	private bool haveNextNextGaussian = false;
+
+	public double NextGaussian() {
+		if (haveNextNextGaussian) {
+			haveNextNextGaussian = false;
+			return nextNextGaussian;
+		} else {
+			double v1;
+			double v2;
+			double s;
+			do {
+				v1 = NextDouble (-1, 1);
+				v2 = NextDouble (-1, 1);
+				s = v1 * v1 + v2 * v2;
+			} while (s >= 1 || s == 0);
+			double multiplier = System.Math.Sqrt (-2 * System.Math.Log (s) / s);
+			nextNextGaussian = v2 * multiplier;
+			haveNextNextGaussian = true;
+			return v1 * multiplier;
+		}
+	}
+
+	public double NextGaussian(double meanValue) {
+		return NextGaussian(meanValue, meanValue / 10);
+	}
+	
+	public double NextGaussian(double meanValue, double standardDeviation) {
+		return NextGaussian() * standardDeviation + meanValue;
+	}
+
+	public float NextFloat(float range) {
+		return ((float) NextRandom().NextDouble()) * range;
+	}
+	
+	public float NextFloat(float min, float max) {
+		return NextFloat (max - min) + min;
+	}
+
+	public bool NextBool(float probability) {
+		return NextFloat (1) < probability;
+	}
+	
+	public bool NextBool(double probability) {
+		return NextDouble (1) < probability;
+	}
+	
+	public T Next<T>(params T[] possibilities) {
+		return possibilities[NextInt (possibilities.Length)];
+	}
+
+	public T NextPossibility<T>(Dictionary<double, T> possibilities) {
+		double sum = 0;
+		foreach (KeyValuePair<double, T> entry in possibilities) {
+			sum += entry.Key;
+		}
+		double r = NextDouble (sum);
+
+		sum = 0;
+		foreach (KeyValuePair<double, T> entry in possibilities) {
+			sum += entry.Key;
+			if (r <= sum) {
+				return entry.Value;
+			}
+		}
+		return possibilities.GetEnumerator ().Current.Value;
+	}
+
+	private System.Random NextRandom() {
+		index++;
+		if (index >= randoms.Length) {
+			index = 0;
+		}
+		return randoms[index];
+	}
+}
+
+class Seed {
+	private int[] seeds;
+
+	public Seed(params int[] seeds) {
+		this.seeds = seeds;
+	}
+
+	public Seed(Seed parentSeed, int childSeed) {
+		seeds = new int[parentSeed.seeds.Length + 1];
+		for (int i=0; i<parentSeed.seeds.Length; i++) {
+			seeds[i] = parentSeed.seeds[i];
+		}
+		seeds [seeds.Length - 1] = childSeed;
+	}
+
+	public PseudoRandom getPseudoRandom() {
+		return new PseudoRandom(seeds);
+	}
+
+	public override bool Equals(System.Object obj) {
+		Seed other = obj as Seed;
+		if (other == null) {
+			return false;
+		}
+
+		if (seeds.Length != other.seeds.Length) {
+			return false;
+		}
+		for (int i=0; i < seeds.Length; i++) {
+			if (seeds[i] != other.seeds[i]) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	public override int GetHashCode() {
+		int hash = 1;
+		for (int i=0; i < seeds.Length; i++) {
+			hash = hash * 31 + seeds[i];
+		}
+		return hash;
+	}
+
+	public string ToString() {
+		string s = "[";
+		for(int i=0; i < seeds.Length; i++) {
+			if (i > 0) {
+				s += ",";
+			}
+			s += seeds[i];
+		}
+		s += "]";
+
+		return s;
+	}
+}
+
+class Generator {
+	public static double LIGHT_YEAR = 9.4605284e15;
+	public static double ASTRONOMICAL_UNIT = 149597871E3;
+	public static double SECONDS_PER_DAY = 34*60*60;
+	public static double SECONDS_PER_YEAR = SECONDS_PER_DAY * 365.25;
+
+	public static double QUADRANT_SIZE = 10 * LIGHT_YEAR;
+
+	public static double SUN_MASS = 2E30;
+	public static double SUN_RADIUS = 696000E3;
+	public static double EARTH_ORBIT_RADIUS = 149597890E3;
+	public static double EARTH_ORBIT_PERIOD = 1 * SECONDS_PER_YEAR;
+	public static double EARTH_MASS = 5.9742E24;
+	public static double EARTH_RADIUS = 6378.1E3;
+	public static double EARTH_PERIOD = 1 * SECONDS_PER_DAY;
+	public static double JUPITER_MASS = 2E27;
+	public static double JUPITER_RADIUS = 70000E3;
+
+	private static bool GENERATE_ASTEROIDS = false;
+
+	private Dictionary<Seed, Node> storedNodes = new Dictionary<Seed, Node> ();
+
+	public Generator() {
+		StoreSolarSystem ();
+	}
+
+	private void StoreSolarSystem() {
+		
+		StarSystem starSystem = new StarSystem (null, new Seed(0));
+		starSystem.childCount = 1;
+		Store (starSystem);
+
+		int childIndex = 0;
+
+		Star star = new Star (starSystem, new Seed(starSystem.seed, childIndex++));
+		star.type = Star.Type.MainSequence;
+		star.radius = SUN_RADIUS;
+		star.mass = SUN_MASS;
+		star.temperature = 5778;
+		star.rotation = 25.38 * SECONDS_PER_DAY;
+		star.childCount = 9;
+		Store (star);
+
+		// planets
+		childIndex = 0;
+
+		Planet mercury = new Planet (star, new Seed(star.seed, childIndex++));
+		mercury.orbitRadius = 57909175E3;
+		mercury.orbitRevolution = 0.2408467 * SECONDS_PER_YEAR;
+		mercury.type = Planet.Type.Stone;
+		mercury.texture = "mercury";
+		mercury.radius = 2439.64E3;
+		mercury.rotation = 58.646225 * SECONDS_PER_DAY;
+		mercury.mass = 3.302E23;
+		mercury.childCount = 0;
+		Store (mercury);
+
+		Planet venus = new Planet (star, new Seed(star.seed, childIndex++));
+		venus.orbitRadius = 108208930E3;
+		venus.orbitRevolution = 0.61519726 * SECONDS_PER_YEAR;
+		venus.type = Planet.Type.Stone;
+		venus.texture = "venus";
+		venus.radius = 6051.59E3;
+		venus.rotation = -243.0187 * SECONDS_PER_DAY;
+		venus.mass = 4.8690E24;
+		venus.childCount = 0;
+		Store (venus);
+
+		Planet terra = new Planet (star, new Seed(star.seed, childIndex++));
+		terra.orbitRadius = 149597890E3;
+		terra.orbitRevolution = 1 * SECONDS_PER_YEAR;
+		terra.type = Planet.Type.Stone;
+		terra.texture = "earth";
+		terra.radius = 6378.1E3;
+		terra.rotation = 1 * SECONDS_PER_DAY;
+		terra.mass = 5.9742E24;
+		terra.childCount = 1;
+		Store (terra);
+		
+		Planet mars = new Planet (star, new Seed(star.seed, childIndex++));
+		mars.orbitRadius = 227936640E3;
+		mars.orbitRevolution = 1.8808476 * SECONDS_PER_YEAR;
+		mars.type = Planet.Type.Stone;
+		mars.texture = "mars";
+		mars.radius = 3397.00E3;
+		mars.rotation = 1.02595675 * SECONDS_PER_DAY;
+		mars.mass = 6.4191E23;
+		mars.childCount = 2;
+		Store (mars);
+
+		Planet ceres = new Planet (star, new Seed(star.seed, childIndex++));
+		ceres.orbitRadius = 413700000E3;
+		ceres.orbitRevolution = 4.599 * SECONDS_PER_YEAR;
+		ceres.type = Planet.Type.Stone;
+		ceres.texture = "ceres";
+		ceres.radius = 471E3;
+		ceres.rotation = 0.3781 * SECONDS_PER_DAY;
+		ceres.mass = 9.5E20;
+		ceres.childCount = 0;
+		Store (ceres);
+		
+		Planet jupiter = new Planet (star, new Seed(star.seed, childIndex++));
+		jupiter.orbitRadius = 778412010E3;
+		jupiter.orbitRevolution = 11.862615 * SECONDS_PER_YEAR;
+		jupiter.type = Planet.Type.Stone;
+		jupiter.texture = "jupiter";
+		jupiter.radius = 71492.68E3;
+		jupiter.rotation = 0.41354 * SECONDS_PER_DAY;
+		jupiter.mass = 1.8987E27;
+		jupiter.childCount = 4;
+		Store (jupiter);
+		
+		Planet saturn = new Planet (star, new Seed(star.seed, childIndex++));
+		saturn.orbitRadius = 1426725400E3;
+		saturn.orbitRevolution = 29.447498 * SECONDS_PER_YEAR;
+		saturn.type = Planet.Type.Stone;
+		saturn.texture = "saturn";
+		saturn.radius = 60267.14E3;
+		saturn.rotation = 0.44401 * SECONDS_PER_DAY;
+		saturn.mass = 5.6851E26;
+		saturn.childCount = 7;
+		Store (saturn);
+		
+		Planet uranus = new Planet (star, new Seed(star.seed, childIndex++));
+		uranus.orbitRadius = 2870972200E3;
+		uranus.orbitRevolution = 84.016846 * SECONDS_PER_YEAR;
+		uranus.type = Planet.Type.Stone;
+		uranus.texture = "uranus";
+		uranus.radius = 25557.25E3;
+		uranus.rotation = -0.7183 * SECONDS_PER_DAY;
+		uranus.mass = 8.6849E25;
+		uranus.childCount = 5;
+		Store (uranus);
+		
+		Planet neptune = new Planet (star, new Seed(star.seed, childIndex++));
+		neptune.orbitRadius = 4498252900E3;
+		neptune.orbitRevolution = 164.79132 * SECONDS_PER_YEAR;
+		neptune.type = Planet.Type.Stone;
+		neptune.texture = "neptune";
+		neptune.radius = 24766.36E3;
+		neptune.rotation = 0.67125 * SECONDS_PER_DAY;
+		neptune.mass = 1.0244E26;
+		neptune.childCount = 1;
+		Store (neptune);
+
+		// moons of terra
+		childIndex = 0;
+
+		Planet luna = new Planet (terra, new Seed(terra.seed, childIndex++));
+		luna.orbitRevolution = 27.32158 * SECONDS_PER_DAY;
+		luna.childCount = 0;
+		luna.type = Planet.Type.Stone;
+		luna.texture = "moon";
+		luna.radius = 1737.1E3;
+		luna.rotation = 27.321582 * SECONDS_PER_DAY;
+		luna.mass = 7.3477E22;
+		luna.orbitRadius = 384399E3;
+		Store (luna);
+
+		// moons of mars
+		childIndex = 0;
+
+		Planet phobos = new Planet (mars, new Seed(mars.seed, childIndex++));
+		phobos.orbitRadius = 9376E3;
+		phobos.orbitRevolution = 0.31891023 * SECONDS_PER_DAY;
+		phobos.type = Planet.Type.Stone;
+		phobos.texture = "phobos";
+		phobos.radius = 11.2667E3;
+		phobos.rotation = phobos.orbitRevolution;
+		phobos.mass = 1.0659E16;
+		phobos.childCount = 0;
+		Store (phobos);
+
+		Planet deimos = new Planet (mars, new Seed(mars.seed, childIndex++));
+		deimos.orbitRadius = 23463.2E3;
+		deimos.orbitRevolution = 1.263 * SECONDS_PER_DAY;
+		deimos.type = Planet.Type.Stone;
+		deimos.texture = "deimos";
+		deimos.radius = 6.2E3;
+		deimos.rotation = deimos.orbitRevolution;
+		deimos.mass = 1.4762E15;
+		deimos.childCount = 0;
+		Store (deimos);
+
+		// moons of jupiter
+		childIndex = 0;
+
+		Planet io = new Planet (jupiter, new Seed(jupiter.seed, childIndex++));
+		io.orbitRadius = 421600E3;
+		io.orbitRevolution = 1.7691378 * SECONDS_PER_DAY;
+		io.type = Planet.Type.Stone;
+		io.texture = "io";
+		io.radius = 1815E3;
+		io.rotation = io.orbitRevolution;
+		io.mass = 8.94E22;
+		io.childCount = 0;
+		Store (io);
+
+		Planet europa = new Planet (jupiter, new Seed(jupiter.seed, childIndex++));
+		europa.orbitRadius = 670900E3;
+		europa.orbitRevolution = 3.551181 * SECONDS_PER_DAY;
+		europa.type = Planet.Type.Stone;
+		europa.texture = "europa";
+		europa.radius = 1569E3;
+		europa.rotation = europa.orbitRevolution;
+		europa.mass = 4.80E22;
+		europa.childCount = 0;
+		Store (europa);
+
+		Planet ganymede = new Planet (jupiter, new Seed(jupiter.seed, childIndex++));
+		ganymede.orbitRadius = 1070400E3;
+		ganymede.orbitRevolution = 7.154553 * SECONDS_PER_DAY;
+		ganymede.type = Planet.Type.Stone;
+		ganymede.texture = "ganymede";
+		ganymede.radius = 2634.19E3;
+		ganymede.rotation = ganymede.orbitRevolution;
+		ganymede.mass = 1.4819E23;
+		ganymede.childCount = 0;
+		Store (ganymede);
+
+		Planet callisto = new Planet (jupiter, new Seed(jupiter.seed, childIndex++));
+		callisto.orbitRadius = 1882700E3;
+		callisto.orbitRevolution = 16.68902 * SECONDS_PER_DAY;
+		callisto.type = Planet.Type.Stone;
+		callisto.texture = "callisto";
+		callisto.radius = 2410.3E3;
+		callisto.rotation = callisto.orbitRevolution;
+		callisto.mass = 1.0758E23;
+		callisto.childCount = 0;
+		Store (callisto);
+
+		// moons of saturn
+		childIndex = 0;
+
+		Planet mimas = new Planet (saturn, new Seed(saturn.seed, childIndex++));
+		mimas.orbitRadius = 185520E3;
+		mimas.orbitRevolution = 0.942422 * SECONDS_PER_DAY;
+		mimas.type = Planet.Type.Stone;
+		mimas.texture = "mimas";
+		mimas.radius = 198.30E3;
+		mimas.rotation = mimas.orbitRevolution;
+		mimas.mass = 3.75E19;
+		mimas.childCount = 0;
+		Store (mimas);
+
+		Planet enceladus = new Planet (saturn, new Seed(saturn.seed, childIndex++));
+		enceladus.orbitRadius = 237948E3;
+		enceladus.orbitRevolution = 1.370218 * SECONDS_PER_DAY;
+		enceladus.type = Planet.Type.Stone;
+		enceladus.texture = "enceladus";
+		enceladus.radius = 252.1E3;
+		enceladus.rotation = enceladus.orbitRevolution;
+		enceladus.mass = 1.08E20;
+		enceladus.childCount = 0;
+		Store (enceladus);
+		
+		Planet tethys = new Planet (saturn, new Seed(saturn.seed, childIndex++));
+		tethys.orbitRadius = 294619E3;
+		tethys.orbitRevolution = 1.887802 * SECONDS_PER_DAY;
+		tethys.type = Planet.Type.Stone;
+		tethys.texture = "tethys";
+		tethys.radius = 533E3;
+		tethys.rotation = tethys.orbitRevolution;
+		tethys.mass = 6.174E20;
+		tethys.childCount = 0;
+		Store (tethys);
+		
+		Planet dione = new Planet (saturn, new Seed(saturn.seed, childIndex++));
+		dione.orbitRadius = 377396E3;
+		dione.orbitRevolution = 2.736915 * SECONDS_PER_DAY;
+		dione.type = Planet.Type.Stone;
+		dione.texture = "dione";
+		dione.radius = 561.7E3;
+		dione.rotation = dione.orbitRevolution;
+		dione.mass = 1.095E21;
+		dione.childCount = 0;
+		Store (dione);
+		
+		Planet rhea = new Planet (saturn, new Seed(saturn.seed, childIndex++));
+		rhea.orbitRadius = 527108E3;
+		rhea.orbitRevolution = 4.518212 * SECONDS_PER_DAY;
+		rhea.type = Planet.Type.Stone;
+		rhea.texture = "rhea";
+		rhea.radius = 764.3E3;
+		rhea.rotation = rhea.orbitRevolution;
+		rhea.mass = 2.306E21;
+		rhea.childCount = 0;
+		Store (rhea);
+		
+		Planet titan = new Planet (saturn, new Seed(saturn.seed, childIndex++));
+		titan.orbitRadius = 1221870E3;
+		titan.orbitRevolution = 15.945 * SECONDS_PER_DAY;
+		titan.type = Planet.Type.Stone;
+		titan.texture = "titan";
+		titan.radius = 2576E3;
+		titan.rotation = titan.orbitRevolution;
+		titan.mass = 1.3452E23;
+		titan.childCount = 0;
+		Store (titan);
+		
+		Planet iapetus = new Planet (saturn, new Seed(saturn.seed, childIndex++));
+		iapetus.orbitRadius = 3560820E3;
+		iapetus.orbitRevolution = 79.322 * SECONDS_PER_DAY;
+		iapetus.type = Planet.Type.Stone;
+		iapetus.texture = "iapetus";
+		iapetus.radius = 735.60E3;
+		iapetus.rotation = iapetus.orbitRevolution;
+		iapetus.mass = 1.8053E21;
+		iapetus.childCount = 0;
+		Store (iapetus);
+		
+		// moons of uranus
+		childIndex = 0;
+
+		Planet miranda = new Planet (uranus, new Seed(uranus.seed, childIndex++));
+		miranda.orbitRadius = 129390E3;
+		miranda.orbitRevolution = 1.4135 * SECONDS_PER_DAY;
+		miranda.type = Planet.Type.Stone;
+		miranda.texture = "miranda";
+		miranda.radius = 235.8E3;
+		miranda.rotation = miranda.orbitRevolution;
+		miranda.mass = 6.59E19;
+		miranda.childCount = 0;
+		Store (miranda);
+		
+		Planet ariel = new Planet (uranus, new Seed(uranus.seed, childIndex++));
+		ariel.orbitRadius = 190900E3;
+		ariel.orbitRevolution = 2.520 * SECONDS_PER_DAY;
+		ariel.type = Planet.Type.Stone;
+		ariel.texture = "ariel";
+		ariel.radius = 578.9E3;
+		ariel.rotation = ariel.orbitRevolution;
+		ariel.mass = 1.35E21;
+		ariel.childCount = 0;
+		Store (ariel);
+		
+		Planet umbriel = new Planet (uranus, new Seed(uranus.seed, childIndex++));
+		umbriel.orbitRadius = 266000E3;
+		umbriel.orbitRevolution = 4.144 * SECONDS_PER_DAY;
+		umbriel.type = Planet.Type.Stone;
+		umbriel.texture = "umbriel";
+		umbriel.radius = 584.7E3;
+		umbriel.rotation = umbriel.orbitRevolution;
+		umbriel.mass = 1.2E21;
+		umbriel.childCount = 0;
+		Store (umbriel);
+		
+		Planet titania = new Planet (uranus, new Seed(uranus.seed, childIndex++));
+		titania.orbitRadius = 436300E3;
+		titania.orbitRevolution = 8.706 * SECONDS_PER_DAY;
+		titania.type = Planet.Type.Stone;
+		titania.texture = "titania";
+		titania.radius = 788.9E3;
+		titania.rotation = titania.orbitRevolution;
+		titania.mass = 3.5E21;
+		titania.childCount = 0;
+		Store (titania);
+		
+		Planet oberon = new Planet (uranus, new Seed(uranus.seed, childIndex++));
+		oberon.orbitRadius = 583519E3;
+		oberon.orbitRevolution = 13.46 * SECONDS_PER_DAY;
+		oberon.type = Planet.Type.Stone;
+		oberon.texture = "oberon";
+		oberon.radius = 761.4E3;
+		oberon.rotation = oberon.orbitRevolution;
+		oberon.mass = 3.014E21;
+		oberon.childCount = 0;
+		Store (oberon);
+		
+		// moons of neptune
+		childIndex = 0;
+
+		Planet triton = new Planet (neptune, new Seed(neptune.seed, childIndex++));
+		triton.orbitRadius = 354759E3;
+		triton.orbitRevolution = -5.877 * SECONDS_PER_DAY;
+		triton.type = Planet.Type.Stone;
+		triton.texture = "triton";
+		triton.radius = 1353.4E3;
+		triton.rotation = - triton.orbitRevolution;
+		triton.mass = 2.14E22;
+		triton.childCount = 0;
+		Store (triton);
+
+		/*
+		Planet yyy = new Planet (xxx, new Seed(xxx.seed, childIndex++));
+		yyy.orbitRadius = xxxE3;
+		yyy.orbitRevolution = xxx * SECONDS_PER_DAY;
+		yyy.type = Planet.Type.Stone;
+		yyy.texture = "yyy";
+		yyy.radius = xxxE3;
+		yyy.rotation = yyy.orbitRevolution;
+		yyy.mass = xxxE22;
+		yyy.childCount = 0;
+		Store (yyy);
+		*/
+	}
+
+	private void Store(Node node) {
+		//Debug.Log ("Storing " + node.seed.ToString ());
+		storedNodes.Add (node.seed, node);
+	}
+
+	public Node getChild(Node parent, int index) {
+		Seed seed = new Seed (parent.seed, index);
+		Node child = null;
+
+		if (storedNodes.ContainsKey (seed)) {
+			child = storedNodes [seed];
+		}
+
+		if (child == null) {
+			child = parent.getChild (this, index);
+		}
+
+		return child;
+	}
+
+	public StarSystem generateStarSystem(int index) {
+		StarSystem starSystem = new StarSystem (null, new Seed(index));
+		PseudoRandom random = starSystem.getPseudoRandom ();
+
+		starSystem.childCount = 1;
+		starSystem.x = random.NextDouble (QUADRANT_SIZE);
+		starSystem.y = random.NextDouble (QUADRANT_SIZE);
+		starSystem.z = random.NextDouble (QUADRANT_SIZE);
+
+		return starSystem;
+	}
+
+	public Star generateStar(StarSystem parent, int index) {
+		Star star = new Star (parent, new Seed(parent.seed, index));
+		PseudoRandom random = star.getPseudoRandom ();
+
+		star.childCount = random.NextInt (6, 12);
+		star.mass = random.NextDouble(0.1*SUN_MASS, 10*SUN_MASS); 
+		star.radius = random.NextDouble(0.1*SUN_RADIUS, 10*SUN_RADIUS);
+		star.temperature = random.NextDouble(2600, 33000);
+
+		Dictionary<double, Star.Type> possibleTypes = new Dictionary<double, Star.Type>();
+		possibleTypes.Add (0, Star.Type.BrownDwarf); // brown dwars still look very wrong
+		possibleTypes.Add (10, Star.Type.Dwarf);
+		possibleTypes.Add (20, Star.Type.MainSequence);
+		possibleTypes.Add (6, Star.Type.SubGiant);
+		possibleTypes.Add (2, Star.Type.Giant);
+		possibleTypes.Add (1, Star.Type.SuperGiant);
+		star.type = random.NextPossibility (possibleTypes);
+
+		switch (star.type) {
+		case Star.Type.BrownDwarf:
+			star.mass = random.NextGaussian(0.2*SUN_MASS); 
+			star.radius = random.NextDouble(0.01*SUN_RADIUS);
+			star.temperature = random.NextDouble(1000, 2600);
+			star.childCount = random.NextInt (1, 3);
+			break;
+		case Star.Type.Dwarf:
+			star.mass = random.NextGaussian(0.2*SUN_MASS); 
+			star.radius = random.NextDouble(0.01*SUN_RADIUS);
+			star.temperature = random.NextDouble(2600, 5000);
+			star.childCount = random.NextInt (2, 5);
+			break;
+		case Star.Type.MainSequence:
+			star.mass = random.NextDouble(0.1*SUN_MASS, 10*SUN_MASS); 
+			star.radius = random.NextDouble(0.1*SUN_RADIUS, 10*SUN_RADIUS);
+			star.temperature = random.NextDouble(2600, 33000);
+			break;
+		case Star.Type.SubGiant:
+			star.mass = random.NextGaussian(3*SUN_MASS); 
+			star.radius = random.NextGaussian(10*SUN_RADIUS);
+			star.temperature = random.NextDouble(2600, 6000);
+			break;
+		case Star.Type.Giant:
+			star.mass = random.NextGaussian(5*SUN_MASS); 
+			star.radius = random.NextGaussian(30*SUN_RADIUS);
+			star.temperature = random.NextDouble(2600, 6000);
+			break;
+		case Star.Type.SuperGiant:
+			star.mass = random.NextGaussian(10*SUN_MASS); 
+			star.radius = random.NextGaussian(60*SUN_RADIUS);
+			star.temperature = random.NextDouble(2600, 6000);
+			break;
+		}
+
+		return star;
+	}
+
+	public Node generatePlanet(OrbitingSpheroidNode parent, int index) {
+		PseudoRandom parentRandom = parent.getPseudoRandom ();
+
+		double baseDist = parent is Star ? ASTRONOMICAL_UNIT : parent.radius * parentRandom.NextInt (5, 20);
+		double distConst = parentRandom.NextGaussian (0.4, 0.01) * baseDist;
+		double distFactor = parentRandom.NextGaussian (0.3, 0.01) * baseDist;
+		double orbitRadius = distConst + distFactor * (index == 0 ? 0 : System.Math.Pow(2, index));
+
+		if (GENERATE_ASTEROIDS && parent.childCount > 4 && index == 3 && parentRandom.NextBool (0.9f)) {
+			AsteroidBelt belt = new AsteroidBelt (parent, new Seed (parent.seed, index));
+			PseudoRandom random = belt.getPseudoRandom ();
+
+			belt.orbitRadius = random.NextGaussian (orbitRadius);
+			belt.orbitRevolution = System.Math.Pow(belt.orbitRadius/ASTRONOMICAL_UNIT, 3.0/2.0) * SECONDS_PER_YEAR;
+			belt.averageRadius = random.NextGaussian (100);
+			belt.density = random.NextGaussian (0.1);
+			belt.width = belt.orbitRadius * random.NextGaussian (0.1);
+			belt.height = belt.orbitRadius * random.NextGaussian (0.01);
+
+			return belt;
+		} else {
+			Planet planet = new Planet (parent, new Seed (parent.seed, index));
+			PseudoRandom random = planet.getPseudoRandom ();
+
+			planet.orbitRadius = random.NextGaussian (orbitRadius);
+			planet.orbitRevolution = System.Math.Pow(planet.orbitRadius/ASTRONOMICAL_UNIT, 3.0/2.0) * SECONDS_PER_YEAR;
+			planet.rotation = random.NextGaussian (25 * SECONDS_PER_DAY);
+
+			if (parent.mass > Generator.SUN_MASS * 0.05) {
+				if (index > 3 && index < 10) {
+					planet.type = Planet.Type.Gas;
+					planet.mass = random.NextGaussian (JUPITER_MASS);
+					planet.radius = random.NextGaussian (JUPITER_RADIUS);
+					planet.childCount = random.NextInt (2, 5);
+				} else {
+					planet.type = Planet.Type.Stone;
+					planet.mass = random.NextGaussian (EARTH_MASS);
+					planet.radius = random.NextGaussian (EARTH_RADIUS);
+					planet.childCount = random.NextInt (1);
+				}
+			} else {
+				planet.type = Planet.Type.Stone;
+				planet.mass = random.NextGaussian (parent.mass / 10); // TODO not linear!
+				planet.radius = random.NextGaussian (parent.radius / 10);
+				planet.childCount = 0;
+			}
+
+			return planet;
+		}
+	}
+}
+
+class Node {
+	public Node parent;
+	public Seed seed;
+	public int childCount;
+
+	public Node(Node parent, Seed seed) {
+		this.parent = parent;
+		this.seed = seed;
+	}
+
+	public PseudoRandom getPseudoRandom() {
+		return seed.getPseudoRandom ();
+	}
+
+	public virtual Node getChild (Generator generator, int index) {
+		return null;
+	}
+}
+
+class CartesianNode : Node {
+	public double x; // m
+	public double y; // m
+	public double z; // m
+
+	public CartesianNode(Node parent, Seed seed)
+		: base (parent, seed) {
+	}
+}
+
+class OrbitingNode : Node {
+	public double orbitRadius; // m
+	public double orbitRevolution; // seconds
+	public double mass; // kg
+	
+	public OrbitingNode(Node parent, Seed seed)
+		: base (parent, seed) {
+	}
+}
+
+class OrbitingSpheroidNode : OrbitingNode {
+	public double radius; // m
+	public double rotation; // s
+	
+	public OrbitingSpheroidNode(Node parent, Seed seed)
+		: base (parent, seed) {
+	}
+}
+
+class StarSystem : CartesianNode {
+	public StarSystem(Node parent, Seed seed)
+		: base (parent, seed) {
+	}
+
+	public override Node getChild (Generator generator, int index) {
+		return generator.generateStar(this, index);
+	}
+}
+
+class Star : OrbitingSpheroidNode {
+	public enum Type { BrownDwarf, Dwarf, MainSequence, SubGiant, Giant, SuperGiant };
+	public double temperature;
+	public Type type;
+
+	public Star(Node parent, Seed seed)
+		: base (parent, seed) {
+	}
+
+	public override Node getChild (Generator generator, int index) {
+		return generator.generatePlanet(this, index);
+	}
+}
+
+class Planet : OrbitingSpheroidNode {
+	public enum Type { Gas, Stone, Ice };
+	public Type type;
+	public string texture;
+	public Planet(Node parent, Seed seed)
+		: base (parent, seed) {
+	}
+	
+	public override Node getChild (Generator generator, int index) {
+		return generator.generatePlanet(this, index);
+	}
+}
+
+class AsteroidBelt : OrbitingNode {
+	public double width; // m
+	public double height; // m
+	public double density; // asteroid/m^3
+	public double averageRadius; // m
+
+	public AsteroidBelt(Node parent, Seed seed)
+		: base (parent, seed) {
+	}
+}
+
+
+

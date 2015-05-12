@@ -1,0 +1,212 @@
+package ch.obermuhlner.infinitespace;
+
+import ch.obermuhlner.infinitespace.game.ship.Hull;
+import ch.obermuhlner.infinitespace.game.ship.Ship;
+import ch.obermuhlner.infinitespace.game.ship.ShipComponent;
+import ch.obermuhlner.infinitespace.game.ship.ShipPart;
+import ch.obermuhlner.infinitespace.game.ship.Thruster;
+import ch.obermuhlner.infinitespace.game.ship.Weapon;
+import ch.obermuhlner.infinitespace.model.Node;
+import ch.obermuhlner.infinitespace.util.Units;
+
+import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Button;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
+import com.badlogic.gdx.scenes.scene2d.ui.SelectBox;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
+
+public class ShipInfoScreen extends AbstractNodeStageScreen {
+
+	private Table tableComponents;
+	
+	private Label labelPartComponentCount;
+	private Label labelPartMaxVolume;
+	
+	public ShipInfoScreen (InfiniteSpaceGame game, Node node) {
+		super(game, node);
+	}
+
+	@Override
+	protected void prepareStage (Stage stage, Table rootTable) {
+		Ship ship = GameState.INSTANCE.ship;
+
+		rootTable.row();
+		rootTable.add(new Label("Ship Info", skin, TITLE)).colspan(4);
+
+		Table tableTotalInfo = table();
+		rootTable.row().colspan(2);
+		rootTable.add(new ScrollPane(tableTotalInfo, skin));
+
+		addRow(tableTotalInfo, "Allowed Mass", ship.allowedMass);
+		addRow(tableTotalInfo, "Total Mass", ship.mass, ship.mass <= ship.allowedMass);
+		addRow(tableTotalInfo, "Total Power", ship.power, ship.power >= 0);
+		addRow(tableTotalInfo, "Total Shield", ship.shield);
+		addRow(tableTotalInfo, "Total Cargo Space", ship.cargoSpace);
+		addRow(tableTotalInfo, "Total Passenger Space", ship.passengerSpace);
+
+		rootTable.row();
+		final SelectBox<String> selectPartType = new SelectBox<String>(skin);
+		rootTable.add(selectPartType);
+		selectPartType.setItems(getPartTypes(ship));
+		
+		Table tablePart = table();
+		rootTable.row();
+		rootTable.add(new ScrollPane(tablePart, skin));
+
+		tablePart.row();
+		tablePart.add(new Label("Components", skin));
+		labelPartComponentCount = new Label("", skin);
+		tablePart.add(labelPartComponentCount).right();
+		
+		tablePart.row();
+		tablePart.add(new Label("Max Volume", skin));
+		labelPartMaxVolume = new Label("", skin);
+		tablePart.add(labelPartMaxVolume).right();
+		
+		tableComponents = table();
+		rootTable.row();
+		rootTable.add(new ScrollPane(tableComponents, skin));
+				
+		updateTableComponents(selectPartType.getSelectedIndex());
+		selectPartType.addListener(new ChangeListener() {
+			@Override
+			public void changed (ChangeEvent event, Actor actor) {
+				updateTableComponents(selectPartType.getSelectedIndex());
+			}
+		});
+		
+		rootTable.row().padTop(20);
+		rootTable.add(button(I18N.OK, new ChangeListener() {
+			@Override
+			public void changed (ChangeEvent event, Actor actor) {
+				game.setScreen(new LandScreen(infiniteSpaceGame, node));
+			}
+		}));
+
+		stage.addActor(rootTable);
+	}
+
+	private void updateTableComponents (int partTypeIndex) {
+		Ship ship = GameState.INSTANCE.ship;
+
+		tableComponents.clear();
+		
+		if (partTypeIndex == 0) {
+			labelPartComponentCount.setText("6");
+			labelPartMaxVolume.setText("");
+			
+			tableComponents.row();
+			tableComponents.add(new Label("Type", skin, HEADER));
+			tableComponents.add(new Label("Name", skin, HEADER));
+			tableComponents.add(new Label("Price", skin, HEADER));
+			tableComponents.add(new Label("Mass", skin, HEADER));
+			tableComponents.add(new Label("Power", skin, HEADER));
+			tableComponents.add(new Label("Volume", skin, HEADER));
+			tableComponents.add(new Label("Thrust", skin, HEADER));
+			
+			addComponentRow(tableComponents, "Forward", null, ship.forwardThruster, false);
+			addComponentRow(tableComponents, "Up/Down", null, ship.upThruster, false);
+			addComponentRow(tableComponents, "Left/Right", null, ship.rightThruster, false);
+			addComponentRow(tableComponents, "Roll", null, ship.rollThruster, false);
+			addComponentRow(tableComponents, "Pitch", null, ship.pitchThruster, false);
+			addComponentRow(tableComponents, "Yaw", null, ship.yawThruster, false);
+		} else {
+			ShipPart<?> part = ship.parts.get(partTypeIndex - 1);
+
+			if (part.minCount == part.maxCount) {
+				labelPartComponentCount.setText(Units.toString(part.minCount));
+			} else {
+				labelPartComponentCount.setText(Units.toString(part.minCount) + " - " + Units.toString(part.maxCount));
+			}
+			labelPartMaxVolume.setText(Units.toString(part.maxVolume));
+
+			tableComponents.row();
+			tableComponents.add(new Label("Type", skin, HEADER));
+			tableComponents.add(new Label("Name", skin, HEADER));
+			tableComponents.add(new Label("Price", skin, HEADER));
+			tableComponents.add(new Label("Mass", skin, HEADER));
+			tableComponents.add(new Label("Power", skin, HEADER));
+			tableComponents.add(new Label("Volume", skin, HEADER));
+			
+			if (part.type.equals(Hull.class.getSimpleName())) {
+				tableComponents.add(new Label("Strength", skin, HEADER));
+				tableComponents.add(new Label("Allowed Mass", skin, HEADER));
+			} else if (part.type.equals(Weapon.class.getSimpleName())) {
+				tableComponents.add(new Label("Hit", skin, HEADER));
+				tableComponents.add(new Label("Fire Rate", skin, HEADER));
+			}
+
+			if (part.components.size() < part.maxCount) {
+				addComponentRow(tableComponents, part);
+			}
+
+			for (ShipComponent component : part.components) {
+				addComponentRow(tableComponents, "", part, component, true);
+			}
+		}
+	}
+
+	private String[] getPartTypes (Ship ship) {
+		String[] result = new String[ship.parts.size() + 1];
+		result[0] = Thruster.class.getSimpleName();
+		for (int i = 0; i < ship.parts.size(); i++) {
+			result[i + 1] = ship.parts.get(i).type;
+		}
+		return result;
+	}
+
+	private void addComponentRow (Table table, String name, ShipPart<?> part, final ShipComponent component, boolean allowSell) {
+		table.row();
+		table.add(component.getClass().getSimpleName());
+		table.add(name);
+		table.add(Units.moneyToString(component.price));
+		table.add(Units.toString(component.mass)).right();
+		table.add(Units.toString(component.power)).right();
+		table.add(Units.toString(component.volume)).right();
+		
+		if (component instanceof Thruster) {
+			Thruster thruster = (Thruster)component;
+			table.add(Units.toString(thruster.thrust)).right();
+		} else if (component instanceof Hull) {
+			Hull hull = (Hull)component;
+			table.add(Units.toString(hull.strength)).right();
+			table.add(Units.toString(hull.allowedMass)).right();
+		} else if (component instanceof Weapon) {
+			Weapon weapon = (Weapon)component;
+			table.add(Units.toString(weapon.hit)).right();
+			table.add(Units.toString(weapon.fireRate)).right();
+		}
+		
+		boolean canSell = part == null || part.minCount < part.components.size();
+		Button buttonSell = button("Sell", new SellShipComponentScreen(infiniteSpaceGame, component, this));
+		buttonSell.setDisabled(!allowSell || !canSell);
+		table.add(buttonSell);
+		
+		table.add(button("Replace", new ReplaceShipComponentScreen(infiniteSpaceGame, component, this)));
+	}
+
+	private void addComponentRow (Table table, ShipPart<?> part) {
+		table.row();
+		table.add(part.type).colspan(6);
+		
+		Button buttonBuy = button("Buy", new BuyShipComponentScreen(infiniteSpaceGame, part, node));
+		table.add(buttonBuy);
+	}
+
+	private void addRow (Table table, String label, float value) {
+		addRow(table, label, value, "default");
+	}
+	
+	private void addRow (Table table, String label, float value, boolean good) {
+		addRow(table, label, value, good ? "good" : "bad");
+	}
+	
+	private void addRow (Table table, String label, float value, String style) {
+		table.row();
+		table.add(new Label(label, skin)).colspan(2);
+		table.add(new Label(Units.toString(value), skin, style)).right();
+	}
+}
