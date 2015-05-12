@@ -1,5 +1,8 @@
-package ch.obermuhlner.infinitespace;
+package ch.obermuhlner.infinitespace.ui;
 
+import ch.obermuhlner.infinitespace.InfiniteSpaceGame;
+import ch.obermuhlner.infinitespace.NodeToRenderConverter;
+import ch.obermuhlner.infinitespace.RenderState;
 import ch.obermuhlner.infinitespace.model.Node;
 
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;

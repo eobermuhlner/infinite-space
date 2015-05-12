@@ -1,11 +1,10 @@
 package ch.obermuhlner.infinitespace.ui;
 
-import ch.obermuhlner.infinitespace.AbstractGameScreen;
 import ch.obermuhlner.infinitespace.InfiniteSpaceGame;
-import ch.obermuhlner.infinitespace.LandScreen;
 import ch.obermuhlner.infinitespace.model.Node;
 import ch.obermuhlner.infinitespace.model.universe.Planet;
 import ch.obermuhlner.infinitespace.model.universe.SpaceStation;
+import ch.obermuhlner.infinitespace.ui.land.LandScreen;
 
 public class LandNodeAction implements NodeAction {
 

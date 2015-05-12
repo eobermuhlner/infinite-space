@@ -1,9 +1,8 @@
 package ch.obermuhlner.infinitespace.ui;
 
-import ch.obermuhlner.infinitespace.AbstractGameScreen;
 import ch.obermuhlner.infinitespace.InfiniteSpaceGame;
-import ch.obermuhlner.infinitespace.InfoScreen;
 import ch.obermuhlner.infinitespace.model.Node;
+import ch.obermuhlner.infinitespace.ui.info.InfoScreen;
 
 public class InfoNodeAction implements NodeAction {
 

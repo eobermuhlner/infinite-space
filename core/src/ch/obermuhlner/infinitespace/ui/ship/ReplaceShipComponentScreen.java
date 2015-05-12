@@ -1,6 +1,11 @@
-package ch.obermuhlner.infinitespace;
+package ch.obermuhlner.infinitespace.ui.ship;
 
+import ch.obermuhlner.infinitespace.GameState;
+import ch.obermuhlner.infinitespace.I18N;
+import ch.obermuhlner.infinitespace.InfiniteSpaceGame;
 import ch.obermuhlner.infinitespace.game.ship.ShipComponent;
+import ch.obermuhlner.infinitespace.ui.AbstractGameScreen;
+import ch.obermuhlner.infinitespace.ui.AbstractStageScreen;
 import ch.obermuhlner.infinitespace.util.Units;
 
 import com.badlogic.gdx.scenes.scene2d.Actor;

@@ -1,5 +1,9 @@
-package ch.obermuhlner.infinitespace;
+package ch.obermuhlner.infinitespace.ui;
 
+import ch.obermuhlner.infinitespace.Effects;
+import ch.obermuhlner.infinitespace.GamePreferences;
+import ch.obermuhlner.infinitespace.InfiniteSpaceGame;
+import ch.obermuhlner.infinitespace.RenderState;
 import ch.obermuhlner.infinitespace.render.UberShaderProvider;
 
 import com.badlogic.gdx.Gdx;

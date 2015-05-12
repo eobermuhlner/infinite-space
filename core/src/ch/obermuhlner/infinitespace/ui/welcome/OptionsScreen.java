@@ -1,9 +1,13 @@
-package ch.obermuhlner.infinitespace;
+package ch.obermuhlner.infinitespace.ui.welcome;
 
 import java.util.HashMap;
 import java.util.Map;
 
+import ch.obermuhlner.infinitespace.GamePreferences;
+import ch.obermuhlner.infinitespace.I18N;
+import ch.obermuhlner.infinitespace.InfiniteSpaceGame;
 import ch.obermuhlner.infinitespace.GamePreferences.GraphicsQuality;
+import ch.obermuhlner.infinitespace.ui.AbstractStageScreen;
 
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;

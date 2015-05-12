@@ -1,6 +1,5 @@
 package ch.obermuhlner.infinitespace.ui;
 
-import ch.obermuhlner.infinitespace.AbstractGameScreen;
 import ch.obermuhlner.infinitespace.InfiniteSpaceGame;
 import ch.obermuhlner.infinitespace.model.Node;
 

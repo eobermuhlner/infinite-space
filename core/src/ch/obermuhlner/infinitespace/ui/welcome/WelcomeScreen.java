@@ -1,4 +1,10 @@
-package ch.obermuhlner.infinitespace;
+package ch.obermuhlner.infinitespace.ui.welcome;
+
+import ch.obermuhlner.infinitespace.GameScreen;
+import ch.obermuhlner.infinitespace.GameState;
+import ch.obermuhlner.infinitespace.I18N;
+import ch.obermuhlner.infinitespace.InfiniteSpaceGame;
+import ch.obermuhlner.infinitespace.ui.AbstractStageScreen;
 
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;

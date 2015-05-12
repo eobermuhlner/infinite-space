@@ -1,4 +1,4 @@
-package ch.obermuhlner.infinitespace;
+package ch.obermuhlner.infinitespace.ui;
 
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;

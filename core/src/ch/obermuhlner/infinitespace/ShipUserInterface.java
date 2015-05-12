@@ -3,6 +3,7 @@ package ch.obermuhlner.infinitespace;
 import ch.obermuhlner.infinitespace.game.Player;
 import ch.obermuhlner.infinitespace.model.Node;
 import ch.obermuhlner.infinitespace.model.OrbitingNode;
+import ch.obermuhlner.infinitespace.ui.AbstractGameScreen;
 import ch.obermuhlner.infinitespace.ui.NodeMenuWindow;
 
 import com.badlogic.gdx.Gdx;
@@ -31,6 +32,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Touchpad;
 import com.badlogic.gdx.scenes.scene2d.ui.Touchpad.TouchpadStyle;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
@@ -247,6 +249,7 @@ public class ShipUserInterface {
 		}
 		
 		nodeMenu = new NodeMenuWindow(game, screen, node, uiSkin);
+		nodeMenu.setPosition(0, Gdx.graphics.getHeight(), Align.top | Align.left);
 		nodeMenu.top().right();
 		nodeMenu.addAction(Effects.pullIn());
 		

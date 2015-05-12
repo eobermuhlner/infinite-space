@@ -1,13 +1,17 @@
-package ch.obermuhlner.infinitespace;
+package ch.obermuhlner.infinitespace.ui.cargo;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import ch.obermuhlner.infinitespace.CommodityItem;
+import ch.obermuhlner.infinitespace.GameState;
+import ch.obermuhlner.infinitespace.I18N;
+import ch.obermuhlner.infinitespace.InfiniteSpaceGame;
 import ch.obermuhlner.infinitespace.model.Node;
 import ch.obermuhlner.infinitespace.model.OrbitingNode;
-import ch.obermuhlner.infinitespace.model.generator.Generator;
-import ch.obermuhlner.infinitespace.model.random.Random;
 import ch.obermuhlner.infinitespace.model.universe.population.Population;
+import ch.obermuhlner.infinitespace.ui.AbstractNodeStageScreen;
+import ch.obermuhlner.infinitespace.ui.land.LandScreen;
 import ch.obermuhlner.infinitespace.util.Units;
 
 import com.badlogic.gdx.scenes.scene2d.Actor;
@@ -19,7 +23,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 
-public class SellCargoScreen extends AbstractNodeStageScreen {
+public class BuyCargoScreen extends AbstractNodeStageScreen {
 
 	private Label labelCash;
 	private Label labelCargo;
@@ -29,37 +33,34 @@ public class SellCargoScreen extends AbstractNodeStageScreen {
 	private long cargoCash = 0;
 	private long cargoSpace = 0;
 
-	public SellCargoScreen (InfiniteSpaceGame game, Node node) {
+	public BuyCargoScreen (InfiniteSpaceGame game, Node node) {
 		super(game, node);
 	}
 
 	@Override
 	protected void prepareStage (Stage stage, Table rootTable) {
-		updateCargoPrices();
-		
 		rootTable.row();
-		rootTable.add(new Label("Sell Cargo: " + node.getName(), skin, TITLE)).colspan(2);
+		rootTable.add(new Label("Buy Cargo: " + node.getName(), skin, TITLE)).colspan(2);
 
 		Table table = table();
 		rootTable.row().colspan(2);
 		rootTable.add(new ScrollPane(table, skin));
-		
+	
 		table.row();
 		table.add(new Label("Name", skin));
 		table.add(new Label("Type", skin));
-		table.add(new Label("Cargo", skin));
-		table.add(new Label("Original Price", skin));
+		table.add(new Label("Available", skin));
 		table.add(new Label("Price", skin));
-		table.add(new Label("Sell -", skin));
-		table.add(new Label("Sell +", skin));
+		table.add(new Label("Buy -", skin));
+		table.add(new Label("Buy +", skin));
 		table.add(new Label("Amount", skin));
 		table.add(new Label("Total Price", skin));
 
 		if (node instanceof OrbitingNode) {
 			OrbitingNode orbitingNode = (OrbitingNode)node;
 			Population population = orbitingNode.population;
-			if (population != null) {
-				for (CommodityItem item : GameState.INSTANCE.cargo) {
+			if (population != null && population.commodities != null) {
+				for (CommodityItem item : population.commodities) {
 					final CommodityItemUserInterface commodityItemUserInterface = new CommodityItemUserInterface();
 					commodityItemUserInterfaces.add(commodityItemUserInterface);
 					commodityItemUserInterface.item = item;
@@ -70,7 +71,6 @@ public class SellCargoScreen extends AbstractNodeStageScreen {
 					commodityItemUserInterface.labelAvailableAmount = new Label("", skin);
 					table.add(new Label(Units.toString(item.amount), skin)).right();
 					table.add(new Label(Units.moneyToString(item.priceSell), skin)).right();
-					table.add(new Label(Units.moneyToString(item.priceBuy), skin)).right();
 					commodityItemUserInterface.buttonMinus = new TextButton("-1", skin);
 					table.add(commodityItemUserInterface.buttonMinus);
 					commodityItemUserInterface.buttonPlus = new TextButton("+1", skin);
@@ -84,8 +84,8 @@ public class SellCargoScreen extends AbstractNodeStageScreen {
 						@Override
 						public void changed (ChangeEvent event, Actor actor) {
 							commodityItemUserInterface.amount++;
-							cargoCash += commodityItemUserInterface.item.priceBuy;
-							cargoSpace--;
+							cargoCash += commodityItemUserInterface.item.priceSell;
+							cargoSpace++;
 							update();
 						}
 					});
@@ -93,15 +93,15 @@ public class SellCargoScreen extends AbstractNodeStageScreen {
 						@Override
 						public void changed (ChangeEvent event, Actor actor) {
 							commodityItemUserInterface.amount--;
-							cargoCash -= commodityItemUserInterface.item.priceBuy;
-							cargoSpace++;
+							cargoCash -= commodityItemUserInterface.item.priceSell;
+							cargoSpace--;
 							update();
 						}
 					});
 				}
 			}
 		}
-		
+
 		rootTable.row();
 		rootTable.add(new Label("Remaining Cash", skin));
 		labelCash = new Label("", skin);
@@ -111,12 +111,12 @@ public class SellCargoScreen extends AbstractNodeStageScreen {
 		rootTable.add(new Label("Remaining Cargo Space", skin));
 		labelCargo = new Label("", skin);
 		rootTable.add(labelCargo).right();
-
+		
 		rootTable.row().padTop(20);
 		rootTable.add(button(I18N.OK, new ChangeListener() {
 			@Override
 			public void changed (ChangeEvent event, Actor actor) {
-				sellCargo();
+				buyCargo();
 				game.setScreen(new LandScreen(infiniteSpaceGame, node));
 			}
 		}));
@@ -132,28 +132,6 @@ public class SellCargoScreen extends AbstractNodeStageScreen {
 		update();
 	}
 	
-	private void updateCargoPrices () {
-		Population population = getNodePopulation();
-		Random random = node.seed.getRandom();
-		for(CommodityItem item : GameState.INSTANCE.cargo) {
-			if (population != null) {
-				double price = Generator.calculatePrice(item, node, population);
-				item.priceBuy = Generator.calculatePriceBuy(price, population);
-			} else {
-				item.priceBuy = 0;
-			}
-		}
-	}
-
-	private Population getNodePopulation () {
-		if (node instanceof OrbitingNode) {
-			OrbitingNode orbitingNode = (OrbitingNode)node;
-			Population population = orbitingNode.population;
-			return population;
-		}
-		return null;
-	}
-
 	private void update() {
 		long availableCash = GameState.INSTANCE.cash - cargoCash;
 		labelCash.setText(Units.moneyToString(availableCash));
@@ -164,21 +142,20 @@ public class SellCargoScreen extends AbstractNodeStageScreen {
 		for (CommodityItemUserInterface commodityItemUserInterface: commodityItemUserInterfaces) {
 			int availableAmount = commodityItemUserInterface.item.amount - commodityItemUserInterface.amount;
 			commodityItemUserInterface.labelAvailableAmount.setText(Units.toString(availableAmount));
-			commodityItemUserInterface.buttonPlus.setDisabled(availableAmount == 0);
+			commodityItemUserInterface.buttonPlus.setDisabled(availableCargoSpace == 0 || availableAmount == 0 || availableCash < commodityItemUserInterface.item.priceSell);
 			commodityItemUserInterface.buttonMinus.setDisabled(commodityItemUserInterface.amount == 0);
 			commodityItemUserInterface.labelAmount.setText(Units.toString(commodityItemUserInterface.amount));
-			commodityItemUserInterface.labelCash.setText(Units.moneyToString(commodityItemUserInterface.amount * commodityItemUserInterface.item.priceBuy));
+			commodityItemUserInterface.labelCash.setText(Units.moneyToString(commodityItemUserInterface.amount * commodityItemUserInterface.item.priceSell));
 		}
 	}
 
-	protected void sellCargo () {
+	protected void buyCargo () {
 		for (CommodityItemUserInterface commodityItemUserInterface: commodityItemUserInterfaces) {
 			if (commodityItemUserInterface.amount > 0) {
-				GameState.INSTANCE.cash += commodityItemUserInterface.item.amount * commodityItemUserInterface.item.priceBuy;
-				commodityItemUserInterface.item.amount -= commodityItemUserInterface.amount;
-				if (commodityItemUserInterface.item.amount == 0) {
-					GameState.INSTANCE.cargo.remove(commodityItemUserInterface.item);
-				}
+				CommodityItem item = new CommodityItem(commodityItemUserInterface.item);
+				item.amount = commodityItemUserInterface.amount;
+				GameState.INSTANCE.cargo.add(item);
+				GameState.INSTANCE.cash -= item.amount * item.priceSell;
 			}
 		}
 		GameState.INSTANCE.save();

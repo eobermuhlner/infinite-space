@@ -4,6 +4,7 @@ import ch.obermuhlner.infinitespace.game.Player;
 import ch.obermuhlner.infinitespace.game.ship.ShipFactory;
 import ch.obermuhlner.infinitespace.model.Node;
 import ch.obermuhlner.infinitespace.render.UberShaderProvider;
+import ch.obermuhlner.infinitespace.ui.AbstractInfiniteSpaceGameScreen;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Music;

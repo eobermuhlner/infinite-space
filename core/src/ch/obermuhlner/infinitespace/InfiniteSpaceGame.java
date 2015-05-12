@@ -2,6 +2,7 @@
 package ch.obermuhlner.infinitespace;
 
 import ch.obermuhlner.infinitespace.model.UniverseModel;
+import ch.obermuhlner.infinitespace.ui.welcome.WelcomeScreen;
 
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.assets.AssetManager;

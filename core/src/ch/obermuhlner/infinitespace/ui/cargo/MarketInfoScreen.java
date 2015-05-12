@@ -1,10 +1,14 @@
-package ch.obermuhlner.infinitespace;
+package ch.obermuhlner.infinitespace.ui.cargo;
 
+import ch.obermuhlner.infinitespace.I18N;
+import ch.obermuhlner.infinitespace.InfiniteSpaceGame;
 import ch.obermuhlner.infinitespace.model.Node;
 import ch.obermuhlner.infinitespace.model.OrbitingNode;
 import ch.obermuhlner.infinitespace.model.generator.Generator;
 import ch.obermuhlner.infinitespace.model.universe.population.Commodity;
 import ch.obermuhlner.infinitespace.model.universe.population.Population;
+import ch.obermuhlner.infinitespace.ui.AbstractNodeStageScreen;
+import ch.obermuhlner.infinitespace.ui.land.LandScreen;
 import ch.obermuhlner.infinitespace.util.Units;
 
 import com.badlogic.gdx.scenes.scene2d.Actor;

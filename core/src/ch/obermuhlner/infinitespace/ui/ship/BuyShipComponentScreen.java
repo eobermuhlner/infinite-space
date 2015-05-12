@@ -1,8 +1,11 @@
-package ch.obermuhlner.infinitespace;
+package ch.obermuhlner.infinitespace.ui.ship;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import ch.obermuhlner.infinitespace.GameState;
+import ch.obermuhlner.infinitespace.I18N;
+import ch.obermuhlner.infinitespace.InfiniteSpaceGame;
 import ch.obermuhlner.infinitespace.game.ship.CargoBay;
 import ch.obermuhlner.infinitespace.game.ship.Hull;
 import ch.obermuhlner.infinitespace.game.ship.InternalComponent;
@@ -15,6 +18,7 @@ import ch.obermuhlner.infinitespace.game.ship.ShipFactory;
 import ch.obermuhlner.infinitespace.game.ship.ShipPart;
 import ch.obermuhlner.infinitespace.game.ship.Weapon;
 import ch.obermuhlner.infinitespace.model.Node;
+import ch.obermuhlner.infinitespace.ui.AbstractStageScreen;
 import ch.obermuhlner.infinitespace.util.Units;
 
 import com.badlogic.gdx.graphics.Color;
