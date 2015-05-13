@@ -124,6 +124,18 @@ public class GameScreen extends AbstractInfiniteSpaceGameScreen {
 		int alwaysVisibleCount = 0;
 
 		{
+//			camera.near = 1f;
+//			camera.far = 1000f;
+//			camera.update(true);
+	
+			for (int i = 0; i < renderState.instancesFar.size; i++) {
+				renderState.instancesFar.get(i).transform.setToTranslation(camera.position);
+			}
+			modelBatch.render(renderState.instancesFar);
+			modelBatch.flush();
+		}
+		
+		{
 //			camera.near = 0.001f;
 //			camera.far = 400f;
 //			camera.update(true);
@@ -155,15 +167,6 @@ public class GameScreen extends AbstractInfiniteSpaceGameScreen {
 			modelBatch.flush();
 		}
 
-		{
-//			camera.near = 1f;
-//			camera.far = 1000f;
-//			camera.update(true);
-	
-			modelBatch.render(renderState.instancesFar);
-			modelBatch.flush();
-		}
-		
 		modelBatch.end();
 
 		shipUserInterface.setDebugInfo(getDebugInfo(visibleCount, alwaysVisibleCount));

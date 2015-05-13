@@ -95,7 +95,7 @@ public class NodeToRenderConverter {
 	}
 
 	private void createSkyBox(RenderState renderState) {
-		float boxSize = 50f;
+		float boxSize = 200f;
 		Vector3 v000 = new Vector3(-boxSize, -boxSize, -boxSize);
 		Vector3 v001 = new Vector3(-boxSize, -boxSize, boxSize);
 		Vector3 v010 = new Vector3(-boxSize, boxSize, -boxSize);
@@ -115,7 +115,7 @@ public class NodeToRenderConverter {
 	
 	private void createSkyBoxRect(RenderState renderState, String textureName, Vector3 corner1, Vector3 corner2, Vector3 corner3, Vector3 corner4) {
 		Texture texture = assetManager.get(InfiniteSpaceGame.getTexturePath(textureName), Texture.class);
-		Material material = new Material(new TextureAttribute(TextureAttribute.Emissive, texture) /*, new DepthTestAttribute(0) */);
+		Material material = new Material(new TextureAttribute(TextureAttribute.Emissive, texture), new DepthTestAttribute(0));
 		Model model = modelBuilder.createRect(
 				corner1.x, corner1.y, corner1.z,
 				corner2.x, corner2.y, corner2.z,
