@@ -18,6 +18,7 @@ import ch.obermuhlner.infinitespace.render.UberShaderProvider;
 import ch.obermuhlner.infinitespace.util.MathUtil;
 import ch.obermuhlner.infinitespace.util.Units;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Color;
@@ -32,6 +33,7 @@ import com.badlogic.gdx.graphics.g3d.ModelBatch;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
+import com.badlogic.gdx.graphics.g3d.attributes.DepthTestAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.PointLight;
 import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder;
@@ -84,11 +86,47 @@ public class NodeToRenderConverter {
 			Model gridModel = modelBuilder.createLineGrid(2000, 2000, 5f, 5f, material, Usage.Position);
 			renderState.instancesAlways.add(new ModelInstance(gridModel));
 		}
-
+		
 		for (Node node : universe) {
 			convertNode(node, renderState, true);
 		}
+
+		createSkyBox(renderState);
 	}
+
+	private void createSkyBox(RenderState renderState) {
+		float boxSize = 50f;
+		Vector3 v000 = new Vector3(-boxSize, -boxSize, -boxSize);
+		Vector3 v001 = new Vector3(-boxSize, -boxSize, boxSize);
+		Vector3 v010 = new Vector3(-boxSize, boxSize, -boxSize);
+		Vector3 v011 = new Vector3(-boxSize, boxSize, boxSize);
+		Vector3 v100 = new Vector3(boxSize, -boxSize, -boxSize);
+		Vector3 v101 = new Vector3(boxSize, -boxSize, boxSize);
+		Vector3 v110 = new Vector3(boxSize, boxSize, -boxSize);
+		Vector3 v111 = new Vector3(boxSize, boxSize, boxSize);
+		
+		createSkyBoxRect(renderState, "skybox_neg_x.png", v001, v000, v010, v011);
+		createSkyBoxRect(renderState, "skybox_pos_x.png", v100, v101, v111, v110);
+		createSkyBoxRect(renderState, "skybox_neg_y.png", v100, v000, v001, v101);
+		createSkyBoxRect(renderState, "skybox_pos_y.png", v111, v011, v010, v110);
+		createSkyBoxRect(renderState, "skybox_neg_z.png", v000, v100, v110, v010);
+		createSkyBoxRect(renderState, "skybox_pos_z.png", v101, v001, v011, v111);
+	}
+	
+	private void createSkyBoxRect(RenderState renderState, String textureName, Vector3 corner1, Vector3 corner2, Vector3 corner3, Vector3 corner4) {
+		Texture texture = assetManager.get(InfiniteSpaceGame.getTexturePath(textureName), Texture.class);
+		Material material = new Material(new TextureAttribute(TextureAttribute.Emissive, texture) /*, new DepthTestAttribute(0) */);
+		Model model = modelBuilder.createRect(
+				corner1.x, corner1.y, corner1.z,
+				corner2.x, corner2.y, corner2.z,
+				corner3.x, corner3.y, corner3.z,
+				corner4.x, corner4.y, corner4.z,
+				0, 1, 0,
+				material, Usage.Position | Usage.Normal | Usage.TextureCoordinates);
+		ModelInstance instance = new ModelInstance(model);
+		renderState.instancesFar.add(instance);
+	}
+
 
 	private <T extends Node> void convertNode (T node, RenderState renderState, boolean calculatePosition) {
 		@SuppressWarnings("unchecked")
@@ -130,6 +168,7 @@ public class NodeToRenderConverter {
 				}
 
 				renderState.instances.add(sphere);
+				
 			}
 
 			renderState.environment.add(new PointLight().set(r2, g2, b2, x, y, z, luminosity));

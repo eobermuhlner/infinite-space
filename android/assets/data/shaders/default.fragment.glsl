@@ -28,7 +28,7 @@ varying float v_alphaTest;
 #endif //alphaTestFlag
 #endif //blendedFlag
 
-#if defined(diffuseTextureFlag) || defined(specularTextureFlag)
+#if defined(diffuseTextureFlag) || defined(specularTextureFlag) || defined(emissiveTextureFlag)
 #define textureFlag
 varying MED vec2 v_texCoords0;
 #endif
@@ -39,6 +39,10 @@ uniform vec4 u_diffuseColor;
 
 #ifdef diffuseTextureFlag
 uniform sampler2D u_diffuseTexture;
+#endif
+
+#ifdef emissiveTextureFlag
+uniform sampler2D u_emissiveTexture;
 #endif
 
 #ifdef specularColorFlag
@@ -115,8 +119,18 @@ void main() {
 		vec3 normal = v_normal;
 	#endif
 
-	#if defined(emissiveColorFlag)
-		vec4 emissive = v_emissiveColor;
+	#if defined(emissiveTextureFlag) && defined(emissiveColorFlag) && defined(colorFlag)
+		vec4 emissive = texture2D(u_emissiveTexture, v_texCoords0) * u_emissiveColor * v_color;
+	#elif defined(emissiveTextureFlag) && defined(emissiveColorFlag)
+		vec4 emissive = texture2D(u_emissiveTexture, v_texCoords0) * u_emissiveColor;
+	#elif defined(emissiveTextureFlag) && defined(colorFlag)
+		vec4 emissive = texture2D(u_emissiveTexture, v_texCoords0) * v_color;
+	#elif defined(emissiveTextureFlag)
+		vec4 emissive = texture2D(u_emissiveTexture, v_texCoords0);
+	#elif defined(emissiveColorFlag) && defined(colorFlag)
+		vec4 emissive = u_emissiveColor * v_color;
+	#elif defined(emissiveColorFlag)
+		vec4 emissive = u_emissiveColor;
 	#else
 		vec4 emissive = vec4(0.0);
 	#endif
@@ -136,11 +150,7 @@ void main() {
 	#elif defined(colorFlag)
 		vec4 diffuse = v_color;
 	#else
-		#if defined(emissiveColorFlag)
-			vec4 diffuse = vec4(0.0);
-		#else
-			vec4 diffuse = vec4(1.0);
-		#endif
+		vec4 diffuse = vec4(0.0);
 	#endif
 
 	#if (!defined(lightingFlag))  

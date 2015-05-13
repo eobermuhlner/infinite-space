@@ -1,5 +1,11 @@
-package ch.obermuhlner.infinitespace;
+package ch.obermuhlner.infinitespace.ui.game;
 
+import ch.obermuhlner.infinitespace.GamePreferences;
+import ch.obermuhlner.infinitespace.GameState;
+import ch.obermuhlner.infinitespace.InfiniteSpaceGame;
+import ch.obermuhlner.infinitespace.RenderState;
+import ch.obermuhlner.infinitespace.ShipUserInterface;
+import ch.obermuhlner.infinitespace.UniverseCoordinates;
 import ch.obermuhlner.infinitespace.game.Player;
 import ch.obermuhlner.infinitespace.game.ship.ShipFactory;
 import ch.obermuhlner.infinitespace.model.Node;
@@ -11,9 +17,15 @@ import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.VertexAttributes.Usage;
+import com.badlogic.gdx.graphics.g3d.Material;
+import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelBatch;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
+import com.badlogic.gdx.graphics.g3d.attributes.DepthTestAttribute;
+import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.math.Vector3;
 
 public class GameScreen extends AbstractInfiniteSpaceGameScreen {
@@ -54,16 +66,16 @@ public class GameScreen extends AbstractInfiniteSpaceGameScreen {
 		camera.position.set(GameState.INSTANCE.position);
 		camera.direction.set(GameState.INSTANCE.direction);
 		camera.up.set(GameState.INSTANCE.up);
-		camera.update(true);
 		camera.near = 0.001f;
-		camera.far = 300f;
-		camera.update();
+		camera.far = 400f;
+		camera.update(true);
 
 		player = new Player(ShipFactory.getStandardShip(), camera);
 		shipUserInterface = new ShipUserInterface(infiniteSpaceGame, skin, this, player, camera);
 		shipUserInterface.starSystemIndex = GameState.INSTANCE.starSystem;
 		
-		renderState.environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.1f, 0.1f, 0.1f, 1f));
+		renderState.environment.set(
+				new ColorAttribute(ColorAttribute.AmbientLight, 0.1f, 0.1f, 0.1f, 1f));
 		
 		updateUniverse();
 		shipUserInterface.setZoomObject(renderState.instances);
@@ -111,23 +123,47 @@ public class GameScreen extends AbstractInfiniteSpaceGameScreen {
 		int visibleCount = 0;
 		int alwaysVisibleCount = 0;
 
-		// render these instances only if visible
-		if (USE_FRUSTUM_CULLING) {
-			for (final ModelInstance instance : renderState.instances) {
-				if (isVisible(camera, instance)) {
-					modelBatch.render(instance, renderState.environment);
-					visibleCount++;
+		{
+//			camera.near = 0.001f;
+//			camera.far = 400f;
+//			camera.update(true);
+	
+			// render these instances only if visible
+			if (USE_FRUSTUM_CULLING) {
+				for (final ModelInstance instance : renderState.instances) {
+					if (isVisible(camera, instance)) {
+						modelBatch.render(instance, renderState.environment);
+						visibleCount++;
+					}
 				}
+			} else {
+				visibleCount += renderState.instances.size;
+				modelBatch.render(renderState.instances, renderState.environment);
 			}
-		} else {
-			visibleCount += renderState.instances.size;
-			modelBatch.render(renderState.instances, renderState.environment);
+			modelBatch.flush();
+		}
+		
+		{
+//			camera.near = 0.01f;
+//			camera.far = 500f;
+//			camera.update(true);
+	
+			// always render these instances
+			modelBatch.render(renderState.instancesAlways, renderState.environment);
+			alwaysVisibleCount += renderState.instancesAlways.size;
+	
+			modelBatch.flush();
 		}
 
-		// always render these instances
-		modelBatch.render(renderState.instancesAlways, renderState.environment);
-		alwaysVisibleCount += renderState.instancesAlways.size;
-
+		{
+//			camera.near = 1f;
+//			camera.far = 1000f;
+//			camera.update(true);
+	
+			modelBatch.render(renderState.instancesFar);
+			modelBatch.flush();
+		}
+		
 		modelBatch.end();
 
 		shipUserInterface.setDebugInfo(getDebugInfo(visibleCount, alwaysVisibleCount));
@@ -161,6 +197,7 @@ public class GameScreen extends AbstractInfiniteSpaceGameScreen {
 	private void disposeInstances () {
 		renderState.instances.clear();
 		renderState.instancesAlways.clear();
+		renderState.instancesFar.clear();
 	}
 
 	private final Vector3 positionForIsVisible = new Vector3();

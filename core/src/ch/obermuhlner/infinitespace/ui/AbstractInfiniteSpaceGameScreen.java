@@ -1,7 +1,7 @@
 package ch.obermuhlner.infinitespace.ui;
 
-import ch.obermuhlner.infinitespace.GameScreen;
 import ch.obermuhlner.infinitespace.InfiniteSpaceGame;
+import ch.obermuhlner.infinitespace.ui.game.GameScreen;
 import ch.obermuhlner.infinitespace.ui.welcome.OptionsScreen;
 import ch.obermuhlner.infinitespace.ui.welcome.WelcomeScreen;
 
