@@ -95,7 +95,7 @@ public class NodeToRenderConverter {
 	}
 
 	private void createSkyBox(RenderState renderState) {
-		float boxSize = 200f;
+		float boxSize = 500f;
 		Vector3 v000 = new Vector3(-boxSize, -boxSize, -boxSize);
 		Vector3 v001 = new Vector3(-boxSize, -boxSize, boxSize);
 		Vector3 v010 = new Vector3(-boxSize, boxSize, -boxSize);

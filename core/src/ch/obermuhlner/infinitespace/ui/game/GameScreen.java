@@ -124,9 +124,9 @@ public class GameScreen extends AbstractInfiniteSpaceGameScreen {
 		int alwaysVisibleCount = 0;
 
 		{
-//			camera.near = 1f;
-//			camera.far = 1000f;
-//			camera.update(true);
+			camera.near = 100f;
+			camera.far = 900f;
+			camera.update(true);
 	
 			for (int i = 0; i < renderState.instancesFar.size; i++) {
 				renderState.instancesFar.get(i).transform.setToTranslation(camera.position);
@@ -136,9 +136,21 @@ public class GameScreen extends AbstractInfiniteSpaceGameScreen {
 		}
 		
 		{
-//			camera.near = 0.001f;
-//			camera.far = 400f;
-//			camera.update(true);
+			camera.near = 0.01f;
+			camera.far = 1000f;
+			camera.update(true);
+	
+			// always render these instances
+			modelBatch.render(renderState.instancesAlways, renderState.environment);
+			alwaysVisibleCount += renderState.instancesAlways.size;
+	
+			modelBatch.flush();
+		}
+
+		{
+			camera.near = 0.001f;
+			camera.far = 300f;
+			camera.update(true);
 	
 			// render these instances only if visible
 			if (USE_FRUSTUM_CULLING) {
@@ -155,18 +167,6 @@ public class GameScreen extends AbstractInfiniteSpaceGameScreen {
 			modelBatch.flush();
 		}
 		
-		{
-//			camera.near = 0.01f;
-//			camera.far = 500f;
-//			camera.update(true);
-	
-			// always render these instances
-			modelBatch.render(renderState.instancesAlways, renderState.environment);
-			alwaysVisibleCount += renderState.instancesAlways.size;
-	
-			modelBatch.flush();
-		}
-
 		modelBatch.end();
 
 		shipUserInterface.setDebugInfo(getDebugInfo(visibleCount, alwaysVisibleCount));
