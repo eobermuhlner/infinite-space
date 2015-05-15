@@ -108,6 +108,8 @@ public class ShipInfoScreen extends AbstractNodeStageScreen {
 		}
 		labelPartMaxVolume.setText(Units.toString(part.maxVolume));
 
+		int columnCount = 0;
+		
 		tableComponents.row();
 		tableComponents.add(new Label("Type", skin, HEADER));
 		tableComponents.add(new Label("Name", skin, HEADER));
@@ -115,21 +117,24 @@ public class ShipInfoScreen extends AbstractNodeStageScreen {
 		tableComponents.add(new Label("Mass", skin, HEADER));
 		tableComponents.add(new Label("Power", skin, HEADER));
 		tableComponents.add(new Label("Volume", skin, HEADER));
+		columnCount += 6;
 		
 		if (part.type.equals(Hull.class.getSimpleName())) {
 			tableComponents.add(new Label("Strength", skin, HEADER));
 			tableComponents.add(new Label("Allowed Mass", skin, HEADER));
+			columnCount += 2;
 		} else if (part.type.equals(Weapon.class.getSimpleName())) {
 			tableComponents.add(new Label("Hit", skin, HEADER));
 			tableComponents.add(new Label("Fire Rate", skin, HEADER));
+			columnCount += 2;
 		}
 
 		if (part.components.size() < part.maxCount) {
-			addComponentRow(tableComponents, part);
+			addBuyComponentRow(tableComponents, part, columnCount);
 		}
 
 		for (ShipComponent component : part.components) {
-			addComponentRow(tableComponents, "", part, component, true);
+			addSellReplaceComponentRow(tableComponents, "", part, component, true);
 		}
 	}
 
@@ -141,7 +146,7 @@ public class ShipInfoScreen extends AbstractNodeStageScreen {
 		return result;
 	}
 
-	private void addComponentRow (Table table, String name, ShipPart<?> part, final ShipComponent component, boolean allowSell) {
+	private void addSellReplaceComponentRow (Table table, String name, ShipPart<?> part, final ShipComponent component, boolean allowSell) {
 		table.row();
 		table.add(component.getClass().getSimpleName());
 		table.add(name);
@@ -171,10 +176,10 @@ public class ShipInfoScreen extends AbstractNodeStageScreen {
 		table.add(button("Replace", new ReplaceShipComponentScreen(infiniteSpaceGame, component, this)));
 	}
 
-	private void addComponentRow (Table table, ShipPart<?> part) {
+	private void addBuyComponentRow (Table table, ShipPart<?> part, int columnCount) {
 		table.row();
 		table.add(part.name);
-		table.add(part.type).colspan(2);
+		table.add(part.type).colspan(columnCount - 1);
 		
 		Button buttonBuy = button("Buy", new BuyShipComponentScreen(infiniteSpaceGame, part, node));
 		table.add(buttonBuy);
