@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.List;
 
 public class ShipPart<T extends ShipComponent> {
+	public String name;
 	public String type;
 	public int minCount;
 	public int maxCount;
@@ -15,16 +16,17 @@ public class ShipPart<T extends ShipComponent> {
 	protected ShipPart() {
 	}
 	
-	public ShipPart (String type, int minCount, int maxCount, float maxSize) {
-		this(type, minCount, maxCount, maxSize, Collections.<T> emptyList());
+	public ShipPart (String name, String type, int minCount, int maxCount, float maxSize) {
+		this(name, type, minCount, maxCount, maxSize, Collections.<T> emptyList());
 	}
 	
 	@SuppressWarnings("unchecked")
-	public ShipPart (String type, int minCount, int maxCount, float maxSize, T component) {
-		this(type, minCount, maxCount, maxSize, Arrays.asList(component));
+	public ShipPart (String name, String type, int minCount, int maxCount, float maxSize, T component) {
+		this(name, type, minCount, maxCount, maxSize, Arrays.asList(component));
 	}
 	
-	public ShipPart (String type, int minCount, int maxCount, float maxSize, List<T> components) {
+	public ShipPart (String name, String type, int minCount, int maxCount, float maxSize, List<T> components) {
+		this.name = name;
 		this.type = type;
 		this.minCount = minCount;
 		this.maxCount = maxCount;

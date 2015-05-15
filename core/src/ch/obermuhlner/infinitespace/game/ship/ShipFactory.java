@@ -7,28 +7,62 @@ import java.util.List;
 
 public class ShipFactory {
 
+	public static final String MAIN_THRUSTER = "Main Thruster";
+	public static final String ROLL_THRUSTER = "Roll Thruster";
+	public static final String YAW_THRUSTER = "Yaw Thruster";
+	public static final String PITCH_THRUSTER = "Pitch Thruster";
+	public static final String UP_DOWN_THRUSTER = "Up/Down Thruster";
+	public static final String LEFT_RIGHT_THRUSTER = "Left/Right Thruster";
+	
 	public static Ship getStandardShip() {
 		Ship ship = new Ship();
 		
-		ship.forwardThruster = new Thruster(4.0f);
-		ship.upThruster = new Thruster(0.4f);
-		ship.rightThruster = new Thruster(0.4f);
-		ship.rollThruster = new Thruster(2.0f);
-		ship.pitchThruster = new Thruster(2.0f);
-		ship.yawThruster = new Thruster(1f);
-
+		ship.parts.add(new ShipPart<Thruster>(
+				MAIN_THRUSTER,
+				Thruster.class.getSimpleName(), 
+				1, 1, 6.0f, 
+				new Thruster(4.0f)));
+		ship.parts.add(new ShipPart<Thruster>(
+				ROLL_THRUSTER,
+				Thruster.class.getSimpleName(), 
+				1, 1, 2.0f, 
+				new Thruster(2.0f)));
+		ship.parts.add(new ShipPart<Thruster>(
+				PITCH_THRUSTER,
+				Thruster.class.getSimpleName(), 
+				1, 1, 2.0f, 
+				new Thruster(2.0f)));
+		ship.parts.add(new ShipPart<Thruster>(
+				YAW_THRUSTER,
+				Thruster.class.getSimpleName(), 
+				1, 1, 1.0f, 
+				new Thruster(1.0f)));
+		ship.parts.add(new ShipPart<Thruster>(
+				UP_DOWN_THRUSTER,
+				Thruster.class.getSimpleName(), 
+				1, 1, 0.5f, 
+				new Thruster(0.4f)));
+		ship.parts.add(new ShipPart<Thruster>(
+				LEFT_RIGHT_THRUSTER,
+				Thruster.class.getSimpleName(), 
+				1, 1, 0.5f, 
+				new Thruster(0.4f)));
 		ship.parts.add(new ShipPart<Hull>(
+			"Hull",
 			Hull.class.getSimpleName(), 
 			1, 1, 1, 
 			DEFAULT_HULL));
 		ship.parts.add(new ShipPart<PowerPlant>(
+			"Powerplant",
 			PowerPlant.class.getSimpleName(), 
 			1, 1, 3, 
 			DEFAULT_POWER_PLANT));
 		ship.parts.add(new ShipPart<Weapon>(
+			"Weapons",
 			Weapon.class.getSimpleName(),
 			0, 4, 3));
 		ship.parts.add(new ShipPart<InternalComponent>(
+			"Main Compartment",
 			InternalComponent.class.getSimpleName(),
 			0, 5, 20f,
 			Arrays.<InternalComponent> asList(
@@ -37,6 +71,36 @@ public class ShipFactory {
 		ship.update();
 		
 		return ship;
+	}
+
+	public static List<Thruster> getThrusters() {
+		return Arrays.asList(
+			// thrust
+			new Thruster(0.1f),
+			new Thruster(0.2f),
+			new Thruster(0.3f),
+			new Thruster(0.4f),
+			new Thruster(0.5f),
+			new Thruster(0.6f),
+			new Thruster(0.7f),
+			new Thruster(0.8f),
+			new Thruster(0.9f),
+			new Thruster(1.0f),
+			new Thruster(1.1f),
+			new Thruster(1.2f),
+			new Thruster(1.3f),
+			new Thruster(1.4f),
+			new Thruster(1.5f),
+			new Thruster(2.0f),
+			new Thruster(2.5f),
+			new Thruster(3.0f),
+			new Thruster(4.0f),
+			new Thruster(5.0f),
+			new Thruster(6.0f),
+			new Thruster(7.0f),
+			new Thruster(8.0f),
+			new Thruster(9.0f)
+		);
 	}
 	
 	private static final Hull DEFAULT_HULL = new Hull(Hull.Type.STEEL, 1f, 20f);

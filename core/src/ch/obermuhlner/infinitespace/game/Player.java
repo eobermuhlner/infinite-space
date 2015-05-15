@@ -63,12 +63,12 @@ public class Player {
 
 	public void update (float deltaTime) {
 		float mass = ship.mass;
-		float maxThrustForward = ship.forwardThruster.thrust / mass;
-		float maxThrustRight = ship.rightThruster.thrust / mass;
-		float maxThrustUp = ship.upThruster.thrust / mass;
-		float maxThrustRoll = ship.rollThruster.thrust / mass;
-		float maxThrustPitch = ship.pitchThruster.thrust / mass;
-		float maxThrustYaw = ship.yawThruster.thrust / mass;
+		float maxThrustForward = ship.forwardThrust / mass;
+		float maxThrustRight = ship.rightThrust / mass;
+		float maxThrustUp = ship.upThrust / mass;
+		float maxThrustRoll = ship.rollThrust / mass;
+		float maxThrustPitch = ship.pitchThrust / mass;
+		float maxThrustYaw = ship.yawThrust / mass;
 		
 		vec3.set(camera.direction).crs(camera.up).scl(deltaTime * thrustRight * velocity * maxThrustRight);
 		camera.position.add(vec3);

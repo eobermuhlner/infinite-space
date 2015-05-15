@@ -8,7 +8,8 @@ public class Thruster extends ShipComponent {
 	}
 	
 	public Thruster(float thrust) {
-		super(thrust * 0.1f, -thrust * 0.5f, (int) (thrust * PRICE_UNIT));
+		super(thrust * 0.1f, -thrust * 0.5f, (int) (thrust * 10 * PRICE_UNIT));
+		volume = thrust;
 		
 		this.thrust = thrust;
 	}

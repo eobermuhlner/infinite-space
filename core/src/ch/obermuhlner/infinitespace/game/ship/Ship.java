@@ -4,13 +4,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Ship {
-	public Thruster forwardThruster;
-	public Thruster upThruster;
-	public Thruster rightThruster;
-	public Thruster rollThruster;
-	public Thruster pitchThruster;
-	public Thruster yawThruster;
-
+	public float forwardThrust;
+	public float upThrust;
+	public float rightThrust;
+	public float rollThrust;
+	public float pitchThrust;
+	public float yawThrust;
+	
 	public List<ShipPart<?>> parts = new ArrayList<ShipPart<?>>();
 	
 	public float allowedMass;
@@ -22,11 +22,18 @@ public class Ship {
 	
 	public void update() {
 		allowedMass = 0;
-		mass = forwardThruster.mass + upThruster.mass + rightThruster.mass + rollThruster.mass + pitchThruster.mass + yawThruster.mass;
-		power = forwardThruster.power + upThruster.power + rightThruster.power + rollThruster.power + pitchThruster.power + yawThruster.power;
+		mass = 0;
+		power = 0;
 		shield = 0;
 		cargoSpace = 0;
 		passengerSpace = 0;
+		
+		forwardThrust = 0;
+		upThrust = 0;
+		rightThrust = 0;
+		rollThrust = 0;
+		pitchThrust = 0;
+		yawThrust = 0;
 		
 		for (ShipPart<?> part : parts) {
 			for (ShipComponent component : part.components) {
@@ -43,6 +50,22 @@ public class Ship {
 				}
 				if (component instanceof PassengerBay) {
 					passengerSpace += ((PassengerBay) component).space;
+				}
+				if (component instanceof Thruster) {
+					Thruster thruster = (Thruster) component;
+					if (part.name.equals(ShipFactory.MAIN_THRUSTER)) {
+						forwardThrust += thruster.thrust;
+					} else if (part.name.equals(ShipFactory.UP_DOWN_THRUSTER)) {
+						upThrust += thruster.thrust;
+					} else if (part.name.equals(ShipFactory.LEFT_RIGHT_THRUSTER)) {
+						rightThrust += thruster.thrust;
+					} else if (part.name.equals(ShipFactory.PITCH_THRUSTER)) {
+						pitchThrust += thruster.thrust;
+					} else if (part.name.equals(ShipFactory.ROLL_THRUSTER)) {
+						rollThrust += thruster.thrust;
+					} else if (part.name.equals(ShipFactory.YAW_THRUSTER)) {
+						yawThrust += thruster.thrust;
+					}
 				}
 			}
 		}

@@ -55,7 +55,7 @@ public class ShipInfoScreen extends AbstractNodeStageScreen {
 		rootTable.row();
 		final SelectBox<String> selectPartType = new SelectBox<String>(skin);
 		rootTable.add(selectPartType);
-		selectPartType.setItems(getPartTypes(ship));
+		selectPartType.setItems(getPartTypeNames(ship));
 		
 		Table tablePart = table();
 		rootTable.row();
@@ -99,66 +99,44 @@ public class ShipInfoScreen extends AbstractNodeStageScreen {
 
 		tableComponents.clear();
 		
-		if (partTypeIndex == 0) {
-			labelPartComponentCount.setText("6");
-			labelPartMaxVolume.setText("");
-			
-			tableComponents.row();
-			tableComponents.add(new Label("Type", skin, HEADER));
-			tableComponents.add(new Label("Name", skin, HEADER));
-			tableComponents.add(new Label("Price", skin, HEADER));
-			tableComponents.add(new Label("Mass", skin, HEADER));
-			tableComponents.add(new Label("Power", skin, HEADER));
-			tableComponents.add(new Label("Volume", skin, HEADER));
-			tableComponents.add(new Label("Thrust", skin, HEADER));
-			
-			addComponentRow(tableComponents, "Forward", null, ship.forwardThruster, false);
-			addComponentRow(tableComponents, "Up/Down", null, ship.upThruster, false);
-			addComponentRow(tableComponents, "Left/Right", null, ship.rightThruster, false);
-			addComponentRow(tableComponents, "Roll", null, ship.rollThruster, false);
-			addComponentRow(tableComponents, "Pitch", null, ship.pitchThruster, false);
-			addComponentRow(tableComponents, "Yaw", null, ship.yawThruster, false);
+		ShipPart<?> part = ship.parts.get(partTypeIndex);
+
+		if (part.minCount == part.maxCount) {
+			labelPartComponentCount.setText(Units.toString(part.minCount));
 		} else {
-			ShipPart<?> part = ship.parts.get(partTypeIndex - 1);
+			labelPartComponentCount.setText(Units.toString(part.minCount) + " - " + Units.toString(part.maxCount));
+		}
+		labelPartMaxVolume.setText(Units.toString(part.maxVolume));
 
-			if (part.minCount == part.maxCount) {
-				labelPartComponentCount.setText(Units.toString(part.minCount));
-			} else {
-				labelPartComponentCount.setText(Units.toString(part.minCount) + " - " + Units.toString(part.maxCount));
-			}
-			labelPartMaxVolume.setText(Units.toString(part.maxVolume));
+		tableComponents.row();
+		tableComponents.add(new Label("Type", skin, HEADER));
+		tableComponents.add(new Label("Name", skin, HEADER));
+		tableComponents.add(new Label("Price", skin, HEADER));
+		tableComponents.add(new Label("Mass", skin, HEADER));
+		tableComponents.add(new Label("Power", skin, HEADER));
+		tableComponents.add(new Label("Volume", skin, HEADER));
+		
+		if (part.type.equals(Hull.class.getSimpleName())) {
+			tableComponents.add(new Label("Strength", skin, HEADER));
+			tableComponents.add(new Label("Allowed Mass", skin, HEADER));
+		} else if (part.type.equals(Weapon.class.getSimpleName())) {
+			tableComponents.add(new Label("Hit", skin, HEADER));
+			tableComponents.add(new Label("Fire Rate", skin, HEADER));
+		}
 
-			tableComponents.row();
-			tableComponents.add(new Label("Type", skin, HEADER));
-			tableComponents.add(new Label("Name", skin, HEADER));
-			tableComponents.add(new Label("Price", skin, HEADER));
-			tableComponents.add(new Label("Mass", skin, HEADER));
-			tableComponents.add(new Label("Power", skin, HEADER));
-			tableComponents.add(new Label("Volume", skin, HEADER));
-			
-			if (part.type.equals(Hull.class.getSimpleName())) {
-				tableComponents.add(new Label("Strength", skin, HEADER));
-				tableComponents.add(new Label("Allowed Mass", skin, HEADER));
-			} else if (part.type.equals(Weapon.class.getSimpleName())) {
-				tableComponents.add(new Label("Hit", skin, HEADER));
-				tableComponents.add(new Label("Fire Rate", skin, HEADER));
-			}
+		if (part.components.size() < part.maxCount) {
+			addComponentRow(tableComponents, part);
+		}
 
-			if (part.components.size() < part.maxCount) {
-				addComponentRow(tableComponents, part);
-			}
-
-			for (ShipComponent component : part.components) {
-				addComponentRow(tableComponents, "", part, component, true);
-			}
+		for (ShipComponent component : part.components) {
+			addComponentRow(tableComponents, "", part, component, true);
 		}
 	}
 
-	private String[] getPartTypes (Ship ship) {
-		String[] result = new String[ship.parts.size() + 1];
-		result[0] = Thruster.class.getSimpleName();
+	private String[] getPartTypeNames (Ship ship) {
+		String[] result = new String[ship.parts.size()];
 		for (int i = 0; i < ship.parts.size(); i++) {
-			result[i + 1] = ship.parts.get(i).type;
+			result[i] = ship.parts.get(i).name;
 		}
 		return result;
 	}
@@ -195,7 +173,8 @@ public class ShipInfoScreen extends AbstractNodeStageScreen {
 
 	private void addComponentRow (Table table, ShipPart<?> part) {
 		table.row();
-		table.add(part.type).colspan(6);
+		table.add(part.name);
+		table.add(part.type).colspan(2);
 		
 		Button buttonBuy = button("Buy", new BuyShipComponentScreen(infiniteSpaceGame, part, node));
 		table.add(buttonBuy);
