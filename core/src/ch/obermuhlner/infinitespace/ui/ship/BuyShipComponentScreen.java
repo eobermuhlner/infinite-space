@@ -184,19 +184,19 @@ public class BuyShipComponentScreen<T extends ShipComponent> extends AbstractSta
 			table.add("Strength", HEADER);
 			table.add("Allowed Mass", HEADER);
 		} else if (componentType.equals(CargoBay.class.getSimpleName())) {
-			table.add("Unit Size", HEADER);
+			table.add("Volume", HEADER);
 			table.add("Cargo Space", HEADER);
 		} else if (componentType.equals(PassengerBay.class.getSimpleName())) {
-			table.add("Unit Size", HEADER);
+			table.add("Volume", HEADER);
 			table.add("Type", HEADER);
 			table.add("Passenger Space", HEADER);
 		} else if (componentType.equals(PowerPlant.class.getSimpleName())) {
-			table.add("Unit Size", HEADER);
+			table.add("Volume", HEADER);
 		} else if (componentType.equals(ShieldGenerator.class.getSimpleName())) {
-			table.add("Unit Size", HEADER);
+			table.add("Volume", HEADER);
 			table.add("Shield", HEADER);
 		} else if (componentType.equals(Weapon.class.getSimpleName())) {
-			table.add("Unit Size", HEADER);
+			table.add("Volume", HEADER);
 			table.add("Type", HEADER);
 			table.add("Hit", HEADER);
 			table.add("Fire Rate", HEADER);
@@ -215,30 +215,30 @@ public class BuyShipComponentScreen<T extends ShipComponent> extends AbstractSta
 		if (componentType.equals(Hull.class.getSimpleName())) {
 			Hull hull = (Hull)component;
 			table.add(hull.type.toString());
-			table.add(Units.toString(hull.strength));
-			table.add(Units.kilogramsToString(hull.allowedMass));
+			table.add(Units.toString(hull.strength)).right();
+			table.add(Units.kilogramsToString(hull.allowedMass)).right();
 		} else if (componentType.equals(CargoBay.class.getSimpleName())) {
 			CargoBay cargoBay = (CargoBay)component;
-			table.add(Units.toString(cargoBay.volume));
-			table.add(Units.toString(cargoBay.space));
+			table.add(Units.toString(cargoBay.volume)).right();
+			table.add(Units.toString(cargoBay.space)).right();
 		} else if (componentType.equals(PassengerBay.class.getSimpleName())) {
 			PassengerBay passengerBay = (PassengerBay)component;
-			table.add(Units.toString(passengerBay.volume));
+			table.add(Units.toString(passengerBay.volume)).right();
 			table.add(passengerBay.type.toString());
-			table.add(Units.toString(passengerBay.space));
+			table.add(Units.toString(passengerBay.space)).right();
 		} else if (componentType.equals(PowerPlant.class.getSimpleName())) {
 			PowerPlant powerPlant = (PowerPlant)component;
-			table.add(Units.toString(powerPlant.volume));
+			table.add(Units.toString(powerPlant.volume)).right();
 		} else if (componentType.equals(ShieldGenerator.class.getSimpleName())) {
 			ShieldGenerator shieldGenerator = (ShieldGenerator)component;
-			table.add(Units.toString(shieldGenerator.volume));
-			table.add(Units.toString(shieldGenerator.shield));
+			table.add(Units.toString(shieldGenerator.volume)).right();
+			table.add(Units.toString(shieldGenerator.shield)).right();
 		} else if (componentType.equals(Weapon.class.getSimpleName())) {
 			Weapon weapon = (Weapon)component;
-			table.add(Units.toString(weapon.volume));
+			table.add(Units.toString(weapon.volume)).right();
 			table.add(weapon.type.toString());
-			table.add(Units.toString(weapon.hit));
-			table.add(Units.toString(weapon.fireRate));
+			table.add(Units.toString(weapon.hit)).right();
+			table.add(Units.toString(weapon.fireRate)).right();
 		}
 
 		if (allowBuy) {
