@@ -231,7 +231,6 @@ public class NodeToRenderConverter {
 			}
 			
 			{
-				ModelInstance sphere;
 				Material material;
 				if (textureName != null) {
 					Texture texture = assetManager.get(InfiniteSpaceGame.getTexturePath(textureName), Texture.class);
@@ -252,17 +251,33 @@ public class NodeToRenderConverter {
 					}
 				}
 
-				Model sphereModel = modelBuilder.createSphere(radius, radius, radius, PLANET_SPHERE_DIVISIONS_U, PLANET_SPHERE_DIVISIONS_V,
-					material, Usage.Position | Usage.Normal | Usage.TextureCoordinates);
-				sphere = new ModelInstance(sphereModel);
-				if (calculatePosition) {
-					sphere.transform.setToTranslation(position);
+				{
+					Model sphereModel = modelBuilder.createSphere(radius, radius, radius, PLANET_SPHERE_DIVISIONS_U, PLANET_SPHERE_DIVISIONS_V,
+						material, Usage.Position | Usage.Normal | Usage.TextureCoordinates);
+					ModelInstance sphere = new ModelInstance(sphereModel);
+					if (calculatePosition) {
+						sphere.transform.setToTranslation(position);
+					}
+	
+					UserData userData = new UserData();
+					userData.node = node;
+					sphere.userData = userData;
+					renderState.instances.add(sphere);
 				}
-
-				UserData userData = new UserData();
-				userData.node = node;
-				sphere.userData = userData;
-				renderState.instances.add(sphere);
+				
+				if (node.breathableAtmosphere && node.water > 0.2) {
+					float atmosphereRadiusFactor = 1.01f;
+					float atmosphereRadius = radius * atmosphereRadiusFactor; 
+					Texture texture = assetManager.get(InfiniteSpaceGame.getTexturePath("clouds.png"), Texture.class);
+					Material materialClouds = new Material(new TextureAttribute(TextureAttribute.Diffuse, texture), new BlendingAttribute(1.0f));
+					Model sphereModel = modelBuilder.createSphere(atmosphereRadius, atmosphereRadius, atmosphereRadius, PLANET_SPHERE_DIVISIONS_U, PLANET_SPHERE_DIVISIONS_V,
+							materialClouds, Usage.Position | Usage.Normal | Usage.TextureCoordinates);
+					ModelInstance sphereClouds = new ModelInstance(sphereModel);
+					if (calculatePosition) {
+						sphereClouds.transform.setToTranslation(position);
+					}
+					renderState.instances.add(sphereClouds);
+				}
 			}
 
 			createOrbit(renderState, node, orbitRadius, parentPosition);
