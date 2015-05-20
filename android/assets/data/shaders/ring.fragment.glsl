@@ -171,6 +171,6 @@ void main() {
 	a = a * 0.8 + 0.2;
 	a = a * (smoothstep(0.30, 0.31, radius) - smoothstep(0.49, 0.50, radius));
 	
-	gl_FragColor.rgb = u_diffuseColor;
+	gl_FragColor.rgb = u_diffuseColor.rgb;
 	gl_FragColor.a = u_opacity * a;
 }
