@@ -120,17 +120,17 @@ void main() {
 	#endif
 
 	#if defined(emissiveTextureFlag) && defined(emissiveColorFlag) && defined(colorFlag)
-		vec4 emissive = texture2D(u_emissiveTexture, v_texCoords0) * u_emissiveColor * v_color;
+		vec4 emissive = texture2D(u_emissiveTexture, v_texCoords0) * v_emissiveColor * v_color;
 	#elif defined(emissiveTextureFlag) && defined(emissiveColorFlag)
-		vec4 emissive = texture2D(u_emissiveTexture, v_texCoords0) * u_emissiveColor;
+		vec4 emissive = texture2D(u_emissiveTexture, v_texCoords0) * v_emissiveColor;
 	#elif defined(emissiveTextureFlag) && defined(colorFlag)
 		vec4 emissive = texture2D(u_emissiveTexture, v_texCoords0) * v_color;
 	#elif defined(emissiveTextureFlag)
 		vec4 emissive = texture2D(u_emissiveTexture, v_texCoords0);
 	#elif defined(emissiveColorFlag) && defined(colorFlag)
-		vec4 emissive = u_emissiveColor * v_color;
+		vec4 emissive = v_emissiveColor * v_color;
 	#elif defined(emissiveColorFlag)
-		vec4 emissive = u_emissiveColor;
+		vec4 emissive = v_emissiveColor;
 	#else
 		vec4 emissive = vec4(0.0);
 	#endif
@@ -183,7 +183,7 @@ void main() {
 			
 		#if defined(ambientFlag) && defined(separateAmbientFlag)
 			#ifdef shadowMapFlag
-			gl_FragColor.rgb = emissive.rgb + (diffuse.rgb * (getShadow() * v_lightDiffuse + v_ambientLight)) + specular;
+				gl_FragColor.rgb = emissive.rgb + (diffuse.rgb * (getShadow() * v_lightDiffuse + v_ambientLight)) + specular;
 				//gl_FragColor.rgb = texture2D(u_shadowTexture, v_shadowMapUv.xy);
 			#else
 				gl_FragColor.rgb = emissive.rgb + (diffuse.rgb * (v_lightDiffuse + v_ambientLight)) + specular;
