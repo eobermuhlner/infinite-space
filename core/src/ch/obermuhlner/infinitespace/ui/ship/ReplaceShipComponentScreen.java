@@ -1,12 +1,11 @@
 package ch.obermuhlner.infinitespace.ui.ship;
 
-import ch.obermuhlner.infinitespace.GameState;
 import ch.obermuhlner.infinitespace.I18N;
 import ch.obermuhlner.infinitespace.InfiniteSpaceGame;
 import ch.obermuhlner.infinitespace.game.ship.ShipComponent;
-import ch.obermuhlner.infinitespace.ui.AbstractGameScreen;
-import ch.obermuhlner.infinitespace.ui.AbstractStageScreen;
-import ch.obermuhlner.infinitespace.util.Units;
+import ch.obermuhlner.infinitespace.game.ship.ShipFactory;
+import ch.obermuhlner.infinitespace.game.ship.ShipPart;
+import ch.obermuhlner.infinitespace.model.Node;
 
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
@@ -15,55 +14,69 @@ import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 
-public class ReplaceShipComponentScreen extends AbstractStageScreen {
+public class ReplaceShipComponentScreen<T extends ShipComponent> extends AbstractShipComponentScreen<T> {
 
-	private ShipComponent component;
-	private AbstractGameScreen backScreen;
+	private ShipComponent originalComponent;
 
-	public ReplaceShipComponentScreen (InfiniteSpaceGame game, ShipComponent component, AbstractGameScreen backScreen) {
-		super(game);
+	public ReplaceShipComponentScreen (InfiniteSpaceGame game, ShipPart<T> part, ShipComponent originalComponent, Node node) {
+		super(game, part, originalComponent.getClass().getSimpleName(), node);
 		
-		this.component = component;
-		this.backScreen = backScreen;
+		this.originalComponent = originalComponent;
 	}
 
 	@Override
-	protected void prepareStage (Stage stage) {
-		Table table = table();
-
-		table.row();
-		table.add(new Label("Replace " + component.getClass().getSimpleName(), skin, TITLE));
-
-		table.row();
-		table.add(new Label("Price", skin));
-		table.add(new Label(Units.moneyToString(component.price), skin));
+	protected void prepareStage (final Stage stage, Table rootTable) {
+		rootTable.row();
+		rootTable.add(new Label("Replace " + part.type, skin, TITLE));
 		
-		table.row();
-		table.add(new Label("Cash", skin));
-		table.add(new Label(Units.moneyToString(GameState.INSTANCE.cash), skin));
+		addOverviewTable(rootTable);
 
-		// root table
-		Table rootTable = rootTable();
+		rootTable.row();
+		rootTable.add(new Label("Sell the following component", skin)).colspan(2);
 		
+		// original component table
+		Table tableOriginal = table();
 		rootTable.row().colspan(2);
-		ScrollPane scrollPane = new ScrollPane(table, skin);
-		rootTable.add(scrollPane);
+		rootTable.add(new ScrollPane(tableOriginal, skin));
+
+		addHeaderRow(tableOriginal, componentType);
+		addComponentRow(tableOriginal, (T) originalComponent, false);
+
+		rootTable.row();
+		rootTable.add(new Label("and replace it with one of:", skin)).colspan(2);
+
+		// replace component table
+		Table tableReplacement = table();
+		rootTable.row().colspan(2);
+		rootTable.add(new ScrollPane(tableReplacement, skin));
+
+		addHeaderRow(tableReplacement, componentType);
 		
+		for (ShipComponent component: ShipFactory.getShipComponents(componentType)) {
+			if (component.volume <= part.maxVolume) {
+				addComponentRow(tableReplacement, (T) component, false);
+			}
+		}
+		
+		// buttons
 		rootTable.row().padTop(20);
 		rootTable.add(button(I18N.OK, new ChangeListener() {
 			@Override
 			public void changed (ChangeEvent event, Actor actor) {
-				game.setScreen(backScreen);
+				buySellComponents();
+				game.setScreen(new ShipInfoScreen(infiniteSpaceGame, node));
 			}
 		}));
 		rootTable.add(button(I18N.CANCEL, new ChangeListener() {
 			@Override
 			public void changed (ChangeEvent event, Actor actor) {
-				game.setScreen(backScreen);
+				game.setScreen(new ShipInfoScreen(infiniteSpaceGame, node));
 			}
 		}));
 		
 		stage.addActor(rootTable);
+
+		update();
 	}
 
 }

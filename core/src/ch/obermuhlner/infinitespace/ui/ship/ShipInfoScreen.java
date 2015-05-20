@@ -173,7 +173,7 @@ public class ShipInfoScreen extends AbstractNodeStageScreen {
 		buttonSell.setDisabled(!allowSell || !canSell);
 		table.add(buttonSell);
 		
-		table.add(button("Replace", new ReplaceShipComponentScreen(infiniteSpaceGame, component, this)));
+		table.add(button("Replace", new ReplaceShipComponentScreen(infiniteSpaceGame, part, component, node)));
 	}
 
 	private void addBuyComponentRow (Table table, ShipPart<?> part, int columnCount) {
