@@ -1,13 +1,9 @@
 package ch.obermuhlner.infinitespace.ui.ship;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import ch.obermuhlner.infinitespace.GameState;
 import ch.obermuhlner.infinitespace.InfiniteSpaceGame;
 import ch.obermuhlner.infinitespace.game.ship.CargoBay;
 import ch.obermuhlner.infinitespace.game.ship.Hull;
-import ch.obermuhlner.infinitespace.game.ship.InternalComponent;
 import ch.obermuhlner.infinitespace.game.ship.PassengerBay;
 import ch.obermuhlner.infinitespace.game.ship.PowerPlant;
 import ch.obermuhlner.infinitespace.game.ship.ShieldGenerator;
