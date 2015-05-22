@@ -67,11 +67,11 @@ public class SellShipComponentScreen extends AbstractStageScreen {
 	private void sellShipComponent () {
 		Ship ship = GameState.INSTANCE.ship;
 		
-		for (ShipPart<?> part : ship.parts) {
-			for (int i = 0; i < part.components.size(); i++) {
+		for (ShipPart part : ship.parts) {
+			for (int i = 0; i < part.components.size; i++) {
 				ShipComponent component = part.components.get(i);
 				if (component == componentToSell) {
-					part.components.remove(component);
+					part.components.removeValue(component, true);
 					ship.update();
 					GameState.INSTANCE.cash += component.price;
 					GameState.INSTANCE.save();

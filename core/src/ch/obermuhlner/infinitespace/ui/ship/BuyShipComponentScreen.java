@@ -14,16 +14,16 @@ import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 
-public class BuyShipComponentScreen<T extends ShipComponent> extends AbstractShipComponentScreen<T> {
+public class BuyShipComponentScreen extends AbstractShipComponentScreen {
 
-	public BuyShipComponentScreen (InfiniteSpaceGame game, ShipPart<T> part, Node node) {
-		super(game, part, part.type, node);
+	public BuyShipComponentScreen (InfiniteSpaceGame game, ShipPart part, Node node) {
+		super(game, part, part.types.get(0), node);
 	}
 
 	@Override
 	protected void prepareStage (final Stage stage, Table rootTable) {
 		rootTable.row();
-		rootTable.add(new Label("Buy " + part.type, skin, TITLE));
+		rootTable.add(new Label("Buy " + part.types, skin, TITLE));
 		
 		addOverviewTable(rootTable);
 
@@ -38,7 +38,7 @@ public class BuyShipComponentScreen<T extends ShipComponent> extends AbstractShi
 		addHeaderRow(table, componentType);
 		
 		for (ShipComponent component: ShipFactory.getShipComponents(componentType)) {
-			addComponentRow(table, (T) component, true);
+			addComponentRow(table, component, true);
 		}
 		
 		// buttons
@@ -59,6 +59,6 @@ public class BuyShipComponentScreen<T extends ShipComponent> extends AbstractShi
 		
 		stage.addActor(rootTable);
 
-		update();
+		updateWidgets();
 	}
 }

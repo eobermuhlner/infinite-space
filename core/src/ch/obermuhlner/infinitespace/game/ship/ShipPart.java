@@ -1,36 +1,34 @@
 package ch.obermuhlner.infinitespace.game.ship;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import com.badlogic.gdx.utils.Array;
 
-public class ShipPart<T extends ShipComponent> {
+public class ShipPart {
 	public String name;
-	public String type;
+	public Array<String> types;
 	public int minCount;
 	public int maxCount;
-	public float maxVolume;
-	public List<T> components = new ArrayList<T>();
+	public float maxComponentVolume;
+	public float maxTotalVolume;
+	public Array<ShipComponent> components;
 
 	protected ShipPart() {
 	}
 	
-	public ShipPart (String name, String type, int minCount, int maxCount, float maxSize) {
-		this(name, type, minCount, maxCount, maxSize, Collections.<T> emptyList());
+	public ShipPart (String name, Array<String> types, int minCount, int maxCount, float maxComponentVolume) {
+		this(name, types, minCount, maxCount, maxComponentVolume, new Array<ShipComponent>());
 	}
 	
-	@SuppressWarnings("unchecked")
-	public ShipPart (String name, String type, int minCount, int maxCount, float maxSize, T component) {
-		this(name, type, minCount, maxCount, maxSize, Arrays.asList(component));
+	public ShipPart (String name, Array<String> types, int minCount, int maxCount, float maxComponentVolume, ShipComponent component) {
+		this(name, types, minCount, maxCount, maxComponentVolume, Array.with(component));
 	}
 	
-	public ShipPart (String name, String type, int minCount, int maxCount, float maxSize, List<T> components) {
+	public ShipPart (String name, Array<String> types, int minCount, int maxCount, float maxComponentVolume, Array<ShipComponent> components) {
 		this.name = name;
-		this.type = type;
+		this.types = types;
 		this.minCount = minCount;
 		this.maxCount = maxCount;
-		this.maxVolume = maxSize;
-		this.components.addAll(components);
+		this.maxComponentVolume = maxComponentVolume;
+		this.maxTotalVolume = maxComponentVolume * maxCount;
+		this.components = components;
 	}
 }

@@ -11,7 +11,7 @@ public class Ship {
 	public float pitchThrust;
 	public float yawThrust;
 	
-	public List<ShipPart<?>> parts = new ArrayList<ShipPart<?>>();
+	public List<ShipPart> parts = new ArrayList<ShipPart>();
 	
 	public float allowedMass;
 	public float mass;
@@ -35,7 +35,7 @@ public class Ship {
 		pitchThrust = 0;
 		yawThrust = 0;
 		
-		for (ShipPart<?> part : parts) {
+		for (ShipPart part : parts) {
 			for (ShipComponent component : part.components) {
 				mass += component.mass;
 				power += component.power;

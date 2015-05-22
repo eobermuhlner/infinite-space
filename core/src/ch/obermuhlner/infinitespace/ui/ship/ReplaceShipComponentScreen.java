@@ -14,11 +14,11 @@ import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 
-public class ReplaceShipComponentScreen<T extends ShipComponent> extends AbstractShipComponentScreen<T> {
+public class ReplaceShipComponentScreen extends AbstractShipComponentScreen {
 
 	private ShipComponent originalComponent;
 
-	public ReplaceShipComponentScreen (InfiniteSpaceGame game, ShipPart<T> part, ShipComponent originalComponent, Node node) {
+	public ReplaceShipComponentScreen (InfiniteSpaceGame game, ShipPart part, ShipComponent originalComponent, Node node) {
 		super(game, part, originalComponent.getClass().getSimpleName(), node);
 		
 		this.originalComponent = originalComponent;
@@ -27,7 +27,7 @@ public class ReplaceShipComponentScreen<T extends ShipComponent> extends Abstrac
 	@Override
 	protected void prepareStage (final Stage stage, Table rootTable) {
 		rootTable.row();
-		rootTable.add(new Label("Replace " + part.type, skin, TITLE));
+		rootTable.add(new Label("Replace " + part.types, skin, TITLE));
 		
 		addOverviewTable(rootTable);
 
@@ -40,7 +40,7 @@ public class ReplaceShipComponentScreen<T extends ShipComponent> extends Abstrac
 		rootTable.add(new ScrollPane(tableOriginal, skin));
 
 		addHeaderRow(tableOriginal, componentType);
-		addComponentRow(tableOriginal, (T) originalComponent, false);
+		addComponentRow(tableOriginal, originalComponent, false);
 
 		rootTable.row();
 		rootTable.add(new Label("and replace it with one of:", skin)).colspan(2);
@@ -53,8 +53,8 @@ public class ReplaceShipComponentScreen<T extends ShipComponent> extends Abstrac
 		addHeaderRow(tableReplacement, componentType);
 		
 		for (ShipComponent component: ShipFactory.getShipComponents(componentType)) {
-			if (component.volume <= part.maxVolume) {
-				addComponentRow(tableReplacement, (T) component, false);
+			if (component != originalComponent) {
+				addComponentRow(tableReplacement, component, component.volume <= part.maxComponentVolume);
 			}
 		}
 		
@@ -76,7 +76,6 @@ public class ReplaceShipComponentScreen<T extends ShipComponent> extends Abstrac
 		
 		stage.addActor(rootTable);
 
-		update();
+		updateWidgets();
 	}
-
 }

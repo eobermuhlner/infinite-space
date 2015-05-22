@@ -28,25 +28,24 @@ import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
 import com.badlogic.gdx.scenes.scene2d.ui.SelectBox;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
+import com.badlogic.gdx.utils.Array;
 
-public class AbstractShipComponentScreen<T extends ShipComponent> extends AbstractStageScreen {
+public class AbstractShipComponentScreen extends AbstractStageScreen {
 
-	protected ShipPart<T> part;
+	protected ShipPart part;
 	protected Node node;
 	
 	protected String componentType;
 	
-	private List<T> boughtComponents = new ArrayList<T>();
-	private List<T> soldComponents = new ArrayList<T>();
+	private Array<ShipComponent> boughtComponents = new Array<ShipComponent>();
+	private Array<ShipComponent> soldComponents = new Array<ShipComponent>();
 	
 	private Label labelCash;
 	private Label labelTotalMass;
 	private Label labelTotalPower;
-	private Label labelShield;
-	private Label labelCargoSpace;
-	private Label labelPassengerSpace;
+	private Label labelPartInfo;
 
-	public AbstractShipComponentScreen (InfiniteSpaceGame game, ShipPart<T> part, String componentType, Node node) {
+	public AbstractShipComponentScreen (InfiniteSpaceGame game, ShipPart part, String componentType, Node node) {
 		super(game);
 		
 		this.part = part;
@@ -64,24 +63,15 @@ public class AbstractShipComponentScreen<T extends ShipComponent> extends Abstra
 		addInfoRow(table2, "Allowed Mass").setText(Units.toString(ship.allowedMass));
 		labelTotalMass = addInfoRow(table2, "Total Mass");
 		labelTotalPower = addInfoRow(table2, "Total Power");
-		labelShield = addInfoRow(table2, "Total Shield");
-		labelCargoSpace = addInfoRow(table2, "Total Cargo Space");
-		labelPassengerSpace = addInfoRow(table2, "Total Passenger Space");
+		labelPartInfo = addInfoRow(table2, "Part Info");
 	}
 
 	protected void addTypeSelection(Table rootTable, final Stage stage) {
 		rootTable.row();
 		final SelectBox<String> selectComponentType = new SelectBox<String>(skin);
 		rootTable.add(selectComponentType);
-		if (InternalComponent.class.getSimpleName().equals(part.type)) {
-			selectComponentType.setItems(CargoBay.class.getSimpleName(), PassengerBay.class.getSimpleName(), PowerPlant.class.getSimpleName(), ShieldGenerator.class.getSimpleName(), Weapon.class.getSimpleName());
-			if (componentType.equals(part.type)) {
-				componentType = CargoBay.class.getSimpleName();
-			}
-		} else {
-			selectComponentType.setItems(part.type);
-		}
-		selectComponentType.setSelected(componentType);
+		selectComponentType.setItems(toStringArray(part.types));
+		selectComponentType.setSelected(part.types.get(0));
 		selectComponentType.addListener(new ChangeListener() {
 			@Override
 			public void changed (ChangeEvent event, Actor actor) {
@@ -89,6 +79,14 @@ public class AbstractShipComponentScreen<T extends ShipComponent> extends Abstra
 				prepareStageRoot(stage);
 			}
 		});
+	}
+
+	private String[] toStringArray(Array<String> items) {
+		String[] result = new String[items.size];
+		for (int i = 0; i < items.size; i++) {
+			result[i] = (String) items.get(i);
+		}
+		return result;
 	}
 
 	private Label addInfoRow (Table table, String text) {
@@ -99,42 +97,28 @@ public class AbstractShipComponentScreen<T extends ShipComponent> extends Abstra
 		return label;
 	}
 
-	protected void update() {
+	protected void updateWidgets() {
 		long cash = GameState.INSTANCE.cash;
 		float mass = GameState.INSTANCE.ship.mass;
 		float power = GameState.INSTANCE.ship.power;
-		float shield = GameState.INSTANCE.ship.shield;
-		int cargoSpace = GameState.INSTANCE.ship.cargoSpace;
-		int passengerSpace = GameState.INSTANCE.ship.passengerSpace;
+		
+		float partTotalVolume = 0;
+		for (ShipComponent component : part.components) {
+			if (!soldComponents.contains(component, true)) {
+				partTotalVolume += component.volume;
+			}
+		}
 		
 		for (ShipComponent component : boughtComponents) {
 			cash -= component.price;
 			mass += component.mass;
 			power += component.power;
-			if (component instanceof ShieldGenerator) {
-				shield += ((ShieldGenerator)component).shield;
-			}
-			if (component instanceof CargoBay) {
-				cargoSpace += ((CargoBay)component).space;
-			}
-			if (component instanceof PassengerBay) {
-				passengerSpace += ((PassengerBay)component).space;
-			}
 		}
 		
 		for (ShipComponent component : soldComponents) {
 			cash += component.price;
 			mass -= component.mass;
 			power -= component.power;
-			if (component instanceof ShieldGenerator) {
-				shield -= ((ShieldGenerator)component).shield;
-			}
-			if (component instanceof CargoBay) {
-				cargoSpace -= ((CargoBay)component).space;
-			}
-			if (component instanceof PassengerBay) {
-				passengerSpace -= ((PassengerBay)component).space;
-			}
 		}
 		
 		labelCash.setText(Units.moneyToString(cash));
@@ -142,9 +126,23 @@ public class AbstractShipComponentScreen<T extends ShipComponent> extends Abstra
 		labelTotalMass.setColor(mass >= GameState.INSTANCE.ship.allowedMass ? Color.RED : Color.GREEN);
 		labelTotalPower.setText(Units.toString(power));
 		labelTotalPower.setColor(power < 0 ? Color.RED : Color.GREEN);
-		labelShield.setText(Units.toString(shield));
-		labelCargoSpace.setText(Units.toString(cargoSpace));
-		labelPassengerSpace.setText(Units.toString(passengerSpace));
+		
+		StringBuilder partInfoText = new StringBuilder();
+		partInfoText.append(part.components.size);
+		partInfoText.append(" of ");
+		if (part.minCount == part.maxCount) {
+			partInfoText.append(part.minCount);
+		} else {
+			partInfoText.append(part.minCount);
+			partInfoText.append("-");
+			partInfoText.append(part.maxCount);
+		}
+		partInfoText.append(" filled ");
+		partInfoText.append(partTotalVolume);
+		partInfoText.append(" of max ");
+		partInfoText.append(part.maxTotalVolume);
+		
+		labelPartInfo.setText(partInfoText.toString());
 	}
 	
 	protected void addHeaderRow (Table table, String componentType) {
@@ -180,7 +178,7 @@ public class AbstractShipComponentScreen<T extends ShipComponent> extends Abstra
 		}
 	}
 	
-	protected void addComponentRow (Table table, final T component, boolean allowBuy) {
+	protected void addComponentRow (Table table, final ShipComponent component, boolean allowBuy) {
 		String componentType = component.getClass().getSimpleName();
 
 		table.row();
@@ -227,7 +225,7 @@ public class AbstractShipComponentScreen<T extends ShipComponent> extends Abstra
 				@Override
 				public void changed (ChangeEvent event, Actor actor) {
 					boughtComponents.add(component);
-					update();
+					updateWidgets();
 				}
 			}));
 		}
@@ -244,7 +242,7 @@ public class AbstractShipComponentScreen<T extends ShipComponent> extends Abstra
 		
 		GameState.INSTANCE.cash = cash;
 		
-		part.components.removeAll(soldComponents);
+		part.components.removeAll(soldComponents, true);
 		part.components.addAll(boughtComponents);
 		
 		GameState.INSTANCE.ship.update();

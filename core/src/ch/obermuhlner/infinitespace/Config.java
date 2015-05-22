@@ -1,5 +1,7 @@
 package ch.obermuhlner.infinitespace;
 
+import com.badlogic.gdx.Gdx;
+
 public class Config {
 
 	public static boolean useScreenControls = true;
@@ -7,5 +9,17 @@ public class Config {
 	public static boolean useTouchpadControls = true;
 
 	public static boolean useKeyControls = true;
+	
+	public static float screenDensityFactor = 1.0f;
+	
+	/**
+	 * To be used with {@link com.badlogic.gdx.utils.viewport.ScreenViewport#setUnitsPerPixel(float)}.
+	 * 
+	 * @return the units per pixel
+	 */
+	public static float getUnitsPerPixel() {
+		float density = Gdx.graphics.getDensity();
+		return 1.0f / density / screenDensityFactor;
+	}
 
 }

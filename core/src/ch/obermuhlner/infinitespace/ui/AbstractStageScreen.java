@@ -1,5 +1,6 @@
 package ch.obermuhlner.infinitespace.ui;
 
+import ch.obermuhlner.infinitespace.Config;
 import ch.obermuhlner.infinitespace.Effects;
 import ch.obermuhlner.infinitespace.GamePreferences;
 import ch.obermuhlner.infinitespace.InfiniteSpaceGame;
@@ -51,8 +52,7 @@ public abstract class AbstractStageScreen extends AbstractInfiniteSpaceGameScree
 		modelBatch = new ModelBatch(UberShaderProvider.DEFAULT);
 		
 		ScreenViewport viewport = new ScreenViewport();
-		float density = Gdx.graphics.getDensity();
-		viewport.setUnitsPerPixel(1.0f / density / 2);
+		viewport.setUnitsPerPixel(Config.getUnitsPerPixel());
 		stage = new Stage(viewport);
 		
 		createCamera();

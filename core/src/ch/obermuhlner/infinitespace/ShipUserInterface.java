@@ -50,7 +50,14 @@ public class ShipUserInterface {
 	
 	private Camera camera;
 
+	/**
+	 * Stage with corrected Viewport for text-based UI.
+	 */
 	private Stage stage;
+	/**
+	 * Stage with uncorrected Viewport for pixel accurate UI.
+	 */
+	private Stage stageDirect;
 	private Label debugInfo;
 	
 	private Touchpad touchpadLeft;
@@ -103,9 +110,14 @@ public class ShipUserInterface {
 		environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.1f, 0.1f, 0.1f, 1f));
 		environment.add(new DirectionalLight().set(Color.WHITE, -1, 0, 0));
 		
-		stage = new Stage(new ScreenViewport());
+		ScreenViewport viewport = new ScreenViewport();
+		stage = new Stage(viewport);
+		viewport.setUnitsPerPixel(Config.getUnitsPerPixel());
 		debugInfo = new Label("", labelStyle);
 		debugInfo.setBounds(0, skin.getFont(FONT).getLineHeight(), 0, 0);
+
+		ScreenViewport viewportDirect = new ScreenViewport();
+		stageDirect = new Stage(viewportDirect);
 
 		InputMultiplexer inputMultiplexer = new InputMultiplexer();
 		
@@ -143,13 +155,14 @@ public class ShipUserInterface {
 			
 			stage.addActor(debugInfo);
 			if (Config.useTouchpadControls) {
-				stage.addActor(touchpadLeft);
-				stage.addActor(touchpadLeftSecondary);
-				stage.addActor(touchpadRight);
-				stage.addActor(touchpadRightSecondary);
+				stageDirect.addActor(touchpadLeft);
+				stageDirect.addActor(touchpadLeftSecondary);
+				stageDirect.addActor(touchpadRight);
+				stageDirect.addActor(touchpadRightSecondary);
 			}
 		
 			inputMultiplexer.addProcessor(stage);
+			inputMultiplexer.addProcessor(stageDirect);
 		}
 		if (Config.useKeyControls) {
 			playerController = new PlayerController(player);
@@ -179,7 +192,7 @@ public class ShipUserInterface {
 		TextButton buttonPrev = new TextButton(text, uiSkin, "ship");
 		buttonPrev.setBounds(x, y, size, size);
 		buttonPrev.addListener(clickListener);
-		stage.addActor(buttonPrev);
+		stageDirect.addActor(buttonPrev);
 		return x + margin + size;
 	}
 
@@ -222,7 +235,7 @@ public class ShipUserInterface {
 							showMenu(button, node);							
 						}
 					});
-					stage.addActor(button);
+					stageDirect.addActor(button);
 					cursorButtons.set(i, button);
 				}
 			}
@@ -288,6 +301,9 @@ public class ShipUserInterface {
 	}
 	
 	public void render() {
+		stageDirect.act();
+		stageDirect.draw();
+
 		stage.act();
 		stage.draw();
 	}
@@ -342,6 +358,7 @@ public class ShipUserInterface {
 	
 	public void dispose () {
 		stage.dispose();
+		stageDirect.dispose();
 	}
 
 	public void setDebugInfo (String text) {
@@ -350,5 +367,6 @@ public class ShipUserInterface {
 
 	public void resize (int width, int height) {
 		stage.getViewport().update(width, height, true);
+		stageDirect.getViewport().update(width, height, true);
 	}
 }

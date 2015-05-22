@@ -5,6 +5,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import com.badlogic.gdx.utils.Array;
+
 public class ShipFactory {
 
 	public static final String MAIN_THRUSTER = "Main Thruster";
@@ -13,60 +15,61 @@ public class ShipFactory {
 	public static final String PITCH_THRUSTER = "Pitch Thruster";
 	public static final String UP_DOWN_THRUSTER = "Up/Down Thruster";
 	public static final String LEFT_RIGHT_THRUSTER = "Left/Right Thruster";
-	
+
+	private static final Array<String> INTERNAL_COMPONENT_TYPES = Array.with(CargoBay.class.getSimpleName(), PassengerBay.class.getSimpleName(), PowerPlant.class.getSimpleName(), ShieldGenerator.class.getSimpleName(), Weapon.class.getSimpleName());
+
 	public static Ship getStandardShip() {
 		Ship ship = new Ship();
 		
-		ship.parts.add(new ShipPart<Thruster>(
+		ship.parts.add(new ShipPart(
 				MAIN_THRUSTER,
-				Thruster.class.getSimpleName(), 
+				Array.with(Thruster.class.getSimpleName()), 
 				1, 1, 6.0f, 
 				new Thruster(4.0f)));
-		ship.parts.add(new ShipPart<Thruster>(
+		ship.parts.add(new ShipPart(
 				ROLL_THRUSTER,
-				Thruster.class.getSimpleName(), 
+				Array.with(Thruster.class.getSimpleName()), 
 				1, 1, 2.0f, 
 				new Thruster(2.0f)));
-		ship.parts.add(new ShipPart<Thruster>(
+		ship.parts.add(new ShipPart(
 				PITCH_THRUSTER,
-				Thruster.class.getSimpleName(), 
+				Array.with(Thruster.class.getSimpleName()), 
 				1, 1, 2.0f, 
 				new Thruster(2.0f)));
-		ship.parts.add(new ShipPart<Thruster>(
+		ship.parts.add(new ShipPart(
 				YAW_THRUSTER,
-				Thruster.class.getSimpleName(), 
+				Array.with(Thruster.class.getSimpleName()), 
 				1, 1, 1.0f, 
 				new Thruster(1.0f)));
-		ship.parts.add(new ShipPart<Thruster>(
+		ship.parts.add(new ShipPart(
 				UP_DOWN_THRUSTER,
-				Thruster.class.getSimpleName(), 
+				Array.with(Thruster.class.getSimpleName()), 
 				1, 1, 0.5f, 
 				new Thruster(0.4f)));
-		ship.parts.add(new ShipPart<Thruster>(
+		ship.parts.add(new ShipPart(
 				LEFT_RIGHT_THRUSTER,
-				Thruster.class.getSimpleName(), 
+				Array.with(Thruster.class.getSimpleName()), 
 				1, 1, 0.5f, 
 				new Thruster(0.4f)));
-		ship.parts.add(new ShipPart<Hull>(
+		ship.parts.add(new ShipPart(
 			"Hull",
-			Hull.class.getSimpleName(), 
+			Array.with(Hull.class.getSimpleName()), 
 			1, 1, 1, 
 			DEFAULT_HULL));
-		ship.parts.add(new ShipPart<PowerPlant>(
+		ship.parts.add(new ShipPart(
 			"Powerplant",
-			PowerPlant.class.getSimpleName(), 
+			Array.with(PowerPlant.class.getSimpleName()), 
 			1, 1, 3, 
 			DEFAULT_POWER_PLANT));
-		ship.parts.add(new ShipPart<Weapon>(
+		ship.parts.add(new ShipPart(
 			"Weapons",
-			Weapon.class.getSimpleName(),
+			Array.with(Weapon.class.getSimpleName()),
 			0, 4, 3));
-		ship.parts.add(new ShipPart<InternalComponent>(
+		ship.parts.add(new ShipPart(
 			"Main Compartment",
-			InternalComponent.class.getSimpleName(),
+			INTERNAL_COMPONENT_TYPES,
 			0, 5, 20f,
-			Arrays.<InternalComponent> asList(
-				DEFAULT_CARGO_BAY)));
+			DEFAULT_CARGO_BAY));
 		
 		ship.update();
 		
@@ -219,6 +222,9 @@ public class ShipFactory {
 		}
 		if (Weapon.class.getSimpleName().equals(type)) {
 			return getWeapons();
+		}
+		if (Thruster.class.getSimpleName().equals(type)) {
+			return getThrusters();
 		}
 		
 		return Collections.emptyList();
