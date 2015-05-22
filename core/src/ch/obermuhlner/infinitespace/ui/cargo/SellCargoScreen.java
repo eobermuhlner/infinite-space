@@ -10,7 +10,6 @@ import ch.obermuhlner.infinitespace.InfiniteSpaceGame;
 import ch.obermuhlner.infinitespace.model.Node;
 import ch.obermuhlner.infinitespace.model.OrbitingNode;
 import ch.obermuhlner.infinitespace.model.generator.Generator;
-import ch.obermuhlner.infinitespace.model.random.Random;
 import ch.obermuhlner.infinitespace.model.universe.population.Population;
 import ch.obermuhlner.infinitespace.ui.AbstractNodeStageScreen;
 import ch.obermuhlner.infinitespace.ui.land.LandScreen;
@@ -140,7 +139,6 @@ public class SellCargoScreen extends AbstractNodeStageScreen {
 	
 	private void updateCargoPrices () {
 		Population population = getNodePopulation();
-		Random random = node.seed.getRandom();
 		for(CommodityItem item : GameState.INSTANCE.cargo) {
 			if (population != null) {
 				double price = Generator.calculatePrice(item, node, population);
