@@ -87,6 +87,10 @@ public class Units {
 		return unitToString(value, kilogramUnits, alternateKilogramUnits);
 	}
 
+	public static String volumeToString(double value) {
+		return toString(value) + " m^3";
+	}
+
 	public static String celsiusToString(double value) {
 		return toString(value) + " K";
 	}

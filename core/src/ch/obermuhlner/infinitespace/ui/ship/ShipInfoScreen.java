@@ -160,7 +160,7 @@ public class ShipInfoScreen extends AbstractNodeStageScreen {
 		table.add(Units.moneyToString(component.price));
 		table.add(Units.toString(component.mass)).right();
 		table.add(Units.toString(component.power)).right();
-		table.add(Units.toString(component.volume)).right();
+		table.add(Units.volumeToString(component.volume)).right();
 		
 		if (component instanceof Thruster) {
 			Thruster thruster = (Thruster)component;

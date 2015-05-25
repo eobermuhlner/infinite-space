@@ -133,10 +133,10 @@ public class AbstractShipComponentScreen extends AbstractStageScreen {
 			partInfoText.append("-");
 			partInfoText.append(part.maxCount);
 		}
-		partInfoText.append(" filled ");
-		partInfoText.append(partTotalVolume);
+		partInfoText.append(" occupying ");
+		partInfoText.append(Units.volumeToString(partTotalVolume));
 		partInfoText.append(" of max ");
-		partInfoText.append(part.maxTotalVolume);
+		partInfoText.append(Units.volumeToString(part.maxTotalVolume));
 		
 		labelPartInfo.setText(partInfoText.toString());
 	}
@@ -190,29 +190,29 @@ public class AbstractShipComponentScreen extends AbstractStageScreen {
 			table.add(Units.kilogramsToString(hull.allowedMass)).right();
 		} else if (componentType.equals(CargoBay.class.getSimpleName())) {
 			CargoBay cargoBay = (CargoBay) component;
-			table.add(Units.toString(cargoBay.volume)).right();
+			table.add(Units.volumeToString(cargoBay.volume)).right();
 			table.add(Units.toString(cargoBay.space)).right();
 		} else if (componentType.equals(PassengerBay.class.getSimpleName())) {
 			PassengerBay passengerBay = (PassengerBay) component;
-			table.add(Units.toString(passengerBay.volume)).right();
+			table.add(Units.volumeToString(passengerBay.volume)).right();
 			table.add(passengerBay.type.toString());
 			table.add(Units.toString(passengerBay.space)).right();
 		} else if (componentType.equals(PowerPlant.class.getSimpleName())) {
 			PowerPlant powerPlant = (PowerPlant) component;
-			table.add(Units.toString(powerPlant.volume)).right();
+			table.add(Units.volumeToString(powerPlant.volume)).right();
 		} else if (componentType.equals(ShieldGenerator.class.getSimpleName())) {
 			ShieldGenerator shieldGenerator = (ShieldGenerator)component;
-			table.add(Units.toString(shieldGenerator.volume)).right();
+			table.add(Units.volumeToString(shieldGenerator.volume)).right();
 			table.add(Units.toString(shieldGenerator.shield)).right();
 		} else if (componentType.equals(Weapon.class.getSimpleName())) {
 			Weapon weapon = (Weapon) component;
-			table.add(Units.toString(weapon.volume)).right();
+			table.add(Units.volumeToString(weapon.volume)).right();
 			table.add(weapon.type.toString());
 			table.add(Units.toString(weapon.hit)).right();
 			table.add(Units.toString(weapon.fireRate)).right();
 		} else if (componentType.equals(Thruster.class.getSimpleName())) {
 			Thruster thruster = (Thruster) component;
-			table.add(Units.toString(thruster.volume)).right();
+			table.add(Units.volumeToString(thruster.volume)).right();
 			table.add(Units.toString(thruster.thrust)).right();
 		}
 
