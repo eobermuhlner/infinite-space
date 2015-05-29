@@ -23,7 +23,7 @@ public class BuyShipComponentScreen extends AbstractShipComponentScreen {
 	@Override
 	protected void prepareStage (final Stage stage, Table rootTable) {
 		rootTable.row();
-		rootTable.add(new Label("Buy " + part.types, skin, TITLE));
+		rootTable.add(new Label("Buy " + part.name, skin, TITLE));
 		
 		addOverviewTable(rootTable);
 
@@ -47,13 +47,13 @@ public class BuyShipComponentScreen extends AbstractShipComponentScreen {
 			@Override
 			public void changed (ChangeEvent event, Actor actor) {
 				buySellComponents();
-				game.setScreen(new ShipInfoScreen(infiniteSpaceGame, node));
+				game.setScreen(new ShipInfoScreen(infiniteSpaceGame, node, part.name));
 			}
 		}));
 		rootTable.add(button(I18N.CANCEL, new ChangeListener() {
 			@Override
 			public void changed (ChangeEvent event, Actor actor) {
-				game.setScreen(new ShipInfoScreen(infiniteSpaceGame, node));
+				game.setScreen(new ShipInfoScreen(infiniteSpaceGame, node, part.name));
 			}
 		}));
 		

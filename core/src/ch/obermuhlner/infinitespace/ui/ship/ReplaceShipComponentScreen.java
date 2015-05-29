@@ -64,18 +64,26 @@ public class ReplaceShipComponentScreen extends AbstractShipComponentScreen {
 			@Override
 			public void changed (ChangeEvent event, Actor actor) {
 				buySellComponents();
-				game.setScreen(new ShipInfoScreen(infiniteSpaceGame, node));
+				game.setScreen(new ShipInfoScreen(infiniteSpaceGame, node, part.name));
 			}
 		}));
 		rootTable.add(button(I18N.CANCEL, new ChangeListener() {
 			@Override
 			public void changed (ChangeEvent event, Actor actor) {
-				game.setScreen(new ShipInfoScreen(infiniteSpaceGame, node));
+				game.setScreen(new ShipInfoScreen(infiniteSpaceGame, node, part.name));
 			}
 		}));
 		
 		stage.addActor(rootTable);
 
 		updateWidgets();
+	}
+	
+	@Override
+	protected void buySellComponents() {
+		if (soldComponents.size == 0 && boughtComponents.size > 0) {
+			soldComponents.add(originalComponent);
+		}
+ 		super.buySellComponents();
 	}
 }

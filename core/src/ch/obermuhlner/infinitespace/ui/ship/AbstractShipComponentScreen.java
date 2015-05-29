@@ -33,8 +33,8 @@ public class AbstractShipComponentScreen extends AbstractStageScreen {
 	
 	protected String componentType;
 	
-	private Array<ShipComponent> boughtComponents = new Array<ShipComponent>();
-	private Array<ShipComponent> soldComponents = new Array<ShipComponent>();
+	protected Array<ShipComponent> boughtComponents = new Array<ShipComponent>();
+	protected Array<ShipComponent> soldComponents = new Array<ShipComponent>();
 	
 	private Label labelCash;
 	private Label labelTotalMass;
@@ -67,7 +67,9 @@ public class AbstractShipComponentScreen extends AbstractStageScreen {
 		final SelectBox<String> selectComponentType = new SelectBox<String>(skin);
 		rootTable.add(selectComponentType);
 		selectComponentType.setItems(toStringArray(part.types));
-		selectComponentType.setSelected(part.types.get(0));
+		if (componentType != null) {
+			selectComponentType.setSelected(componentType);
+		}
 		selectComponentType.addListener(new ChangeListener() {
 			@Override
 			public void changed (ChangeEvent event, Actor actor) {

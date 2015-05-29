@@ -31,8 +31,16 @@ public class ShipInfoScreen extends AbstractNodeStageScreen {
 	private Label labelPartMaxComponentVolume;
 	private Label labelPartMaxTotalVolume;
 	
+	private String initialPartType;
+	private SelectBox<String> selectPartType;
+	
 	public ShipInfoScreen (InfiniteSpaceGame game, Node node) {
+		this(game, node, null);
+	}
+
+	public ShipInfoScreen (InfiniteSpaceGame game, Node node, String partType) {
 		super(game, node);
+		this.initialPartType = partType;
 	}
 
 	@Override
@@ -46,6 +54,7 @@ public class ShipInfoScreen extends AbstractNodeStageScreen {
 		rootTable.row().colspan(2);
 		rootTable.add(new ScrollPane(tableTotalInfo, skin));
 
+		addRow(tableTotalInfo, "Cash", GameState.INSTANCE.cash);
 		addRow(tableTotalInfo, "Allowed Mass", ship.allowedMass);
 		addRow(tableTotalInfo, "Total Mass", ship.mass, ship.mass <= ship.allowedMass);
 		addRow(tableTotalInfo, "Total Power", ship.power, ship.power >= 0);
@@ -54,9 +63,12 @@ public class ShipInfoScreen extends AbstractNodeStageScreen {
 		addRow(tableTotalInfo, "Total Passenger Space", ship.passengerSpace);
 
 		rootTable.row();
-		final SelectBox<String> selectPartType = new SelectBox<String>(skin);
+		selectPartType = new SelectBox<String>(skin);
 		rootTable.add(selectPartType);
 		selectPartType.setItems(getPartTypeNames(ship));
+		if (initialPartType != null) {
+			selectPartType.setSelected(initialPartType);
+		}
 		
 		Table tablePart = table();
 		rootTable.row();
@@ -100,6 +112,10 @@ public class ShipInfoScreen extends AbstractNodeStageScreen {
 		stage.addActor(rootTable);
 	}
 
+	private void updateWidgets() {
+		updateTableComponents(selectPartType.getSelectedIndex());
+	}
+	
 	private void updateTableComponents (int partTypeIndex) {
 		Ship ship = GameState.INSTANCE.ship;
 
@@ -126,11 +142,15 @@ public class ShipInfoScreen extends AbstractNodeStageScreen {
 		tableComponents.add(new Label("Volume", skin, HEADER));
 		columnCount += 6;
 		
-		if (part.types.contains(Hull.class.getSimpleName(), false)) {
+		String partType = selectPartType.getSelected();
+		if (partType.equals(Thruster.class.getSimpleName())) {
+			tableComponents.add(new Label("Thrust", skin, HEADER));
+			columnCount += 1;
+		} else if (partType.equals(Hull.class.getSimpleName())) {
 			tableComponents.add(new Label("Strength", skin, HEADER));
 			tableComponents.add(new Label("Allowed Mass", skin, HEADER));
 			columnCount += 2;
-		} else if (part.types.contains(Weapon.class.getSimpleName(), false)) {
+		} else if (partType.equals(Weapon.class.getSimpleName())) {
 			tableComponents.add(new Label("Hit", skin, HEADER));
 			tableComponents.add(new Label("Fire Rate", skin, HEADER));
 			columnCount += 2;
@@ -176,11 +196,18 @@ public class ShipInfoScreen extends AbstractNodeStageScreen {
 		}
 		
 		boolean canSell = part == null || part.minCount < part.components.size;
-		Button buttonSell = button("Sell", new SellShipComponentScreen(infiniteSpaceGame, component, this));
+		Button buttonSell = button("Sell", new ChangeListener() {
+			@Override
+			public void changed(ChangeEvent event, Actor actor) {
+				sellShipComponent(component);
+				initialPartType = selectPartType.getSelected();
+				prepareStageRoot(stage);
+			}
+		});
 		buttonSell.setDisabled(!allowSell || !canSell);
 		table.add(buttonSell);
 		
-		table.add(button("Replace", new ReplaceShipComponentScreen(infiniteSpaceGame, part, component, node)));
+		table.add(button("Replace...", new ReplaceShipComponentScreen(infiniteSpaceGame, part, component, node)));
 	}
 
 	private void addBuyComponentRow (Table table, ShipPart part, int columnCount) {
@@ -189,7 +216,7 @@ public class ShipInfoScreen extends AbstractNodeStageScreen {
 		String partType = part.types.size == 1 ? part.types.get(0) : "...";
 		table.add(partType).colspan(columnCount - 1);
 		
-		Button buttonBuy = button("Buy", new BuyShipComponentScreen(infiniteSpaceGame, part, node));
+		Button buttonBuy = button("Buy...", new BuyShipComponentScreen(infiniteSpaceGame, part, node));
 		table.add(buttonBuy);
 	}
 
@@ -205,5 +232,22 @@ public class ShipInfoScreen extends AbstractNodeStageScreen {
 		table.row();
 		table.add(new Label(label, skin)).colspan(2);
 		table.add(new Label(Units.toString(value), skin, style)).right();
+	}
+
+	private void sellShipComponent (ShipComponent componentToSell) {
+		Ship ship = GameState.INSTANCE.ship;
+		
+		for (ShipPart part : ship.parts) {
+			for (int i = 0; i < part.components.size; i++) {
+				ShipComponent component = part.components.get(i);
+				if (component == componentToSell) {
+					part.components.removeValue(component, true);
+					ship.update();
+					GameState.INSTANCE.cash += component.price;
+					GameState.INSTANCE.save();
+					return;
+				}
+			}
+		}
 	}
 }

@@ -37,7 +37,7 @@ public abstract class AbstractStageScreen extends AbstractInfiniteSpaceGameScree
 
 	private ModelBatch modelBatch;
 
-	private Stage stage;
+	protected Stage stage;
 
 	protected CameraInputController cameraInputController;
 
@@ -216,6 +216,9 @@ public abstract class AbstractStageScreen extends AbstractInfiniteSpaceGameScree
 	}
 
 	protected SelectBox<Integer> bindInt(final SelectBox<Integer> selectBox, final String key, final ChangeListener changeListener, final Integer... items) {
+		selectBox.setItems(items);
+		selectBox.setSelected(GamePreferences.INSTANCE.preferences.getInteger(key, items[0]));
+		
 		selectBox.addListener(new ChangeListener() {
 			@Override
 			public void changed (ChangeEvent event, Actor actor) {
@@ -225,8 +228,7 @@ public abstract class AbstractStageScreen extends AbstractInfiniteSpaceGameScree
 				}
 			}
 		});
-		selectBox.setItems(items);
-		selectBox.setSelected(GamePreferences.INSTANCE.preferences.getInteger(key, items[0]));
+
 		return selectBox;
 	}
 
@@ -235,6 +237,11 @@ public abstract class AbstractStageScreen extends AbstractInfiniteSpaceGameScree
 	}
 
 	protected SelectBox<Enum<?>> bindEnum(final SelectBox<Enum<?>> selectBox, final String key, final ChangeListener changeListener, final Enum<?>... items) {
+		selectBox.setItems(items);
+		String currentString = GamePreferences.INSTANCE.preferences.getString(key, items[0].toString());
+		Enum<?> currentEnum = getEnum(currentString, items);
+		selectBox.setSelected(currentEnum);
+
 		selectBox.addListener(new ChangeListener() {
 			@Override
 			public void changed (ChangeEvent event, Actor actor) {
@@ -244,10 +251,7 @@ public abstract class AbstractStageScreen extends AbstractInfiniteSpaceGameScree
 				}
 			}
 		});
-		selectBox.setItems(items);
-		String currentString = GamePreferences.INSTANCE.preferences.getString(key, items[0].toString());
-		Enum<?> currentEnum = getEnum(currentString, items);
-		selectBox.setSelected(currentEnum);
+
 		return selectBox;
 	}
 
