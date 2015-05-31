@@ -9,12 +9,10 @@ public abstract class AbstractGameScreen implements Screen {
 
 	protected Game game;
 
-	protected Skin skin;
+	protected Skin skin = GameSkin.getSkin();
 	
 	public AbstractGameScreen(Game game) {
 		this.game = game;
-		
-		skin = new Skin(Gdx.files.internal("data/uiskin.json"));
 	}
 	
 	protected boolean needsContinuousRendering() {
