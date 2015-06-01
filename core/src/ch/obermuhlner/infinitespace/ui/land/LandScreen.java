@@ -32,6 +32,7 @@ public class LandScreen extends AbstractNodeStageScreen {
 
 		rootTable.row();
 		Table table = table();
+		table.defaults().fillX();
 		rootTable.add(new ScrollPane(table, skin));
 
 		if (node instanceof OrbitingNode) {
@@ -41,7 +42,7 @@ public class LandScreen extends AbstractNodeStageScreen {
 				table.add(button("Info", new InfoScreen(infiniteSpaceGame, node, this)));
 
 				table.row();
-				table.add(new Label("Ship", skin, TITLE)).colspan(3);
+				table.add(new Label("Ship", skin, TITLE));
 
 				table.row();
 				table.add(button("Ship Info", new ShipInfoScreen(infiniteSpaceGame, node)));
@@ -49,7 +50,7 @@ public class LandScreen extends AbstractNodeStageScreen {
 				table.add(new TextButton("Shipyard", skin));
 
 				table.row();
-				table.add(new Label("Market and Cargo", skin, TITLE)).colspan(3);
+				table.add(new Label("Market and Cargo", skin, TITLE));
 
 				table.row();
 				table.add(button("Market Info", new MarketInfoScreen(infiniteSpaceGame, node)));
@@ -59,7 +60,7 @@ public class LandScreen extends AbstractNodeStageScreen {
 				table.add(button("Buy Cargo", new BuyCargoScreen(infiniteSpaceGame, node)));
 
 				table.row();
-				table.add(new Label("News and Missions", skin, TITLE)).colspan(3);
+				table.add(new Label("News and Missions", skin, TITLE));
 
 				table.row();
 				table.add(new TextButton("News", skin));
