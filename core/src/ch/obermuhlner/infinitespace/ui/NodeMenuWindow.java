@@ -19,7 +19,6 @@ public class NodeMenuWindow extends Window {
 	
 	private Skin skin;
 
-
 	public NodeMenuWindow (InfiniteSpaceGame game, AbstractGameScreen screen, Node node, Skin skin) {
 		super(getTitle(node), skin);
 		this.game = game;
@@ -31,7 +30,7 @@ public class NodeMenuWindow extends Window {
 	}
 
 	private void fillMenuItems () {
-		defaults().expandX();
+		//defaults().expandX();
 		
 		addNodeAction("Info", InfoNodeAction.INSTANCE);
 		addNodeAction("Land", LandNodeAction.INSTANCE);
@@ -50,7 +49,7 @@ public class NodeMenuWindow extends Window {
 					remove();
 				}
 			});
-			add(textButton);
+			add(textButton).fillX();
 		}
 	}
 
