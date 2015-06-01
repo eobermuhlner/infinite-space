@@ -1,5 +1,7 @@
 package ch.obermuhlner.infinitespace.ui;
 
+import ch.obermuhlner.infinitespace.Config;
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
@@ -26,9 +28,7 @@ public class GameSkin {
 	private static BitmapFont generateFont(String ttfFile, int size) {
 		FreeTypeFontGenerator gen = new FreeTypeFontGenerator(Gdx.files.internal(ttfFile));
 		FreeTypeFontParameter parameter = new FreeTypeFontParameter();
-		//int correctedSize = size;
-		int correctedSize = Math.round(size * Gdx.graphics.getDensity());
-		parameter.size = correctedSize;
+		parameter.size = Config.getFontSize(size);
 		BitmapFont font = gen.generateFont(parameter);
 		gen.dispose();
 		return font;
