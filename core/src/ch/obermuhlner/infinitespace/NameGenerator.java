@@ -72,17 +72,20 @@ public class NameGenerator {
 			SpaceStation spaceStation = (SpaceStation)node;
 			prefix = random.nextProbability(
 				p(1, "Free "),
-				p(spaceStation.type == SpaceStation.Type.CONGLOMERATE ? 30 : 0, "International "),
-				p(20, ""));
+				p(2, "Deep "),
+				p(spaceStation.type == SpaceStation.Type.CONGLOMERATE ? 10 : 0, "International "),
+				p(30, ""));
 
 			suffix = random.nextProbability(
 				p(20, " Station"),
 				p(10, " Hub"),
 				p(10, " Base"),
 				p(10, " Orbital"),
+				p(10, " Port"),
 				p(spaceStation.type == SpaceStation.Type.RING ? 30 : 0, " Ring"),
 				p(spaceStation.type == SpaceStation.Type.CUBE ? 30 : 0, " Cube"),
-				p(1, " Freehold"));
+				p(spaceStation.starport ? 30 : 0, " Starport"),
+				p(prefix.equals("Free ") ? 0 : 1, " Freehold"));
 		} else if (node instanceof Star) {
 			prefix = random.nextProbability(
 				p(1, "Alpha "),
