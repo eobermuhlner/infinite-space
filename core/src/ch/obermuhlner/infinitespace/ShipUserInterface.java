@@ -262,6 +262,7 @@ public class ShipUserInterface {
 		}
 		
 		nodeMenu = new NodeMenuWindow(game, screen, node, uiSkin);
+		nodeMenu.pack();
 		nodeMenu.setPosition(0, Gdx.graphics.getHeight(), Align.top | Align.left);
 		nodeMenu.top().right();
 		nodeMenu.addAction(Effects.pullIn());
