@@ -78,6 +78,8 @@ public class NameGenerator {
 			suffix = random.nextProbability(
 				p(20, " Station"),
 				p(10, " Hub"),
+				p(10, " Base"),
+				p(10, " Orbital"),
 				p(spaceStation.type == SpaceStation.Type.RING ? 30 : 0, " Ring"),
 				p(spaceStation.type == SpaceStation.Type.CUBE ? 30 : 0, " Cube"),
 				p(1, " Freehold"));
