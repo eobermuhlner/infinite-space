@@ -1,5 +1,5 @@
 {
-//com.badlogic.gdx.graphics.g2d.BitmapFont: { default-font: { file: default.fnt }, bold-font: { file: default.fnt } },
+//com.badlogic.gdx.graphics.g2d.BitmapFont: { default-font: { file: default.fnt }, large-font: { file: default.fnt } },
 // TTF fonts loaded programmatically in class GameSkin
 com.badlogic.gdx.graphics.Color: {
 	white:  { r: 1, g: 1, b: 1, a: 1 },
@@ -70,8 +70,8 @@ com.badlogic.gdx.scenes.scene2d.ui.Slider$SliderStyle: {
 },
 com.badlogic.gdx.scenes.scene2d.ui.Label$LabelStyle: {
 	default: { font: default-font, fontColor: white },
-	title: { font: bold-font, fontColor: yellow },
-	header: { font: bold-font, fontColor: yellow },
+	title: { font: large-font, fontColor: yellow },
+	header: { font: large-font, fontColor: yellow },
 	good: { font: default-font, fontColor: green },
 	bad: { font: default-font, fontColor: red },
 	disabled: { font: default-font, fontColor: alpha20 },
