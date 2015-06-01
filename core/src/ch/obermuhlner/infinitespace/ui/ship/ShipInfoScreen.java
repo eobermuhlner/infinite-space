@@ -135,12 +135,12 @@ public class ShipInfoScreen extends AbstractNodeStageScreen {
 		
 		tableComponents.row();
 		tableComponents.add(new Label("Type", skin, HEADER));
-		tableComponents.add(new Label("Name", skin, HEADER));
+		//tableComponents.add(new Label("Name", skin, HEADER));
 		tableComponents.add(new Label("Price", skin, HEADER));
 		tableComponents.add(new Label("Mass", skin, HEADER));
 		tableComponents.add(new Label("Power", skin, HEADER));
 		tableComponents.add(new Label("Volume", skin, HEADER));
-		columnCount += 6;
+		columnCount += 5;
 		
 		String partType = selectPartType.getSelected();
 		if (partType.equals(Thruster.class.getSimpleName())) {
@@ -176,8 +176,8 @@ public class ShipInfoScreen extends AbstractNodeStageScreen {
 	private void addSellReplaceComponentRow (Table table, String name, ShipPart part, final ShipComponent component, boolean allowSell) {
 		table.row();
 		table.add(component.getClass().getSimpleName());
-		table.add(name);
-		table.add(Units.moneyToString(component.price));
+		//table.add(name);
+		table.add(Units.moneyToString(component.price)).right();
 		table.add(Units.toString(component.mass)).right();
 		table.add(Units.toString(component.power)).right();
 		table.add(Units.volumeToString(component.volume)).right();
@@ -212,9 +212,9 @@ public class ShipInfoScreen extends AbstractNodeStageScreen {
 
 	private void addBuyComponentRow (Table table, ShipPart part, int columnCount) {
 		table.row();
-		table.add(part.name);
-		String partType = part.types.size == 1 ? part.types.get(0) : "...";
-		table.add(partType).colspan(columnCount - 1);
+		table.add(part.name).colspan(columnCount);
+//		String partType = part.types.size == 1 ? part.types.get(0) : "...";
+//		table.add(partType).colspan(columnCount - 1);
 		
 		Button buttonBuy = button("Buy...", new BuyShipComponentScreen(infiniteSpaceGame, part, node));
 		table.add(buttonBuy);
