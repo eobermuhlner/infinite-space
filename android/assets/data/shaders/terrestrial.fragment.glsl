@@ -173,6 +173,7 @@ float earthHeight(vec2 P) {
 	height += pnoise2(P+r8, 128.0 * base) * range / 128.0;
 	height += pnoise2(P+r8, 256.0 * base) * range / 256.0;
 	
+	height = clamp(height, u_heightMin, u_heightMax);
 	return height;
 }
 
