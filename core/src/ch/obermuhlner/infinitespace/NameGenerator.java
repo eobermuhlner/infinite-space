@@ -97,13 +97,9 @@ public class NameGenerator {
 		} else if (node instanceof Planet) {
 			// Use star name + roman number if no population
 			prefix = random.nextProbability(
-				p(5, "Nova "),
 				p(3, "Neu "),
 				p(2, "Nieuw "),
 				p(2, "New "),
-				p(1, "Nuevo "),
-				p(1, "Nuovo "),
-				p(1, "Nouveau "),
 				p(30, ""));
 		}
 		

@@ -1,15 +1,20 @@
 
 package ch.obermuhlner.infinitespace.render;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.g3d.Attribute;
 import com.badlogic.gdx.graphics.g3d.Renderable;
 import com.badlogic.gdx.graphics.g3d.Shader;
+import com.badlogic.gdx.graphics.g3d.attributes.FloatAttribute;
+import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.utils.RenderContext;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.GdxRuntimeException;
 
-public class PlanetShader implements Shader {
+public class TerrestrialPlanetShader implements Shader {
 
 	private final String vertexProgram;
 	private final String fragmentProgram;
@@ -18,7 +23,15 @@ public class PlanetShader implements Shader {
 	
 	private int u_projViewTrans;
 	private int u_worldTrans;
+	private int u_diffuseTexture;
 	private int u_time;
+
+	private int u_heightMin;
+	private int u_heightMax;
+	private int u_heightFrequency;
+	private int u_heightWater;
+	private int u_iceLevel;
+	
 	private int u_random0;
 	private int u_random1;
 	private int u_random2;
@@ -29,11 +42,12 @@ public class PlanetShader implements Shader {
 	private int u_random7;
 	private int u_random8;
 	private int u_random9;
-	private int u_planetColor0;
-	private int u_planetColor1;
-	private int u_planetColor2;
 	
-	public PlanetShader (String vertexProgram, String fragmentProgram) {
+	private RenderContext context;
+	
+	private float time;
+	
+	public TerrestrialPlanetShader (String vertexProgram, String fragmentProgram) {
 		this.vertexProgram = vertexProgram;
 		this.fragmentProgram = fragmentProgram;
 	}
@@ -47,7 +61,15 @@ public class PlanetShader implements Shader {
 
 		u_projViewTrans = program.getUniformLocation("u_projViewTrans");
 		u_worldTrans = program.getUniformLocation("u_worldTrans");
+		u_diffuseTexture = program.getUniformLocation("u_diffuseTexture");
 		u_time = program.getUniformLocation("u_time");
+
+		u_heightMin = program.getUniformLocation("u_heightMin");
+		u_heightMax = program.getUniformLocation("u_heightMax");
+		u_heightFrequency = program.getUniformLocation("u_heightFrequency");
+		u_heightWater = program.getUniformLocation("u_heightWater");
+		u_iceLevel = program.getUniformLocation("u_iceLevel");
+		
 		u_random0 = program.getUniformLocation("u_random0");
 		u_random1 = program.getUniformLocation("u_random1");
 		u_random2 = program.getUniformLocation("u_random2");
@@ -58,13 +80,12 @@ public class PlanetShader implements Shader {
 		u_random7 = program.getUniformLocation("u_random7");
 		u_random8 = program.getUniformLocation("u_random8");
 		u_random9 = program.getUniformLocation("u_random9");
-		u_planetColor0 = program.getUniformLocation("u_planetColor0");
-		u_planetColor1 = program.getUniformLocation("u_planetColor1");
-		u_planetColor2 = program.getUniformLocation("u_planetColor2");
 	}
 
 	@Override
 	public void begin (Camera camera, RenderContext context) {
+		this.context = context;
+		
 		context.setDepthTest(GL20.GL_LEQUAL);
 		context.setCullFace(GL20.GL_BACK);
 
@@ -84,6 +105,18 @@ public class PlanetShader implements Shader {
 		// world transformation
 		program.setUniformMatrix(u_worldTrans, renderable.worldTransform);
 		
+		// diffuse texture
+		TextureAttribute textureAttribute = (TextureAttribute) renderable.material.get(TextureAttribute.Diffuse);
+		int textureUnit = context.textureBinder.bind(textureAttribute.textureDescription);
+		program.setUniformi(u_diffuseTexture, textureUnit);
+
+		// planet data
+		program.setUniformf(u_heightMin, getFloatAttributeValue(renderable, TerrestrialPlanetFloatAttribute.HeightMin, 0.0f));
+		program.setUniformf(u_heightMax, getFloatAttributeValue(renderable, TerrestrialPlanetFloatAttribute.HeightMax, 1.0f));
+		program.setUniformf(u_heightFrequency, getFloatAttributeValue(renderable, TerrestrialPlanetFloatAttribute.HeightFrequency, 5f));
+		program.setUniformf(u_heightWater, getFloatAttributeValue(renderable, TerrestrialPlanetFloatAttribute.HeightWater, 0.4f));
+		program.setUniformf(u_iceLevel, getFloatAttributeValue(renderable, TerrestrialPlanetFloatAttribute.IcelLevel, 0.0f));
+		
 		// random
 		FloatArrayAttribute floatArrayAttribute = (FloatArrayAttribute)renderable.material.get(FloatArrayAttribute.FloatArray);
 		program.setUniformf(u_random0, floatArrayAttribute.values[0]);
@@ -97,16 +130,16 @@ public class PlanetShader implements Shader {
 		program.setUniformf(u_random8, floatArrayAttribute.values[0]);
 		program.setUniformf(u_random9, floatArrayAttribute.values[0]);
 
-		// color array
-		ColorArrayAttribute colorArrayAttribute = (ColorArrayAttribute) renderable.material.get(ColorArrayAttribute.PlanetColors);
-		if (colorArrayAttribute != null) {
-			program.setUniformf(u_planetColor0, colorArrayAttribute.colors[0].r, colorArrayAttribute.colors[0].g, colorArrayAttribute.colors[0].b);			
-			program.setUniformf(u_planetColor1, colorArrayAttribute.colors[1].r, colorArrayAttribute.colors[1].g, colorArrayAttribute.colors[1].b);			
-			program.setUniformf(u_planetColor2, colorArrayAttribute.colors[2].r, colorArrayAttribute.colors[2].g, colorArrayAttribute.colors[2].b);			
-		}
+		// time
+		program.setUniformf(u_time, time += Gdx.graphics.getDeltaTime());
 		
 		// mesh
 		renderable.mesh.render(program, renderable.primitiveType, renderable.meshPartOffset, renderable.meshPartSize);
+	}
+
+	private float getFloatAttributeValue(Renderable renderable, long attributeType, float defaultValue) {
+		FloatAttribute floatAttribute = (FloatAttribute) renderable.material.get(attributeType);
+		return floatAttribute == null ? defaultValue : floatAttribute.value;
 	}
 
 	@Override

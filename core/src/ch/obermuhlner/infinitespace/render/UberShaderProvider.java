@@ -14,6 +14,7 @@ public class UberShaderProvider extends BaseShaderProvider {
 	public static UberShaderProvider EMISSIVE = new UberShaderProvider("emissive");
 	
 	public static final String GAS_PLANET_SHADER = "jupiter";
+	public static final String TERRESTRIAL_PLANET_SHADER = "terrestrial";
 	public static final String SUN_SHADER = "sun";
 	
 	private String shaderName;
@@ -37,7 +38,10 @@ public class UberShaderProvider extends BaseShaderProvider {
 		String frag = Gdx.files.internal("data/shaders/" + name + ".fragment.glsl").readString();
 		
 		if (GAS_PLANET_SHADER.equals(name)) {
-			return new PlanetShader(vert, frag);
+			return new GasPlanetShader(vert, frag);
+		}
+		if (TERRESTRIAL_PLANET_SHADER.equals(name)) {
+			return new TerrestrialPlanetShader(vert, frag);
 		}
 		return new DefaultShader(renderable, new DefaultShader.Config(vert, frag));
 	}

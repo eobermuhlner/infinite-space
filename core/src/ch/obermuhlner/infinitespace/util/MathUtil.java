@@ -29,6 +29,12 @@ public class MathUtil {
 
 	
 	public static float transform(float fromMin, float fromMax, float toMin, float toMax, float value) {
+		if (value < fromMin) {
+			return toMin;
+		}
+		if (value > fromMax) {
+			return toMax;
+		}
 		return (value - fromMin) / (fromMax - fromMin) * (toMax - toMin) + toMin;
 	}
 }
