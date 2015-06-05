@@ -22,11 +22,24 @@ public class MathUtil {
 		return value;
 	}
 
+	/**
+	 * The smoothstep function returns 0.0 if x is smaller then edge0 and 1.0 if x is larger than edge1.
+	 * Otherwise the return value is interpolated between 0.0 and 1.0 using Hermite polynomirals.
+	 * 
+	 * @param edge0 the lower edge
+	 * @param edge1 the upper edge
+	 * @param x the value to smooth
+	 * @return the smoothed value
+	 */
 	public static float smoothstep (float edge0, float edge1, float x) {
 		float clamped = clamp((x - edge0) / (edge1 - edge0), 0.0f, 1.0f);
 		return clamped * clamped * (3 - 2 * clamped);
 	}
 
+	public static double smoothstep (double edge0, double edge1, double x) {
+		double clamped = clamp((x - edge0) / (edge1 - edge0), 0.0, 1.0);
+		return clamped * clamped * (3 - 2 * clamped);
+	}
 	
 	public static float transform(float fromMin, float fromMax, float toMin, float toMax, float value) {
 		if (value < fromMin) {

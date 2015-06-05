@@ -202,6 +202,8 @@ public class NodeToRenderConverter {
 			Vector3 position = calculatePosition(node);
 			Vector3 parentPosition = calculatePosition(node.parent);
 
+			Array<Attribute> materialAttributes = new Array<Attribute>();
+			
 			String textureName = node.textureName;
 			String shaderName = null;
 			Color[] planetColors = null;
@@ -216,13 +218,56 @@ public class NodeToRenderConverter {
 					}
 					break;
 				case STONE:
-					if (node.radius < 1000E3) {
+					if (textureName == null && node.parent instanceof Star) {
+						Star star = (Star) node.parent;
+						// TODO use heat of planet to decide whether is is lava
+						if (node.orbitRadius < star.radius * 10) {
+							textureName = "lava_colors.png";
+							shaderName = UberShaderProvider.TERRESTRIAL_PLANET_SHADER;
+							materialAttributes.add(TerrestrialPlanetFloatAttribute.createHeightFrequency(random.nextFloat(20f, 22f)));
+						}
+					}
+					
+					if (textureName == null && node.radius < 1000E3) {
 						textureName = random.next ("phobos.jpg", "deimos.jpg");
 					} else {
-						if (node.breathableAtmosphere) {
+						if (textureName == null) {
+							if (node.atmosphereDensity > 0.1) {
+								if (node.breathableAtmosphere) {
+									if (node.hasLife) {
+										textureName = "terrestrial_colors.png";
+										float water = (float)node.water;
+										float heightMin = MathUtil.transform(0f, 1f, 0.6f, 0.0f, water);
+										float heightMax = MathUtil.transform(0f, 1f, 1.0f, 0.4f, water);
+										float iceLevel = water < 0.4f ? MathUtil.transform(0f, 1f, -1.0f, 0.0f, water) : 0.0f;
+										materialAttributes.add(TerrestrialPlanetFloatAttribute.createHeightWater(0.4f)); // depends on texture
+										materialAttributes.add(TerrestrialPlanetFloatAttribute.createHeightMin(heightMin));
+										materialAttributes.add(TerrestrialPlanetFloatAttribute.createHeightMax(heightMax));
+										materialAttributes.add(TerrestrialPlanetFloatAttribute.createHeightFrequency(random.nextFloat(2f, 15f)));
+										materialAttributes.add(TerrestrialPlanetFloatAttribute.createIcelLevel(iceLevel));
+										shaderName = UberShaderProvider.TERRESTRIAL_PLANET_SHADER;
+									}
+								}
+								if (textureName == null && random.nextBoolean(0.1)) {
+									textureName = "mars_colors.png";
+									materialAttributes.add(TerrestrialPlanetFloatAttribute.createHeightFrequency(random.nextFloat(2f, 15f)));
+									shaderName = UberShaderProvider.TERRESTRIAL_PLANET_SHADER;
+								}
+							}
+						}
+
+						if (textureName == null && random.nextBoolean(0.1)) {
+							textureName = "moon_colors.png";
+							float heightRange = random.nextFloat(0.3f, 1.0f);
+							float heightMin = random.nextFloat(1.0f - heightRange);
+							float heightMax = heightMin + heightRange;
+							materialAttributes.add(TerrestrialPlanetFloatAttribute.createHeightMin(heightMin));
+							materialAttributes.add(TerrestrialPlanetFloatAttribute.createHeightMax(heightMax));
+							materialAttributes.add(TerrestrialPlanetFloatAttribute.createHeightFrequency(random.nextFloat(2f, 15f)));
 							shaderName = UberShaderProvider.TERRESTRIAL_PLANET_SHADER;
-							textureName = "terrestrial.png";
-						} else {
+						}
+
+						if (textureName == null) {
 							textureName = random.next ("io.jpg", "callisto.jpg", "ganymede.jpg", "europa.jpg", "mercury.jpg", "mars.jpg", "moon.jpg", "iapetus.jpg", "rhea.jpg");
 						}
 					}
@@ -233,34 +278,21 @@ public class NodeToRenderConverter {
 				}
 			}
 
-//			shaderName = UberShaderProvider.TERRESTRIAL_PLANET_SHADER;
-//			textureName = "terrestrial.png";
-//			System.out.println("PLANET " + node.seed + " " + shaderName + " " + textureName);
+			System.out.println("PLANET " + node.seed + " " + shaderName + " " + textureName);
 			
 			{
 				Material material;
 				if (shaderName == null) {
 					Texture texture = assetManager.get(InfiniteSpaceGame.getTexturePath(textureName), Texture.class);
-					material = new Material(new TextureAttribute(TextureAttribute.Diffuse, texture));
+					materialAttributes.add(new TextureAttribute(TextureAttribute.Diffuse, texture));
+					material = new Material(materialAttributes);
 				} else {
-					Array<Attribute> materialAttributes = new Array<Attribute>();
 					if (textureName != null) {
 						Texture texture = assetManager.get(InfiniteSpaceGame.getTexturePath(textureName), Texture.class);
 						materialAttributes.add(new TextureAttribute(TextureAttribute.Diffuse, texture));
 					}
 					if (planetColors != null) {
 						materialAttributes.add(new ColorArrayAttribute(ColorArrayAttribute.PlanetColors, randomPlanetColors(random, planetColors)));
-					}
-					if (shaderName.equals(UberShaderProvider.TERRESTRIAL_PLANET_SHADER)) {
-						float water = (float)node.water;
-						float heightMin = MathUtil.transform(0f, 1f, 0.6f, 0.0f, water);
-						float heightMax = MathUtil.transform(0f, 1f, 1.0f, 0.4f, water);
-						float iceLevel = water < 0.4f ? MathUtil.transform(0f, 1f, -1.0f, 0.0f, water) : 0.0f;
-						materialAttributes.add(TerrestrialPlanetFloatAttribute.createHeightWater(0.4f)); // depends on texture
-						materialAttributes.add(TerrestrialPlanetFloatAttribute.createHeightMin(heightMin));
-						materialAttributes.add(TerrestrialPlanetFloatAttribute.createHeightMax(heightMax));
-						materialAttributes.add(TerrestrialPlanetFloatAttribute.createHeightFrequency(random.nextFloat(2f, 15f)));
-						materialAttributes.add(TerrestrialPlanetFloatAttribute.createIcelLevel(iceLevel));
 					}
 					{
 						float floatArray[] = new float[10];
@@ -379,12 +411,13 @@ public class NodeToRenderConverter {
 	public Texture renderTexture (Material material, UserData userData) {
 		final int textureSize = GamePreferences.INSTANCE.preferences.getInteger(GamePreferences.INT_GENERATED_TEXTURES_SIZE);
 		
+		final int rectSize = 1;
 		Model model;
 		model = modelBuilder.createRect(
-			textureSize, 0f, -textureSize,
-			-textureSize, 0f, -textureSize,
-			-textureSize, 0f, textureSize,
-			textureSize, 0f, textureSize,
+			rectSize, 0f, -rectSize,
+			-rectSize, 0f, -rectSize,
+			-rectSize, 0f, rectSize,
+			rectSize, 0f, rectSize,
 			0, 1, 0,
 			material, Usage.Position | Usage.Normal | Usage.TextureCoordinates);
 
@@ -396,8 +429,7 @@ public class NodeToRenderConverter {
 		FrameBuffer frameBuffer = new FrameBuffer(Pixmap.Format.RGB888, textureSize, textureSize, false);
 		frameBuffer.begin();
 
-		OrthographicCamera camera = new OrthographicCamera(textureSize*2, textureSize*2);
-//		camera.setToOrtho(true, textureSize, textureSize);
+		OrthographicCamera camera = new OrthographicCamera(rectSize*2, rectSize*2);
 		camera.position.set(0, 1, 0);
 		camera.lookAt(0, 0, 0);
 		camera.update();
@@ -412,7 +444,7 @@ public class NodeToRenderConverter {
 
 		model.dispose();
 		modelBatch.dispose();
-		//frameBuffer.dispose();
+		//frameBuffer.dispose(); // FIXME
 		
 		return texture;
 	}

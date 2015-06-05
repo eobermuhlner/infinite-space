@@ -55,6 +55,10 @@ public class Random {
 		return nextRandom().nextFloat();
 	}
 	
+	public float nextFloat(float range) {
+		return nextFloat() * range;
+	}
+	
 	public float nextFloat(float min, float max) {
 		return nextFloat() * (max - min) + min;
 	}

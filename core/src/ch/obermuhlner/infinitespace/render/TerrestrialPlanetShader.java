@@ -114,7 +114,7 @@ public class TerrestrialPlanetShader implements Shader {
 		program.setUniformf(u_heightMin, getFloatAttributeValue(renderable, TerrestrialPlanetFloatAttribute.HeightMin, 0.0f));
 		program.setUniformf(u_heightMax, getFloatAttributeValue(renderable, TerrestrialPlanetFloatAttribute.HeightMax, 1.0f));
 		program.setUniformf(u_heightFrequency, getFloatAttributeValue(renderable, TerrestrialPlanetFloatAttribute.HeightFrequency, 5f));
-		program.setUniformf(u_heightWater, getFloatAttributeValue(renderable, TerrestrialPlanetFloatAttribute.HeightWater, 0.4f));
+		program.setUniformf(u_heightWater, getFloatAttributeValue(renderable, TerrestrialPlanetFloatAttribute.HeightWater, 0.0f));
 		program.setUniformf(u_iceLevel, getFloatAttributeValue(renderable, TerrestrialPlanetFloatAttribute.IcelLevel, 0.0f));
 		
 		// random

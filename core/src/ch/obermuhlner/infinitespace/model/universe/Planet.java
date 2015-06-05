@@ -12,6 +12,7 @@ public class Planet extends OrbitingSpheroidNode {
 	public Type type;
 	public String textureName;
 	
+	public double atmosphereDensity;
 	public boolean breathableAtmosphere;
 	public double water; // 1.0 = 100% covered
 	public boolean supportsLife;

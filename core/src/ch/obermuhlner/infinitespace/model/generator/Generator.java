@@ -26,6 +26,7 @@ import ch.obermuhlner.infinitespace.model.universe.Universe;
 import ch.obermuhlner.infinitespace.model.universe.population.Commodity;
 import ch.obermuhlner.infinitespace.model.universe.population.Industry;
 import ch.obermuhlner.infinitespace.model.universe.population.Population;
+import ch.obermuhlner.infinitespace.util.MathUtil;
 import ch.obermuhlner.infinitespace.util.Units;
 
 public class Generator {
@@ -305,7 +306,8 @@ public class Generator {
 				planet.mass = random.nextGaussian (Units.EARTH_MASS);
 				planet.radius = random.nextGaussian (Units.EARTH_RADIUS);
 				planet.childCount = random.nextInt (0, 2);
-				planet.breathableAtmosphere = random.nextBoolean(0.1);
+				planet.atmosphereDensity = MathUtil.smoothstep(Units.EARTH_MASS / 10, Units.EARTH_MASS * 10, planet.mass); // FIXME real function for atmosphere density
+				planet.breathableAtmosphere = planet.atmosphereDensity > 0.1 && random.nextBoolean(0.1);
 				if (lifeSupportingZone) {
 					planet.breathableAtmosphere = random.nextBoolean(0.3);
 					if (planet.breathableAtmosphere) {
@@ -322,7 +324,8 @@ public class Generator {
 			planet.mass = random.nextGaussian (parent.mass / 10); // TODO not linear!
 			planet.radius = random.nextGaussian (parent.radius / 10);
 			planet.childCount = 0;
-			planet.breathableAtmosphere = random.nextBoolean(0.1);
+			planet.atmosphereDensity = MathUtil.smoothstep(Units.EARTH_MASS / 10, Units.EARTH_MASS * 10, planet.mass); // FIXME real function for atmosphere density
+			planet.breathableAtmosphere = planet.atmosphereDensity > 0.1 && random.nextBoolean(0.1);
 			if (lifeSupportingZone) {
 				planet.breathableAtmosphere = random.nextBoolean(0.3);
 				if (planet.breathableAtmosphere) {
