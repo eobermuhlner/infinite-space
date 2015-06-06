@@ -20,7 +20,6 @@ import ch.obermuhlner.infinitespace.util.MathUtil;
 import ch.obermuhlner.infinitespace.util.Units;
 
 import com.badlogic.gdx.assets.AssetManager;
-import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
@@ -46,6 +45,9 @@ import com.badlogic.gdx.utils.Array;
 public class NodeToRenderConverter {
 
 	private static final boolean RENDER_PROCEDURAL_SHADERS_TO_TEXTURES = true;
+
+	private static final double PROBABILITY_GENERATED_PLANET = 0.2;
+	private static final boolean RENDER_CLOUDS = true;
 
 	private static final double SUN_RADIUS = Units.SUN_RADIUS;
 
@@ -248,7 +250,7 @@ public class NodeToRenderConverter {
 										shaderName = UberShaderProvider.TERRESTRIAL_PLANET_SHADER;
 									}
 								}
-								if (textureName == null && random.nextBoolean(0.1)) {
+								if (textureName == null && random.nextBoolean(PROBABILITY_GENERATED_PLANET)) {
 									textureName = "mars_colors.png";
 									materialAttributes.add(TerrestrialPlanetFloatAttribute.createHeightFrequency(random.nextFloat(2f, 15f)));
 									shaderName = UberShaderProvider.TERRESTRIAL_PLANET_SHADER;
@@ -256,7 +258,7 @@ public class NodeToRenderConverter {
 							}
 						}
 
-						if (textureName == null && random.nextBoolean(0.1)) {
+						if (textureName == null && random.nextBoolean(PROBABILITY_GENERATED_PLANET)) {
 							textureName = "moon_colors.png";
 							float heightRange = random.nextFloat(0.3f, 1.0f);
 							float heightMin = random.nextFloat(1.0f - heightRange);
@@ -278,7 +280,7 @@ public class NodeToRenderConverter {
 				}
 			}
 
-			System.out.println("PLANET " + node.seed + " " + shaderName + " " + textureName);
+			System.out.println("PLANET " + node.seed + " " + node.name + " " + shaderName + " " + textureName);
 			
 			{
 				Material material;
@@ -327,7 +329,7 @@ public class NodeToRenderConverter {
 					renderState.instances.add(sphere);
 				}
 				
-				if (node.breathableAtmosphere) {
+				if (RENDER_CLOUDS && node.breathableAtmosphere) {
 					float atmosphereRadiusFactor = 1.01f;
 					float atmosphereRadius = radius * atmosphereRadiusFactor; 
 					Texture texture = assetManager.get(InfiniteSpaceGame.getTexturePath("clouds.png"), Texture.class);
