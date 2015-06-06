@@ -149,34 +149,6 @@ float pnoise2(vec2 P, float period) {
 	return pnoise(P*period, vec2(period, period));
 }
 
-float earthHeight(vec2 P) {
-	vec2 r1 = vec2(u_random0+u_random5, u_random1+u_random8);
-	vec2 r2 = vec2(u_random2+u_random5, u_random3+u_random8);
-	vec2 r3 = vec2(u_random4+u_random5, u_random5+u_random8);
-	vec2 r4 = vec2(u_random6+u_random5, u_random7+u_random8);
-	vec2 r5 = vec2(u_random8+u_random5, u_random9+u_random8);
-	vec2 r6 = vec2(u_random0+u_random7, u_random7+u_random6);
-	vec2 r7 = vec2(u_random2+u_random7, u_random5+u_random6);
-	vec2 r8 = vec2(u_random4+u_random7, u_random3+u_random6);
-
-	float height = u_heightMin + (u_heightMax - u_heightMin) / 2.0; 
-	const float base = u_heightFrequency;
-	const float range = u_heightMax - u_heightMin;
-	
-	height += pnoise2(P+r2, 1.0 * base) * range / 1.0;
-	height += pnoise2(P+r2, 2.0 * base) * range / 2.0;
-	height += pnoise2(P+r3, 4.0 * base) * range / 4.0;
-	height += pnoise2(P+r4, 8.0 * base) * range / 8.0;
-	height += pnoise2(P+r5, 16.0 * base) * range / 16.0;
-	height += pnoise2(P+r6, 32.0 * base) * range / 32.0;
-	height += pnoise2(P+r7, 64.0 * base) * range / 64.0;
-	height += pnoise2(P+r8, 128.0 * base) * range / 128.0;
-	height += pnoise2(P+r8, 256.0 * base) * range / 256.0;
-	
-	height = clamp(height, u_heightMin, u_heightMax);
-	return height;
-}
-
 float fractalNoise(vec2 P, float baseFrequency, float baseFactor) {
 	vec2 r1 = vec2(u_random0+u_random4, u_random1+u_random6);
 	vec2 r2 = vec2(u_random2+u_random4, u_random3+u_random6);
@@ -211,7 +183,13 @@ void main() {
 	vec2 r8 = vec2(u_random4+u_random3, u_random3+u_random2);
 	vec2 r9 = vec2(u_random6+u_random3, u_random1+u_random2);
 
-	float height = earthHeight(v_texCoords0);
+	float baseHeight = u_heightMin + (u_heightMax - u_heightMin) / 2.0; 
+	const float base = u_heightFrequency;
+	const float range = u_heightMax - u_heightMin;
+
+	float height = baseHeight;
+	height += fractalNoise(v_texCoords0, base, range);
+	height = clamp(height, u_heightMin, u_heightMax);
 
 	float distEquator = abs(v_texCoords0.t - 0.5) * 2.0;
 	distEquator += pnoise2(v_texCoords0,  8) * 0.04;
