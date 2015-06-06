@@ -172,6 +172,10 @@ float fractalNoise(vec2 P, float baseFrequency, float baseFactor) {
 	return noise;
 }
 
+float ridge(float x) {
+	return exp(-8.0 * (x * x));
+}
+
 void main() {
 	vec2 r1 = vec2(u_random0+u_random1, u_random1+u_random0);
 	vec2 r2 = vec2(u_random2+u_random1, u_random3+u_random0);
@@ -191,6 +195,12 @@ void main() {
 	height += fractalNoise(v_texCoords0, base, range);
 	height = clamp(height, u_heightMin, u_heightMax);
 
+	const float mountainRange = 1.0;
+	float mountainFrequency = u_heightFrequency;
+	float mountainHeight = ridge(2 * fractalNoise(v_texCoords0, 2.0, 1.0) - 1.0) * mountainRange;
+	float mountainFactor = smoothstep(0.0, 0.6, ((pnoise2(v_texCoords0+r9, mountainFrequency) + 1) * 0.5));
+	height = max(height, mountainHeight * mountainFactor);
+
 	float distEquator = abs(v_texCoords0.t - 0.5) * 2.0;
 	distEquator += pnoise2(v_texCoords0,  8) * 0.04;
 	distEquator += pnoise2(v_texCoords0, 16) * 0.02;
@@ -208,7 +218,7 @@ void main() {
 
 	if (height > 0.40) {
 		// make noise on land, not on water
-		float colorNoise = fractalNoise(v_texCoords0+r1, 20, 0.1);
+		float colorNoise = fractalNoise(v_texCoords0+r1, 20, 0.2);
 		color = color * (1.0 + colorNoise);
 	}
 
