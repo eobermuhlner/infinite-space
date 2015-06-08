@@ -56,7 +56,7 @@ public class InfoScreen extends AbstractNodeStageScreen {
 			addRow(tablePhysics, "Type", planet.type);
 			addRow(tablePhysics, "Temperature", Units.kelvinToString(planet.temperature));
 			addRow(tablePhysics, "Atmosphere", Units.atmosphereToString(planet.atmosphere));
-			addRow(tablePhysics, "Atmosphere Density", Units.toString(planet.atmosphereDensity));
+			addRow(tablePhysics, "Atmosphere Pressure", Units.pascalToString(planet.atmospherePressure));
 			addRow(tablePhysics, "Breathable Atmosphere", planet.breathableAtmosphere);
 			addRow(tablePhysics, "Water", Units.percentToString(planet.water));
 			addRow(tablePhysics, "Supports Life", planet.supportsLife);

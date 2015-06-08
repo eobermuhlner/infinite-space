@@ -1,8 +1,12 @@
 package ch.obermuhlner.infinitespace.util;
 
 import java.text.NumberFormat;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 public class Units {
 	
@@ -11,6 +15,7 @@ public class Units {
 	public static final double LIGHT_SECOND = 299792458;
 	public static final double LIGHT_YEAR = LIGHT_SECOND * SECONDS_PER_YEAR;
 	public static final double ASTRONOMICAL_UNIT = 149597871E3;
+	private static final double CELSIUS_BASE = 273.16;
 	
 	/**
 	 * See: http://en.wikipedia.org/wiki/Stefan%E2%80%93Boltzmann_constant
@@ -23,6 +28,7 @@ public class Units {
 	public static final double EARTH_MASS = 5.9742E24;
 	public static final double EARTH_RADIUS = 6378.1E3;
 	public static final double EARTH_PERIOD = 1 * SECONDS_PER_DAY;
+	public static final double EARTH_ATMOSPHERE_PRESSURE = 101.325E3; //Pa
 	
 	public static final double JUPITER_MASS = 1.8987E27;
 	public static final double JUPITER_RADIUS = 71492.68E3;
@@ -100,6 +106,10 @@ public class Units {
 		return toString(value) + " K (" + toString(value - 273.16) + " C)";
 	}
 
+	public static String pascalToString(double value) {
+		return toString(value) + " Pa (" + toString(value / Units.EARTH_ATMOSPHERE_PRESSURE) + " bar)";
+	}
+	
 	public static String volumeToString(double value) {
 		return toString(value) + " m^3";
 	}
@@ -111,7 +121,6 @@ public class Units {
 	public static String moneyToString(double value) {
 		return toString(value) + " $";
 	}
-
 
 	public static String unitToString(double value, Unit units[], Unit[]... alternateUnits) {
 		StringBuilder stringBuilder = new StringBuilder();
@@ -148,6 +157,31 @@ public class Units {
 		return null;
 	}
 	
+	public static String atmosphereToString(Map<Molecule, Double> atmosphere) {
+		StringBuilder stringBuilder = new StringBuilder();
+		
+		if (atmosphere != null) {
+			List<Map.Entry<Molecule, Double>> entries = new ArrayList<Map.Entry<Molecule,Double>>(atmosphere.entrySet());
+			Collections.sort(entries, new Comparator<Map.Entry<Molecule,Double>>() {
+				@Override
+				public int compare(Entry<Molecule, Double> o1, Entry<Molecule, Double> o2) {
+					return Double.compare(o1.getValue(), o2.getValue());
+				}
+			});
+			for (Map.Entry<Molecule, Double> entry : entries) {
+				stringBuilder.append(percentToString(entry.getValue()));
+				stringBuilder.append(entry.getKey().name());
+				stringBuilder.append("  ");
+			}
+		}
+		
+		return stringBuilder.toString();
+	}
+
+	public static double celsiusToKelvin(double celsius) {
+		return celsius + CELSIUS_BASE;
+	}
+	
 	private static class Unit {
 		double value;
 		String name;
@@ -156,18 +190,6 @@ public class Units {
 			this.value = value;
 			this.name = unit;
 		}
-	}
-
-	public static String atmosphereToString(List<Tuple2<Molecule, Double>> atmosphere) {
-		StringBuilder stringBuilder = new StringBuilder();
-		
-		for (Tuple2<Molecule, Double> tuple : atmosphere) {
-			stringBuilder.append(percentToString(tuple.getValue2()));
-			stringBuilder.append(tuple.getValue1().name());
-			stringBuilder.append("  ");
-		}
-		
-		return stringBuilder.toString();
 	}
 
 }

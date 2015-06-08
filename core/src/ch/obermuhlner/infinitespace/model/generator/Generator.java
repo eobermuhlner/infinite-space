@@ -3,7 +3,6 @@ package ch.obermuhlner.infinitespace.model.generator;
 import static ch.obermuhlner.infinitespace.model.random.Random.p;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -292,21 +291,14 @@ public class Generator {
 		double starDistance = accumulateOrbitRadius(planet, star);
 		double starLumininosity = star.getLuminosity();
 		double theoreticalTemperature = theoreticalTemperature(starLumininosity, 0.1, starDistance);
+		boolean lifeSupportingZone = theoreticalTemperature > Units.celsiusToKelvin(-50) && theoreticalTemperature < Units.celsiusToKelvin(60);
 		System.out.println("theoreticalTemperature = " + Units.kelvinToString(theoreticalTemperature));
 		
-		planet.type = random.nextProbability(
-			p(5, Planet.Type.STONE),
-			p(4, Planet.Type.GAS)
-			);
-		
-		planet.orbitPeriod = Math.pow(planet.orbitRadius/Units.ASTRONOMICAL_UNIT, 3.0/2.0) * Units.SECONDS_PER_YEAR;
-		planet.rotation = random.nextGaussian (25 * Units.SECONDS_PER_DAY);
-
-		boolean lifeSupportingZone = isLifeSupportingZone(planet);
+		// set Planet: type, mass, radius, childCount
 		if (parent.mass > Units.SUN_MASS * 0.05) {
 			int firstGasPlanet = parentRandom.nextInt(3, 4);
 			int lastGasPlanet = parentRandom.nextInt(8, 11);
-			if (index > firstGasPlanet && index < lastGasPlanet) {
+			if ((index > firstGasPlanet && index < lastGasPlanet) || random.nextBoolean(0.01)) {
 				planet.type = Planet.Type.GAS;
 				planet.mass = random.nextGaussian (Units.JUPITER_MASS);
 				planet.radius = random.nextGaussian (Units.JUPITER_RADIUS);
@@ -316,26 +308,37 @@ public class Generator {
 				planet.mass = random.nextGaussian (Units.EARTH_MASS);
 				planet.radius = random.nextGaussian (Units.EARTH_RADIUS);
 				planet.childCount = random.nextInt (0, 2);
-				planet.atmosphereDensity = MathUtil.smoothstep(Units.EARTH_MASS / 10, Units.EARTH_MASS * 10, planet.mass); // FIXME real function for atmosphere density
-				planet.breathableAtmosphere = planet.atmosphereDensity > 0.1 && random.nextBoolean(0.1);
-				if (lifeSupportingZone) {
-					planet.breathableAtmosphere = random.nextBoolean(0.3);
-					if (planet.breathableAtmosphere) {
-						planet.water = random.nextDouble();
-					} else {
-						if (random.nextBoolean(0.4)) {
-							planet.water = random.nextDouble();
-						}
-					}
-				}
 			}
 		} else {
 			planet.type = Planet.Type.STONE;
 			planet.mass = random.nextGaussian (parent.mass / 10); // TODO not linear!
 			planet.radius = random.nextGaussian (parent.radius / 10);
 			planet.childCount = 0;
-			planet.atmosphereDensity = MathUtil.smoothstep(Units.EARTH_MASS / 10, Units.EARTH_MASS * 10, planet.mass); // FIXME real function for atmosphere density
-			planet.breathableAtmosphere = planet.atmosphereDensity > 0.1 && random.nextBoolean(0.1);
+		}
+		
+		// set Planet orbit
+		planet.orbitPeriod = Math.pow(planet.orbitRadius/Units.ASTRONOMICAL_UNIT, 3.0/2.0) * Units.SECONDS_PER_YEAR;
+		planet.rotation = random.nextGaussian (25 * Units.SECONDS_PER_DAY);
+
+		// set Planet atmosphere
+		switch(planet.type) {
+		case GAS: {
+			// jupiter-like atmosphere
+			planet.atmosphere = random.nextProbabilityMap(
+					p(random.nextGaussian(90), Molecule.H2),
+					p(random.nextGaussian(10), Molecule.He),
+					p(random.nextGaussian(0.3), Molecule.CH4),
+					p(random.nextGaussian(0.003), Molecule.NH3),
+					p(random.nextGaussian(0.0006), Molecule.C2H6)
+					);
+			planet.albedo = random.nextDouble(0.27, 0.34);
+			break;
+			}
+		default :
+		case ICE: //FIXME ??
+		case STONE: {
+			planet.atmospherePressure = MathUtil.smoothstep(Units.EARTH_MASS / 10, Units.EARTH_MASS * 10, planet.mass); // FIXME real function for atmosphere density
+			planet.breathableAtmosphere = planet.atmospherePressure > 0.1 && random.nextBoolean(0.1);
 			if (lifeSupportingZone) {
 				planet.breathableAtmosphere = random.nextBoolean(0.3);
 				if (planet.breathableAtmosphere) {
@@ -346,8 +349,42 @@ public class Generator {
 					}
 				}
 			}
+			if (planet.breathableAtmosphere) {
+				// terra like atmosphere
+				planet.atmosphere = random.nextProbabilityMap(
+						p(random.nextGaussian(75), Molecule.N2),
+						p(random.nextGaussian(20), Molecule.O2),
+						p(random.nextGaussian(0.01), Molecule.Ar),
+						p(random.nextGaussian(0.005), Molecule.CO2)
+						);
+			} else {
+				if (planet.atmospherePressure > 0.1) {
+					if (random.nextBoolean(0.5)) {
+						// mars/venus-like atmosphere
+						planet.atmosphere = random.nextProbabilityMap(
+								p(random.nextGaussian(95), Molecule.CO2),
+								p(random.nextGaussian(3), Molecule.N2),
+								p(random.nextGaussian(0.001), Molecule.Ar),
+								p(random.nextGaussian(0.001), Molecule.O2),
+								p(random.nextGaussian(0.0001), Molecule.SO2)
+								);
+						
+					} else {
+						// titan-line atmosphere
+						planet.atmosphere = random.nextProbabilityMap(
+								p(random.nextGaussian(98), Molecule.N2),
+								p(random.nextGaussian(1), Molecule.CH4),
+								p(random.nextGaussian(0.5), Molecule.H2)
+								);
+					}
+				}
+			}
+			planet.albedo = planet.water > 0 ? random.nextDouble(0.3, 0.95) : random.nextDouble(0.05, 0.2);
+			break;
+			}
 		}
 		
+		// set Planet population
 		if (planet.breathableAtmosphere && lifeSupportingZone) {
 			planet.supportsLife = true;
 			planet.hasLife = random.nextBoolean(0.9);
@@ -360,9 +397,9 @@ public class Generator {
 			}
 		}
 
+		// set Planet temperature
 		// FIXME albedo + temperature
-		planet.albedo = 0.3;
-		planet.temperature = theoreticalTemperature(starLumininosity, planet.albedo, starDistance); 
+		planet.temperature = surfaceTemperature(planet); 
 		
 		return planet;
 	}
@@ -386,27 +423,14 @@ public class Generator {
 		double albedo = Math.min(1.0, planet.albedo);
 		double theoreticalTemperature = theoreticalTemperature(star.getLuminosity(), albedo, accumulateOrbitRadius(planet, star));
 		
+		// FIXME apply correct model of greenhouse effect
+		if (planet.breathableAtmosphere) {
+			theoreticalTemperature *= 1.1; 
+		}
+		
 		return theoreticalTemperature;
 	}
 	
-	private boolean isLifeSupportingZone (Planet planet) {
-		Star star = findParentStar(planet);
-		if (star == null) {
-			return false;
-		}
-		if (star.type != Star.Type.MAIN_SEQUENCE) {
-			return false;
-		}
-		if (star.temperature < 2000 || star.temperature > 20000) {
-			return false;
-		}
-		
-		double orbitRadius = accumulateOrbitRadius(planet, star);
-		
-		double lifeZoneOrbitRadius = Units.EARTH_ORBIT_RADIUS * star.temperature / 5000;
-		return orbitRadius > lifeZoneOrbitRadius * 0.5 && orbitRadius < lifeZoneOrbitRadius * 3.5;
-	}
-
 	private static Star findParentStar (Planet planet) {
 		Node parent = planet.parent;
 		while (parent != null) {
@@ -705,8 +729,8 @@ public class Generator {
 		venus.radius = 6051.59E3;
 		venus.rotation = -243.0187 * Units.SECONDS_PER_DAY;
 		venus.mass = 4.8690E24;
-		venus.atmosphere = Arrays.asList(tuple(Molecule.CO2, 0.965), tuple(Molecule.N2, 0.035), tuple(Molecule.SO2, 0.00015));
-		venus.atmosphereDensity = 9.2E6;
+		venus.atmosphere = asMap(tuple(Molecule.CO2, 0.965), tuple(Molecule.N2, 0.035), tuple(Molecule.SO2, 0.00015));
+		venus.atmospherePressure = 9.2E6;
 		venus.albedo = 0.90; // bond
 		venus.temperature = surfaceTemperature(venus);
 		venus.childCount = 0;
@@ -725,8 +749,8 @@ public class Generator {
 		terra.radius = 6378.1E3;
 		terra.rotation = 1 * Units.SECONDS_PER_DAY;
 		terra.mass = 5.9742E24;
-		terra.atmosphere = Arrays.asList(tuple(Molecule.N2, 0.7808), tuple(Molecule.O2, 0.2095), tuple(Molecule.Ar, 0.00934), tuple(Molecule.CO2, 0.00038));
-		terra.atmosphereDensity = 101.325E3;
+		terra.atmosphere = asMap(tuple(Molecule.N2, 0.7808), tuple(Molecule.O2, 0.2095), tuple(Molecule.Ar, 0.00934), tuple(Molecule.CO2, 0.00038));
+		terra.atmospherePressure = Units.EARTH_ATMOSPHERE_PRESSURE;
 		terra.albedo = 0.306; // bond
 		terra.temperature = surfaceTemperature(terra);
 		terra.childCount = 2;
@@ -743,8 +767,8 @@ public class Generator {
 		mars.rotation = 1.02595675 * Units.SECONDS_PER_DAY;
 		mars.mass = 6.4191E23;
 		mars.albedo = 0.25; // bond
-		mars.atmosphere = Arrays.asList(tuple(Molecule.CO2, 0.9523), tuple(Molecule.N2, 0.0027), tuple(Molecule.Ar, 0.0016), tuple(Molecule.O2, 0.0013));
-		mars.atmosphereDensity = 0.636E6;
+		mars.atmosphere = asMap(tuple(Molecule.CO2, 0.9523), tuple(Molecule.N2, 0.0027), tuple(Molecule.Ar, 0.0016), tuple(Molecule.O2, 0.0013));
+		mars.atmospherePressure = 0.636E6;
 		mars.temperature = surfaceTemperature(mars); // 130K - 280K => 210K
 		mars.childCount = 3;
 		generatePopulationAcceptablePlanet(mars, mars.seed.getRandom());
@@ -785,7 +809,7 @@ public class Generator {
 		jupiter.mass = 1.8987E27;
 		jupiter.albedo = 0.343; // bond
 		jupiter.temperature = surfaceTemperature(jupiter);
-		jupiter.atmosphere = Arrays.asList(tuple(Molecule.H2, 0.75), tuple(Molecule.He, 0.24));
+		jupiter.atmosphere = asMap(tuple(Molecule.H2, percent(89.8)), tuple(Molecule.He, percent(10.2)), tuple(Molecule.CH4, percent(0.3)), tuple(Molecule.NH3, percent(0.003)), tuple(Molecule.C2H6, percent(0.0006)));
 		jupiter.childCount = 4;
 		store(jupiter);
 		
@@ -800,7 +824,7 @@ public class Generator {
 		saturn.mass = 5.6851E26;
 		saturn.albedo = 0.342; // bond
 		saturn.temperature = surfaceTemperature(saturn);
-		saturn.atmosphere = Arrays.asList(tuple(Molecule.H2, 0.932), tuple(Molecule.He, 0.067));
+		saturn.atmosphere = asMap(tuple(Molecule.H2, 0.932), tuple(Molecule.He, 0.067));
 		saturn.childCount = 8;
 		store(saturn);
 		
@@ -815,7 +839,7 @@ public class Generator {
 		uranus.mass = 8.6849E25;
 		uranus.albedo = 0.300; // bond
 		uranus.temperature = surfaceTemperature(uranus);
-		uranus.atmosphere = Arrays.asList(tuple(Molecule.H2, 0.83), tuple(Molecule.He, 0.15), tuple(Molecule.CH4, 0.02));
+		uranus.atmosphere = asMap(tuple(Molecule.H2, 0.83), tuple(Molecule.He, 0.15), tuple(Molecule.CH4, 0.02));
 		uranus.childCount = 5;
 		store(uranus);
 		
@@ -830,7 +854,7 @@ public class Generator {
 		neptune.mass = 1.0244E26;
 		neptune.albedo = 0.290; // bond
 		neptune.temperature = surfaceTemperature(neptune);
-		neptune.atmosphere = Arrays.asList(tuple(Molecule.H2, 0.80), tuple(Molecule.He, 0.19), tuple(Molecule.CH4, 0.015));
+		neptune.atmosphere = asMap(tuple(Molecule.H2, 0.80), tuple(Molecule.He, 0.19), tuple(Molecule.CH4, 0.015));
 		neptune.childCount = 1;
 		store(neptune);
 
@@ -924,8 +948,8 @@ public class Generator {
 		europa.radius = 1569E3;
 		europa.rotation = europa.orbitPeriod;
 		europa.mass = 4.80E22;
-		europa.atmosphere = Arrays.asList(tuple(Molecule.O2, 0.98)); // percentage unknown
-		europa.atmosphereDensity = 0.1E-6; // 0.1 microP
+		europa.atmosphere = asMap(tuple(Molecule.O2, 0.98)); // percentage unknown
+		europa.atmospherePressure = 0.1E-6; // 0.1 microP
 		europa.albedo = 0.67;
 		europa.temperature = surfaceTemperature(europa); // ~50K - 125K => 102K
 		europa.childCount = 0;
@@ -1059,8 +1083,8 @@ public class Generator {
 		titan.radius = 2576E3;
 		titan.rotation = titan.orbitPeriod;
 		titan.mass = 1.3452E23;
-		titan.atmosphere = Arrays.asList(tuple(Molecule.N2, 0.984), tuple(Molecule.CH4, 0.014), tuple(Molecule.H2, 0.002));
-		titan.atmosphereDensity = 146.7E3; // 146.7 kP
+		titan.atmosphere = asMap(tuple(Molecule.N2, 0.984), tuple(Molecule.CH4, 0.014), tuple(Molecule.H2, 0.002));
+		titan.atmospherePressure = 146.7E3; // 146.7 kP
 		titan.albedo = 0.22;
 		titan.temperature = surfaceTemperature(titan);
 		titan.childCount = 0;
@@ -1169,8 +1193,8 @@ public class Generator {
 		triton.radius = 1353.4E3;
 		triton.rotation = - triton.orbitPeriod;
 		triton.mass = 2.14E22;
-		triton.atmosphere = Arrays.asList(tuple(Molecule.N2, 0.96), tuple(Molecule.CH4, 0.02), tuple(Molecule.CO, 0.01)); // exact values unknown
-		triton.atmosphereDensity = 1.5; // 1.4P-1.7P
+		triton.atmosphere = asMap(tuple(Molecule.N2, 0.96), tuple(Molecule.CH4, 0.02), tuple(Molecule.CO, 0.01)); // exact values unknown
+		triton.atmospherePressure = 1.5; // 1.4P-1.7P
 		triton.albedo = 0.76;
 		triton.temperature = surfaceTemperature(triton);
 		triton.childCount = 0;
@@ -1179,7 +1203,19 @@ public class Generator {
 		neptune.childCount = childIndex;
 	}
 
+	private <K, V> Map<K, V> asMap(Tuple2<K, V>... tuples) {
+		Map<K, V> map = new HashMap<K, V>();
+		for (Tuple2<K, V> tuple : tuples) {
+			map.put(tuple.getValue1(), tuple.getValue2());
+		}
+		return map;
+	}
+
 	private <K, V> Tuple2<K, V> tuple(K key, V value) {
 		return new Tuple2<K, V>(key, value);
+	}
+	
+	private double percent(double x) {
+		return x * 0.01;
 	}
 }

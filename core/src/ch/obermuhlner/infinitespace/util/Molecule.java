@@ -2,11 +2,25 @@ package ch.obermuhlner.infinitespace.util;
 
 public enum Molecule {
 	H2,
+	H2O,
+	H2S,
+	HCl,
+	HF,
 	He,
 	Ar,
+	Ne,
+	Kr,
+	Xe,
 	O2,
 	N2,
+	/**
+	 * Ammonia
+	 */
 	NH3,
+	/**
+	 * Ammonium hydrosulfide
+	 */
+	NH4SH,
 	/**
 	Density: 1.15 kg/m³
 	Formula: CO
@@ -22,8 +36,14 @@ public enum Molecule {
 	Molar mass: 44.01 g/mol
 	*/
 	CO2,
+	/**
+	 * Methane
+	 */
 	CH4,
+	/**
+	 * Ethane
+	 */
 	C2H6,
-	SO2,	
-	H2O,
+	SO2,
+	PH3,
 }

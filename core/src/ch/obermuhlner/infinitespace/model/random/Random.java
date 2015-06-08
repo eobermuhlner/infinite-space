@@ -91,7 +91,7 @@ public class Random {
 		double factor[] = new double[probabilities.length];
 		double sum = 0;
 		for (int i = 0; i < factor.length; i++) {
-			factor[i] = nextDouble(probabilities[i].probability);
+			factor[i] = probabilities[i].probability;
 			sum += factor[i];
 		}
 		

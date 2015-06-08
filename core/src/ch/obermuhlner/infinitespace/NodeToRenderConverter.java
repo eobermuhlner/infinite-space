@@ -51,6 +51,8 @@ public class NodeToRenderConverter {
 
 	private static final double SUN_RADIUS = Units.SUN_RADIUS;
 
+	private static final double LAVA_TEMPERATURE = Units.celsiusToKelvin(700);
+
 	private static final double AU = Units.ASTRONOMICAL_UNIT;
 	
 	public static double SIZE_FACTOR = 1 / SUN_RADIUS / 10;
@@ -221,9 +223,8 @@ public class NodeToRenderConverter {
 					break;
 				case STONE:
 					if (textureName == null && node.parent instanceof Star) {
-						Star star = (Star) node.parent;
 						// TODO use heat of planet to decide whether is is lava
-						if (node.orbitRadius < star.radius * 10) {
+						if (node.temperature > LAVA_TEMPERATURE) {
 							textureName = "lava_colors.png";
 							shaderName = UberShaderProvider.TERRESTRIAL_PLANET_SHADER;
 							materialAttributes.add(TerrestrialPlanetFloatAttribute.createHeightFrequency(random.nextFloat(20f, 22f)));
@@ -236,7 +237,7 @@ public class NodeToRenderConverter {
 						textureName = random.next ("phobos.jpg", "deimos.jpg");
 					} else {
 						if (textureName == null) {
-							if (node.atmosphereDensity > 0.1) {
+							if (node.atmospherePressure > 0.1) {
 								if (node.breathableAtmosphere) {
 									if (node.hasLife) {
 										textureName = "terrestrial_colors.png";
