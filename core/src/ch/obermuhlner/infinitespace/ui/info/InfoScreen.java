@@ -48,13 +48,15 @@ public class InfoScreen extends AbstractNodeStageScreen {
 		if (node instanceof Star) {
 			Star star = (Star)node;
 			addRow(tablePhysics, "Type", star.type);
-			addRow(tablePhysics, "Temperature", Units.celsiusToString(star.temperature));
+			addRow(tablePhysics, "Temperature", Units.kelvinToString(star.temperature));
 		}
 		
 		if (node instanceof Planet) {
 			Planet planet = (Planet)node;
 			addRow(tablePhysics, "Type", planet.type);
-			addRow(tablePhysics, "Atmosphere", Units.toString(planet.atmosphereDensity));
+			addRow(tablePhysics, "Temperature", Units.kelvinToString(planet.temperature));
+			addRow(tablePhysics, "Atmosphere", Units.atmosphereToString(planet.atmosphere));
+			addRow(tablePhysics, "Atmosphere Density", Units.toString(planet.atmosphereDensity));
 			addRow(tablePhysics, "Breathable Atmosphere", planet.breathableAtmosphere);
 			addRow(tablePhysics, "Water", Units.percentToString(planet.water));
 			addRow(tablePhysics, "Supports Life", planet.supportsLife);

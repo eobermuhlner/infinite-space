@@ -270,17 +270,17 @@ public class NodeToRenderConverter {
 						}
 
 						if (textureName == null) {
-							textureName = random.next ("io.jpg", "callisto.jpg", "ganymede.jpg", "europa.jpg", "mercury.jpg", "mars.jpg", "moon.jpg", "iapetus.jpg", "rhea.jpg");
+							textureName = random.next ("io.jpg", "callisto.jpg", "ganymede.jpg", "europa.jpg", "mercury.jpg", "mars.jpg", "moon.jpg", "iapetus.jpg");
 						}
 					}
 					break;
 				case ICE:
-					textureName = random.next ("europa.jpg", "mimas.jpg");
+					textureName = random.next ("europa.jpg", "mimas.jpg", "rhea.jpg", "enceladus.jpg", "tethys.jpg", "dione.jpg");
 					break;
 				}
 			}
 
-			System.out.println("PLANET " + node.seed + " " + node.name + " " + shaderName + " " + textureName);
+			System.out.println("PLANET " + node.seed + " " + node.name + " " + shaderName + " " + textureName + " " + Units.kelvinToString(node.temperature));
 			
 			{
 				Material material;

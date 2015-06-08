@@ -1,6 +1,8 @@
 package ch.obermuhlner.infinitespace.util;
 
 import java.text.NumberFormat;
+import java.util.List;
+import java.util.Map;
 
 public class Units {
 	
@@ -9,6 +11,12 @@ public class Units {
 	public static final double LIGHT_SECOND = 299792458;
 	public static final double LIGHT_YEAR = LIGHT_SECOND * SECONDS_PER_YEAR;
 	public static final double ASTRONOMICAL_UNIT = 149597871E3;
+	
+	/**
+	 * See: http://en.wikipedia.org/wiki/Stefan%E2%80%93Boltzmann_constant
+	 * W*m^-2*K^-4
+	 */
+	public static final double STEFAN_BOLTZMAN_CONSTANT = 5.670373E-8;
 	
 	public static final double EARTH_ORBIT_RADIUS = 149597890E3;
 	public static final double EARTH_ORBIT_PERIOD = 1 * SECONDS_PER_YEAR;
@@ -21,6 +29,7 @@ public class Units {
 	
 	public static final double SUN_MASS = 2E30;
 	public static final double SUN_RADIUS = 700000E3;
+	public static final double SUN_LUMINOSITY = 3.827E26; // W
 
 	private static NumberFormat numberFormat;
 	static {
@@ -87,16 +96,16 @@ public class Units {
 		return unitToString(value, kilogramUnits, alternateKilogramUnits);
 	}
 
+	public static String kelvinToString(double value) {
+		return toString(value) + " K (" + toString(value - 273.16) + " C)";
+	}
+
 	public static String volumeToString(double value) {
 		return toString(value) + " m^3";
 	}
 
-	public static String celsiusToString(double value) {
-		return toString(value) + " K";
-	}
-	
 	public static String percentToString(double value) {
-		return toString(value * 100) + " %";
+		return toString(value * 100) + "%";
 	}
 
 	public static String moneyToString(double value) {
@@ -148,4 +157,17 @@ public class Units {
 			this.name = unit;
 		}
 	}
+
+	public static String atmosphereToString(List<Tuple2<Molecule, Double>> atmosphere) {
+		StringBuilder stringBuilder = new StringBuilder();
+		
+		for (Tuple2<Molecule, Double> tuple : atmosphere) {
+			stringBuilder.append(percentToString(tuple.getValue2()));
+			stringBuilder.append(tuple.getValue1().name());
+			stringBuilder.append("  ");
+		}
+		
+		return stringBuilder.toString();
+	}
+
 }

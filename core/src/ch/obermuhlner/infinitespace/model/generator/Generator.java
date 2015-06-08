@@ -3,6 +3,7 @@ package ch.obermuhlner.infinitespace.model.generator;
 import static ch.obermuhlner.infinitespace.model.random.Random.p;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -27,6 +28,8 @@ import ch.obermuhlner.infinitespace.model.universe.population.Commodity;
 import ch.obermuhlner.infinitespace.model.universe.population.Industry;
 import ch.obermuhlner.infinitespace.model.universe.population.Population;
 import ch.obermuhlner.infinitespace.util.MathUtil;
+import ch.obermuhlner.infinitespace.util.Molecule;
+import ch.obermuhlner.infinitespace.util.Tuple2;
 import ch.obermuhlner.infinitespace.util.Units;
 
 public class Generator {
@@ -70,7 +73,8 @@ public class Generator {
 			return childNode;
 		}
 		
-		return node.getChild(this, index);
+		Node childNode = node.getChild(this, index);
+		return childNode;
 	}
 	
 	private void store(Node node) {
@@ -284,6 +288,12 @@ public class Generator {
 		planet.orbitRadius = calculateOrbitRadius(parent, parentRandom, index);
 		planet.rotation = random.nextGaussian(25);
 		
+		Star star = findParentStar(planet);
+		double starDistance = accumulateOrbitRadius(planet, star);
+		double starLumininosity = star.getLuminosity();
+		double theoreticalTemperature = theoreticalTemperature(starLumininosity, 0.1, starDistance);
+		System.out.println("theoreticalTemperature = " + Units.kelvinToString(theoreticalTemperature));
+		
 		planet.type = random.nextProbability(
 			p(5, Planet.Type.STONE),
 			p(4, Planet.Type.GAS)
@@ -350,9 +360,35 @@ public class Generator {
 			}
 		}
 
+		// FIXME albedo + temperature
+		planet.albedo = 0.3;
+		planet.temperature = theoreticalTemperature(starLumininosity, planet.albedo, starDistance); 
+		
 		return planet;
 	}
 
+	/**
+	 * See: http://www.astronomynotes.com/solarsys/s3c.htm
+	 * 
+	 * @param lumininosity the luminosity of the sun
+	 * @param albedo the albedo of the planet (1.0 = 100% reflection)
+	 * @param distance distance between sun and planet
+	 * @return the theoretical temperature of the planet in K
+	 */
+	public static double theoreticalTemperature(double lumininosity, double albedo, double distance) {
+		double value1 = (lumininosity * (1 - albedo) / (16 * Units.STEFAN_BOLTZMAN_CONSTANT * Math.PI));
+		return Math.pow(value1, 0.25) / Math.sqrt(distance);
+	}
+	
+	public static double surfaceTemperature(Planet planet) {
+		Star star = findParentStar(planet);
+		
+		double albedo = Math.min(1.0, planet.albedo);
+		double theoreticalTemperature = theoreticalTemperature(star.getLuminosity(), albedo, accumulateOrbitRadius(planet, star));
+		
+		return theoreticalTemperature;
+	}
+	
 	private boolean isLifeSupportingZone (Planet planet) {
 		Star star = findParentStar(planet);
 		if (star == null) {
@@ -371,7 +407,7 @@ public class Generator {
 		return orbitRadius > lifeZoneOrbitRadius * 0.5 && orbitRadius < lifeZoneOrbitRadius * 3.5;
 	}
 
-	private Star findParentStar (Planet planet) {
+	private static Star findParentStar (Planet planet) {
 		Node parent = planet.parent;
 		while (parent != null) {
 			if (parent instanceof Star) {
@@ -383,7 +419,7 @@ public class Generator {
 		return null;
 	}
 	
-	private double accumulateOrbitRadius(Planet planet, Node center) {
+	private static double accumulateOrbitRadius(Planet planet, Node center) {
 		double orbitRadius = planet.orbitRadius;
 		Node parent = planet.parent;
 		while (parent != null && parent != center) {
@@ -626,7 +662,7 @@ public class Generator {
 	}
 
 	private void storeSolarSystem() {
-		StarSystem starSystem = new StarSystem(new Seed(0, 0, 0, 0, 0, 0, 0));
+		StarSystem starSystem = new StarSystem(new Seed(0, 0, 0, 0, 0, 0));
 		starSystem.childCount = 1;
 		store(starSystem);
 
@@ -654,6 +690,8 @@ public class Generator {
 		mercury.radius = 2439.64E3;
 		mercury.rotation = 58.646225 * Units.SECONDS_PER_DAY;
 		mercury.mass = 3.302E23;
+		mercury.albedo = 0.068; // bond
+		mercury.temperature = surfaceTemperature(mercury);
 		mercury.childCount = 0;
 		generatePopulationHorriblePlanet(mercury, mercury.seed.getRandom());
 		store(mercury);
@@ -667,6 +705,10 @@ public class Generator {
 		venus.radius = 6051.59E3;
 		venus.rotation = -243.0187 * Units.SECONDS_PER_DAY;
 		venus.mass = 4.8690E24;
+		venus.atmosphere = Arrays.asList(tuple(Molecule.CO2, 0.965), tuple(Molecule.N2, 0.035), tuple(Molecule.SO2, 0.00015));
+		venus.atmosphereDensity = 9.2E6;
+		venus.albedo = 0.90; // bond
+		venus.temperature = surfaceTemperature(venus);
 		venus.childCount = 0;
 		store(venus);
 
@@ -683,6 +725,10 @@ public class Generator {
 		terra.radius = 6378.1E3;
 		terra.rotation = 1 * Units.SECONDS_PER_DAY;
 		terra.mass = 5.9742E24;
+		terra.atmosphere = Arrays.asList(tuple(Molecule.N2, 0.7808), tuple(Molecule.O2, 0.2095), tuple(Molecule.Ar, 0.00934), tuple(Molecule.CO2, 0.00038));
+		terra.atmosphereDensity = 101.325E3;
+		terra.albedo = 0.306; // bond
+		terra.temperature = surfaceTemperature(terra);
 		terra.childCount = 2;
 		generatePopulationNicePlanet(terra, terra.seed.getRandom());
 		store(terra);
@@ -696,6 +742,10 @@ public class Generator {
 		mars.radius = 3397.00E3;
 		mars.rotation = 1.02595675 * Units.SECONDS_PER_DAY;
 		mars.mass = 6.4191E23;
+		mars.albedo = 0.25; // bond
+		mars.atmosphere = Arrays.asList(tuple(Molecule.CO2, 0.9523), tuple(Molecule.N2, 0.0027), tuple(Molecule.Ar, 0.0016), tuple(Molecule.O2, 0.0013));
+		mars.atmosphereDensity = 0.636E6;
+		mars.temperature = surfaceTemperature(mars); // 130K - 280K => 210K
 		mars.childCount = 3;
 		generatePopulationAcceptablePlanet(mars, mars.seed.getRandom());
 		store(mars);
@@ -710,6 +760,8 @@ public class Generator {
 //		ceres.rotation = 0.3781 * Units.SECONDS_PER_DAY;
 //		ceres.mass = 9.5E20;
 //		ceres.childCount = 0;
+//		ceres.albedo = 0.1; ??
+//		ceres.temperature = surfaceTemperature(ceres);
 //		store(ceres);
 		AsteroidBelt asteroidBelt = new AsteroidBelt(star, childIndex++);
 		asteroidBelt.orbitRadius = 600000000E3;
@@ -731,6 +783,9 @@ public class Generator {
 		jupiter.radius = 71492.68E3;
 		jupiter.rotation = 0.41354 * Units.SECONDS_PER_DAY;
 		jupiter.mass = 1.8987E27;
+		jupiter.albedo = 0.343; // bond
+		jupiter.temperature = surfaceTemperature(jupiter);
+		jupiter.atmosphere = Arrays.asList(tuple(Molecule.H2, 0.75), tuple(Molecule.He, 0.24));
 		jupiter.childCount = 4;
 		store(jupiter);
 		
@@ -743,6 +798,9 @@ public class Generator {
 		saturn.radius = 60267.14E3;
 		saturn.rotation = 0.44401 * Units.SECONDS_PER_DAY;
 		saturn.mass = 5.6851E26;
+		saturn.albedo = 0.342; // bond
+		saturn.temperature = surfaceTemperature(saturn);
+		saturn.atmosphere = Arrays.asList(tuple(Molecule.H2, 0.932), tuple(Molecule.He, 0.067));
 		saturn.childCount = 8;
 		store(saturn);
 		
@@ -755,6 +813,9 @@ public class Generator {
 		uranus.radius = 25557.25E3;
 		uranus.rotation = -0.7183 * Units.SECONDS_PER_DAY;
 		uranus.mass = 8.6849E25;
+		uranus.albedo = 0.300; // bond
+		uranus.temperature = surfaceTemperature(uranus);
+		uranus.atmosphere = Arrays.asList(tuple(Molecule.H2, 0.83), tuple(Molecule.He, 0.15), tuple(Molecule.CH4, 0.02));
 		uranus.childCount = 5;
 		store(uranus);
 		
@@ -767,6 +828,9 @@ public class Generator {
 		neptune.radius = 24766.36E3;
 		neptune.rotation = 0.67125 * Units.SECONDS_PER_DAY;
 		neptune.mass = 1.0244E26;
+		neptune.albedo = 0.290; // bond
+		neptune.temperature = surfaceTemperature(neptune);
+		neptune.atmosphere = Arrays.asList(tuple(Molecule.H2, 0.80), tuple(Molecule.He, 0.19), tuple(Molecule.CH4, 0.015));
 		neptune.childCount = 1;
 		store(neptune);
 
@@ -787,6 +851,8 @@ public class Generator {
 		luna.rotation = 27.321582 * Units.SECONDS_PER_DAY;
 		luna.mass = 7.3477E22;
 		luna.orbitRadius = 384399E3;
+		luna.albedo = 0.11; // bond
+		luna.temperature = surfaceTemperature(luna);
 		generatePopulationAcceptablePlanet(luna, luna.seed.getRandom());
 		store(luna);
 
@@ -807,6 +873,8 @@ public class Generator {
 		phobos.rotation = phobos.orbitPeriod;
 		phobos.mass = 1.0659E16;
 		phobos.childCount = 0;
+		phobos.albedo = 0.071;
+		phobos.temperature = surfaceTemperature(phobos); // ~233K
 		generatePopulationAcceptablePlanet(phobos, phobos.seed.getRandom());
 		store(phobos);
 
@@ -819,6 +887,8 @@ public class Generator {
 		deimos.radius = 6.2E3;
 		deimos.rotation = deimos.orbitPeriod;
 		deimos.mass = 1.4762E15;
+		deimos.albedo = 0.068;
+		deimos.temperature = surfaceTemperature(deimos); // ~233K
 		deimos.childCount = 0;
 		generatePopulationAcceptablePlanet(deimos, deimos.seed.getRandom());
 		store(deimos);
@@ -839,6 +909,8 @@ public class Generator {
 		io.radius = 1815E3;
 		io.rotation = io.orbitPeriod;
 		io.mass = 8.94E22;
+		io.albedo = 0.63;
+		io.temperature = surfaceTemperature(io); //90K - 130K => 110K
 		io.childCount = 0;
 		generatePopulationHorriblePlanet(io, io.seed.getRandom());
 		store(io);
@@ -852,6 +924,10 @@ public class Generator {
 		europa.radius = 1569E3;
 		europa.rotation = europa.orbitPeriod;
 		europa.mass = 4.80E22;
+		europa.atmosphere = Arrays.asList(tuple(Molecule.O2, 0.98)); // percentage unknown
+		europa.atmosphereDensity = 0.1E-6; // 0.1 microP
+		europa.albedo = 0.67;
+		europa.temperature = surfaceTemperature(europa); // ~50K - 125K => 102K
 		europa.childCount = 0;
 		store(europa);
 
@@ -864,6 +940,8 @@ public class Generator {
 		ganymede.radius = 2634.19E3;
 		ganymede.rotation = ganymede.orbitPeriod;
 		ganymede.mass = 1.4819E23;
+		ganymede.albedo = 0.43;
+		ganymede.temperature = surfaceTemperature(ganymede); // 70K - 152K => 110K
 		ganymede.childCount = 0;
 		generatePopulationHorriblePlanet(ganymede, ganymede.seed.getRandom());
 		store(ganymede);
@@ -877,6 +955,9 @@ public class Generator {
 		callisto.radius = 2410.3E3;
 		callisto.rotation = callisto.orbitPeriod;
 		callisto.mass = 1.0758E23;
+		//callisto.atmosphereDensity = 0; // 7.5pbar
+		callisto.albedo = 0.22;
+		callisto.temperature = surfaceTemperature(callisto); // 80K - 165K => 134K
 		callisto.childCount = 0;
 		generatePopulationHorriblePlanet(callisto, callisto.seed.getRandom());
 		store(callisto);
@@ -908,6 +989,8 @@ public class Generator {
 		mimas.radius = 198.30E3;
 		mimas.rotation = mimas.orbitPeriod;
 		mimas.mass = 3.75E19;
+		mimas.albedo = 0.962; // geometric
+		mimas.temperature = surfaceTemperature(mimas); // ~64K
 		mimas.childCount = 0;
 		store(mimas);
 
@@ -920,6 +1003,8 @@ public class Generator {
 		enceladus.radius = 252.1E3;
 		enceladus.rotation = enceladus.orbitPeriod;
 		enceladus.mass = 1.08E20;
+		enceladus.albedo = 0.99; // bond
+		enceladus.temperature = surfaceTemperature(enceladus);
 		enceladus.childCount = 0;
 		store(enceladus);
 		
@@ -932,6 +1017,8 @@ public class Generator {
 		tethys.radius = 533E3;
 		tethys.rotation = tethys.orbitPeriod;
 		tethys.mass = 6.174E20;
+		tethys.albedo = 0.80; // bond
+		tethys.temperature = surfaceTemperature(tethys);
 		tethys.childCount = 0;
 		store(tethys);
 		
@@ -944,6 +1031,8 @@ public class Generator {
 		dione.radius = 561.7E3;
 		dione.rotation = dione.orbitPeriod;
 		dione.mass = 1.095E21;
+		dione.albedo = 0.998;
+		dione.temperature = surfaceTemperature(dione);
 		dione.childCount = 0;
 		store(dione);
 		
@@ -956,6 +1045,8 @@ public class Generator {
 		rhea.radius = 764.3E3;
 		rhea.rotation = rhea.orbitPeriod;
 		rhea.mass = 2.306E21;
+		rhea.albedo = 0.949;
+		rhea.temperature = surfaceTemperature(rhea);
 		rhea.childCount = 0;
 		store(rhea);
 		
@@ -968,6 +1059,10 @@ public class Generator {
 		titan.radius = 2576E3;
 		titan.rotation = titan.orbitPeriod;
 		titan.mass = 1.3452E23;
+		titan.atmosphere = Arrays.asList(tuple(Molecule.N2, 0.984), tuple(Molecule.CH4, 0.014), tuple(Molecule.H2, 0.002));
+		titan.atmosphereDensity = 146.7E3; // 146.7 kP
+		titan.albedo = 0.22;
+		titan.temperature = surfaceTemperature(titan);
 		titan.childCount = 0;
 		store(titan);
 		
@@ -980,6 +1075,8 @@ public class Generator {
 		iapetus.radius = 735.60E3;
 		iapetus.rotation = iapetus.orbitPeriod;
 		iapetus.mass = 1.8053E21;
+		iapetus.albedo = 0.25; // 0.05 - 0.5
+		iapetus.temperature = surfaceTemperature(iapetus);
 		iapetus.childCount = 0;
 		store(iapetus);
 
@@ -997,6 +1094,8 @@ public class Generator {
 		miranda.radius = 235.8E3;
 		miranda.rotation = miranda.orbitPeriod;
 		miranda.mass = 6.59E19;
+		miranda.albedo = 0.32;
+		miranda.temperature = surfaceTemperature(miranda);
 		miranda.childCount = 0;
 		store(miranda);
 		
@@ -1009,6 +1108,8 @@ public class Generator {
 		ariel.radius = 578.9E3;
 		ariel.rotation = ariel.orbitPeriod;
 		ariel.mass = 1.35E21;
+		ariel.albedo = 0.53;
+		ariel.temperature = surfaceTemperature(ariel); // ?K - 84K => 60K
 		ariel.childCount = 0;
 		store(ariel);
 		
@@ -1021,6 +1122,8 @@ public class Generator {
 		umbriel.radius = 584.7E3;
 		umbriel.rotation = umbriel.orbitPeriod;
 		umbriel.mass = 1.2E21;
+		umbriel.albedo = 0.26;
+		umbriel.temperature = surfaceTemperature(umbriel); // ?K - 85K => 75K
 		umbriel.childCount = 0;
 		store(umbriel);
 		
@@ -1033,6 +1136,8 @@ public class Generator {
 		titania.radius = 788.9E3;
 		titania.rotation = titania.orbitPeriod;
 		titania.mass = 3.5E21;
+		titania.albedo = 0.35;
+		titania.temperature = surfaceTemperature(titania); // 60K - 89K => 70K
 		titania.childCount = 0;
 		store(titania);
 		
@@ -1045,6 +1150,8 @@ public class Generator {
 		oberon.radius = 761.4E3;
 		oberon.rotation = oberon.orbitPeriod;
 		oberon.mass = 3.014E21;
+		oberon.albedo = 0.31;
+		oberon.temperature = surfaceTemperature(oberon); // 70K-80K
 		oberon.childCount = 0;
 		store(oberon);
 		
@@ -1062,9 +1169,17 @@ public class Generator {
 		triton.radius = 1353.4E3;
 		triton.rotation = - triton.orbitPeriod;
 		triton.mass = 2.14E22;
+		triton.atmosphere = Arrays.asList(tuple(Molecule.N2, 0.96), tuple(Molecule.CH4, 0.02), tuple(Molecule.CO, 0.01)); // exact values unknown
+		triton.atmosphereDensity = 1.5; // 1.4P-1.7P
+		triton.albedo = 0.76;
+		triton.temperature = surfaceTemperature(triton);
 		triton.childCount = 0;
 		store(triton);
 		
 		neptune.childCount = childIndex;
+	}
+
+	private <K, V> Tuple2<K, V> tuple(K key, V value) {
+		return new Tuple2<K, V>(key, value);
 	}
 }

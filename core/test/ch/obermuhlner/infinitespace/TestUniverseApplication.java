@@ -44,7 +44,7 @@ public class TestUniverseApplication {
 		if (node instanceof Star) {
 			Star star = (Star)node;
 			println("Type", star.type);
-			println("Temperature", Units.celsiusToString(star.temperature));
+			println("Temperature", Units.kelvinToString(star.temperature));
 		}
 		
 		if (node instanceof Planet) {
