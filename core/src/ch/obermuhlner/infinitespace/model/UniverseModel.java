@@ -29,14 +29,16 @@ public class UniverseModel {
 	public Iterable<Node> getUniverse() {
 		Universe universe = generator.generateUniverse(universeIndex);
 
-		Galaxy galaxy = universe.getChild(generator, 0);
-		GalaxyQuadrantX galaxyQuadrantX = galaxy.getChild(generator, 0);
-		GalaxyQuadrantY galaxyQuadrantY = galaxyQuadrantX.getChild(generator, 0);
-		GalaxyQuadrantZ galaxyQuadrantZ = galaxyQuadrantY.getChild(generator, 0);
-		StarSystem starSystem = galaxyQuadrantZ.getChild(generator, starSystemIndex);
+		Node node = universe;
+		while (!(node instanceof GalaxyQuadrantZ)) {
+			node = generator.getChild(node, 0);
+		}
+
+		// get StarSystem
+		node = generator.getChild(node, starSystemIndex);
 
 		Array<Node> result = new Array<Node>();
-		generateDeep(starSystem, result);
+		generateDeep(node, result);
 		return result;
 	}
 	
