@@ -31,6 +31,8 @@ public class TerrestrialPlanetShader implements Shader {
 	private int u_heightFrequency;
 	private int u_heightWater;
 	private int u_iceLevel;
+	private int u_colorNoise;
+	private int u_colorFrequency;
 	
 	private int u_random0;
 	private int u_random1;
@@ -69,6 +71,8 @@ public class TerrestrialPlanetShader implements Shader {
 		u_heightFrequency = program.getUniformLocation("u_heightFrequency");
 		u_heightWater = program.getUniformLocation("u_heightWater");
 		u_iceLevel = program.getUniformLocation("u_iceLevel");
+		u_colorNoise = program.getUniformLocation("u_colorNoise");
+		u_colorFrequency = program.getUniformLocation("u_colorFrequency");
 		
 		u_random0 = program.getUniformLocation("u_random0");
 		u_random1 = program.getUniformLocation("u_random1");
@@ -115,7 +119,9 @@ public class TerrestrialPlanetShader implements Shader {
 		program.setUniformf(u_heightMax, getFloatAttributeValue(renderable, TerrestrialPlanetFloatAttribute.HeightMax, 1.0f));
 		program.setUniformf(u_heightFrequency, getFloatAttributeValue(renderable, TerrestrialPlanetFloatAttribute.HeightFrequency, 5f));
 		program.setUniformf(u_heightWater, getFloatAttributeValue(renderable, TerrestrialPlanetFloatAttribute.HeightWater, 0.0f));
-		program.setUniformf(u_iceLevel, getFloatAttributeValue(renderable, TerrestrialPlanetFloatAttribute.IcelLevel, 0.0f));
+		program.setUniformf(u_iceLevel, getFloatAttributeValue(renderable, TerrestrialPlanetFloatAttribute.IceLevel, 0.0f));
+		program.setUniformf(u_colorNoise, getFloatAttributeValue(renderable, TerrestrialPlanetFloatAttribute.ColorNoise, 0.2f));
+		program.setUniformf(u_colorFrequency, getFloatAttributeValue(renderable, TerrestrialPlanetFloatAttribute.ColorFrequency, 20.0f));
 		
 		// random
 		FloatArrayAttribute floatArrayAttribute = (FloatArrayAttribute)renderable.material.get(FloatArrayAttribute.FloatArray);

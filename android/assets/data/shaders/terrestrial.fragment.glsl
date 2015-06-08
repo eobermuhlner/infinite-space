@@ -14,6 +14,8 @@ uniform float u_heightMax;
 uniform float u_heightFrequency;
 uniform float u_heightWater;
 uniform float u_iceLevel;
+uniform float u_colorNoise;
+uniform float u_colorFrequency;
 
 uniform float u_time;
 
@@ -218,7 +220,7 @@ void main() {
 
 	if (height > 0.40) {
 		// make noise on land, not on water
-		float colorNoise = fractalNoise(v_texCoords0+r1, 20, 0.2);
+		float colorNoise = fractalNoise(v_texCoords0+r1, u_colorFrequency, u_colorNoise);
 		color = color * (1.0 + colorNoise);
 	}
 

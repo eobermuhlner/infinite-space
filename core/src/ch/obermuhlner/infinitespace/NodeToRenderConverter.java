@@ -46,7 +46,7 @@ public class NodeToRenderConverter {
 
 	private static final boolean RENDER_PROCEDURAL_SHADERS_TO_TEXTURES = true;
 
-	private static final double PROBABILITY_GENERATED_PLANET = 0.2;
+	private static final double PROBABILITY_GENERATED_PLANET = 1.0;
 	private static final boolean RENDER_CLOUDS = true;
 
 	private static final double SUN_RADIUS = Units.SUN_RADIUS;
@@ -227,6 +227,8 @@ public class NodeToRenderConverter {
 							textureName = "lava_colors.png";
 							shaderName = UberShaderProvider.TERRESTRIAL_PLANET_SHADER;
 							materialAttributes.add(TerrestrialPlanetFloatAttribute.createHeightFrequency(random.nextFloat(20f, 22f)));
+							materialAttributes.add(TerrestrialPlanetFloatAttribute.createColorNoise(random.nextFloat(0.3f, 0.9f)));
+							materialAttributes.add(TerrestrialPlanetFloatAttribute.createColorFrequency(random.nextFloat(20f, 30f)));
 						}
 					}
 					
@@ -246,13 +248,17 @@ public class NodeToRenderConverter {
 										materialAttributes.add(TerrestrialPlanetFloatAttribute.createHeightMin(heightMin));
 										materialAttributes.add(TerrestrialPlanetFloatAttribute.createHeightMax(heightMax));
 										materialAttributes.add(TerrestrialPlanetFloatAttribute.createHeightFrequency(random.nextFloat(2f, 15f)));
-										materialAttributes.add(TerrestrialPlanetFloatAttribute.createIcelLevel(iceLevel));
+										materialAttributes.add(TerrestrialPlanetFloatAttribute.createIceLevel(iceLevel));
+										materialAttributes.add(TerrestrialPlanetFloatAttribute.createColorNoise(random.nextFloat(0.1f, 0.3f)));
+										materialAttributes.add(TerrestrialPlanetFloatAttribute.createColorFrequency(random.nextFloat(15f, 25f)));
 										shaderName = UberShaderProvider.TERRESTRIAL_PLANET_SHADER;
 									}
 								}
 								if (textureName == null && random.nextBoolean(PROBABILITY_GENERATED_PLANET)) {
 									textureName = "mars_colors.png";
 									materialAttributes.add(TerrestrialPlanetFloatAttribute.createHeightFrequency(random.nextFloat(2f, 15f)));
+									materialAttributes.add(TerrestrialPlanetFloatAttribute.createColorNoise(random.nextFloat(0.1f, 0.3f)));
+									materialAttributes.add(TerrestrialPlanetFloatAttribute.createColorFrequency(random.nextFloat(15f, 25f)));
 									shaderName = UberShaderProvider.TERRESTRIAL_PLANET_SHADER;
 								}
 							}
@@ -266,6 +272,8 @@ public class NodeToRenderConverter {
 							materialAttributes.add(TerrestrialPlanetFloatAttribute.createHeightMin(heightMin));
 							materialAttributes.add(TerrestrialPlanetFloatAttribute.createHeightMax(heightMax));
 							materialAttributes.add(TerrestrialPlanetFloatAttribute.createHeightFrequency(random.nextFloat(2f, 15f)));
+							materialAttributes.add(TerrestrialPlanetFloatAttribute.createColorNoise(random.nextFloat(0.1f, 0.3f)));
+							materialAttributes.add(TerrestrialPlanetFloatAttribute.createColorFrequency(random.nextFloat(15f, 25f)));
 							shaderName = UberShaderProvider.TERRESTRIAL_PLANET_SHADER;
 						}
 

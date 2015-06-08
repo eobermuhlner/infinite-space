@@ -16,8 +16,14 @@ public class TerrestrialPlanetFloatAttribute extends FloatAttribute {
 	public static final String HeightWaterAlias = "heightWater";
 	public static final long HeightWater = register(HeightWaterAlias);
 
-	public static final String IcelLevelAlias = "icelLevel";
-	public static final long IcelLevel = register(IcelLevelAlias);
+	public static final String IceLevelAlias = "iceLevel";
+	public static final long IceLevel = register(IceLevelAlias);
+
+	public static final String ColorNoiseAlias = "colorNoise";
+	public static final long ColorNoise = register(ColorNoiseAlias);
+
+	public static final String ColorFrequencyAlias = "colorFrequency";
+	public static final long ColorFrequency = register(ColorFrequencyAlias);
 
 	public static TerrestrialPlanetFloatAttribute createHeightMin (float value) {
 		return new TerrestrialPlanetFloatAttribute(HeightMin, value);
@@ -35,8 +41,16 @@ public class TerrestrialPlanetFloatAttribute extends FloatAttribute {
 		return new TerrestrialPlanetFloatAttribute(HeightWater, value);
 	}
 
-	public static TerrestrialPlanetFloatAttribute createIcelLevel (float value) {
-		return new TerrestrialPlanetFloatAttribute(IcelLevel, value);
+	public static TerrestrialPlanetFloatAttribute createIceLevel (float value) {
+		return new TerrestrialPlanetFloatAttribute(IceLevel, value);
+	}
+
+	public static TerrestrialPlanetFloatAttribute createColorNoise (float value) {
+		return new TerrestrialPlanetFloatAttribute(ColorNoise, value);
+	}
+
+	public static TerrestrialPlanetFloatAttribute createColorFrequency (float value) {
+		return new TerrestrialPlanetFloatAttribute(ColorFrequency, value);
 	}
 
 	private TerrestrialPlanetFloatAttribute(long type, float value) {
