@@ -165,7 +165,7 @@ public class Units {
 			Collections.sort(entries, new Comparator<Map.Entry<Molecule,Double>>() {
 				@Override
 				public int compare(Entry<Molecule, Double> o1, Entry<Molecule, Double> o2) {
-					return Double.compare(o1.getValue(), o2.getValue());
+					return -Double.compare(o1.getValue(), o2.getValue());
 				}
 			});
 			for (Map.Entry<Molecule, Double> entry : entries) {
