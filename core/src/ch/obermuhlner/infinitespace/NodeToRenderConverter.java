@@ -17,6 +17,7 @@ import ch.obermuhlner.infinitespace.render.FloatArrayAttribute;
 import ch.obermuhlner.infinitespace.render.TerrestrialPlanetFloatAttribute;
 import ch.obermuhlner.infinitespace.render.UberShaderProvider;
 import ch.obermuhlner.infinitespace.util.MathUtil;
+import ch.obermuhlner.infinitespace.util.StopWatch;
 import ch.obermuhlner.infinitespace.util.Units;
 
 import com.badlogic.gdx.assets.AssetManager;
@@ -47,7 +48,7 @@ public class NodeToRenderConverter {
 	private static final boolean RENDER_PROCEDURAL_SHADERS_TO_TEXTURES = true;
 
 	private static final double PROBABILITY_GENERATED_PLANET = 1.0;
-	private static final boolean RENDER_CLOUDS = true;
+	private static final boolean RENDER_CLOUDS = Config.DEBUG_RENDER_CLOUDS;
 
 	private static final double SUN_RADIUS = Units.SUN_RADIUS;
 
@@ -138,7 +139,9 @@ public class NodeToRenderConverter {
 		@SuppressWarnings("unchecked")
 		NodeConverter<T> nodeConverter = (NodeConverter<T>)nodeConverters.get(node.getClass());
 		if (nodeConverter != null) {
+			//StopWatch stopWatch = new StopWatch();
 			nodeConverter.convert(node, renderState, calculatePosition);
+			//System.out.println("Converting to render " + node + " in " + stopWatch);
 		}
 	}
 
@@ -211,6 +214,7 @@ public class NodeToRenderConverter {
 			String textureName = node.textureName;
 			String shaderName = null;
 			Color[] planetColors = null;
+			
 			if (textureName == null) {
 				switch (node.type) {
 				case GAS:
@@ -222,7 +226,7 @@ public class NodeToRenderConverter {
 					}
 					break;
 				case STONE:
-					if (textureName == null && node.parent instanceof Star) {
+					if (textureName == null) {
 						// TODO use heat of planet to decide whether is is lava
 						if (node.temperature > LAVA_TEMPERATURE) {
 							textureName = "lava_colors.png";
@@ -244,11 +248,12 @@ public class NodeToRenderConverter {
 										float water = (float)node.water;
 										float heightMin = MathUtil.transform(0f, 1f, 0.6f, 0.0f, water);
 										float heightMax = MathUtil.transform(0f, 1f, 1.0f, 0.4f, water);
-										float iceLevel = water < 0.4f ? MathUtil.transform(0f, 1f, -1.0f, 0.0f, water) : 0.0f;
+										float iceLevel = MathUtil.transform((float)Units.celsiusToKelvin(-50), (float)Units.celsiusToKelvin(50), 1f, -1f, (float)node.temperature);
 										materialAttributes.add(TerrestrialPlanetFloatAttribute.createHeightWater(0.4f)); // depends on texture
 										materialAttributes.add(TerrestrialPlanetFloatAttribute.createHeightMin(heightMin));
 										materialAttributes.add(TerrestrialPlanetFloatAttribute.createHeightMax(heightMax));
 										materialAttributes.add(TerrestrialPlanetFloatAttribute.createHeightFrequency(random.nextFloat(2f, 15f)));
+										materialAttributes.add(TerrestrialPlanetFloatAttribute.createHeightMountains(1.0f));
 										materialAttributes.add(TerrestrialPlanetFloatAttribute.createIceLevel(iceLevel));
 										materialAttributes.add(TerrestrialPlanetFloatAttribute.createColorNoise(random.nextFloat(0.1f, 0.3f)));
 										materialAttributes.add(TerrestrialPlanetFloatAttribute.createColorFrequency(random.nextFloat(15f, 25f)));
@@ -258,8 +263,8 @@ public class NodeToRenderConverter {
 								if (textureName == null && random.nextBoolean(PROBABILITY_GENERATED_PLANET)) {
 									textureName = "mars_colors.png";
 									materialAttributes.add(TerrestrialPlanetFloatAttribute.createHeightFrequency(random.nextFloat(2f, 15f)));
-									materialAttributes.add(TerrestrialPlanetFloatAttribute.createColorNoise(random.nextFloat(0.1f, 0.3f)));
-									materialAttributes.add(TerrestrialPlanetFloatAttribute.createColorFrequency(random.nextFloat(15f, 25f)));
+									//materialAttributes.add(TerrestrialPlanetFloatAttribute.createColorNoise(random.nextFloat(0.1f, 0.3f)));
+									//materialAttributes.add(TerrestrialPlanetFloatAttribute.createColorFrequency(random.nextFloat(15f, 25f)));
 									shaderName = UberShaderProvider.TERRESTRIAL_PLANET_SHADER;
 								}
 							}
@@ -273,8 +278,8 @@ public class NodeToRenderConverter {
 							materialAttributes.add(TerrestrialPlanetFloatAttribute.createHeightMin(heightMin));
 							materialAttributes.add(TerrestrialPlanetFloatAttribute.createHeightMax(heightMax));
 							materialAttributes.add(TerrestrialPlanetFloatAttribute.createHeightFrequency(random.nextFloat(2f, 15f)));
-							materialAttributes.add(TerrestrialPlanetFloatAttribute.createColorNoise(random.nextFloat(0.1f, 0.3f)));
-							materialAttributes.add(TerrestrialPlanetFloatAttribute.createColorFrequency(random.nextFloat(15f, 25f)));
+							//materialAttributes.add(TerrestrialPlanetFloatAttribute.createColorNoise(random.nextFloat(0.1f, 0.3f)));
+							//materialAttributes.add(TerrestrialPlanetFloatAttribute.createColorFrequency(random.nextFloat(15f, 25f)));
 							shaderName = UberShaderProvider.TERRESTRIAL_PLANET_SHADER;
 						}
 
@@ -289,7 +294,7 @@ public class NodeToRenderConverter {
 				}
 			}
 
-			System.out.println("PLANET " + node.seed + " " + node.name + " " + shaderName + " " + textureName + " " + Units.kelvinToString(node.temperature));
+			//System.out.println("PLANET " + node.seed + " " + node.name + " " + shaderName + " " + textureName + " " + Units.kelvinToString(node.temperature));
 			
 			{
 				Material material;
@@ -314,10 +319,14 @@ public class NodeToRenderConverter {
 					}
 					material = new Material(materialAttributes);
 					if (RENDER_PROCEDURAL_SHADERS_TO_TEXTURES) {
+						StopWatch stopWatch = new StopWatch();
 						UserData userData = new UserData();
 						userData.shaderName = shaderName;
 						Texture texture = renderTexture(material, userData);
 						material = new Material(new TextureAttribute(TextureAttribute.Diffuse, texture));
+						if (Config.DEBUG_PROFILING) {
+							System.out.println("Render " + node + " to texture in " + stopWatch);
+						}
 					}
 				}
 

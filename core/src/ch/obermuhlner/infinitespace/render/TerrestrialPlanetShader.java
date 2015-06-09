@@ -4,18 +4,21 @@ package ch.obermuhlner.infinitespace.render;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.g3d.Attribute;
 import com.badlogic.gdx.graphics.g3d.Renderable;
 import com.badlogic.gdx.graphics.g3d.Shader;
 import com.badlogic.gdx.graphics.g3d.attributes.FloatAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.utils.RenderContext;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
-import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.GdxRuntimeException;
 
 public class TerrestrialPlanetShader implements Shader {
 
+	private static final float DEFAULT_COLOR_NOISE = 0.0f;
+
+	private static final float DEFAULT_HEIGHT_MOUNTAINS = 0.0f;
+	
+	private Renderable renderable;
 	private final String vertexProgram;
 	private final String fragmentProgram;
 
@@ -30,6 +33,7 @@ public class TerrestrialPlanetShader implements Shader {
 	private int u_heightMax;
 	private int u_heightFrequency;
 	private int u_heightWater;
+	private int u_heightMountains;
 	private int u_iceLevel;
 	private int u_colorNoise;
 	private int u_colorFrequency;
@@ -49,14 +53,16 @@ public class TerrestrialPlanetShader implements Shader {
 	
 	private float time;
 	
-	public TerrestrialPlanetShader (String vertexProgram, String fragmentProgram) {
+	public TerrestrialPlanetShader (Renderable renderable, String vertexProgram, String fragmentProgram) {
+		this.renderable = renderable;
 		this.vertexProgram = vertexProgram;
 		this.fragmentProgram = fragmentProgram;
 	}
 	
 	@Override
 	public void init () {
-		program = new ShaderProgram(vertexProgram, fragmentProgram);
+		String prefix = createPrefix();
+		program = new ShaderProgram(prefix + vertexProgram, prefix + fragmentProgram);
 		if (!program.isCompiled()) {
 			throw new GdxRuntimeException(program.getLog());
 		}
@@ -70,6 +76,7 @@ public class TerrestrialPlanetShader implements Shader {
 		u_heightMax = program.getUniformLocation("u_heightMax");
 		u_heightFrequency = program.getUniformLocation("u_heightFrequency");
 		u_heightWater = program.getUniformLocation("u_heightWater");
+		u_heightMountains = program.getUniformLocation("u_heightMountains");
 		u_iceLevel = program.getUniformLocation("u_iceLevel");
 		u_colorNoise = program.getUniformLocation("u_colorNoise");
 		u_colorFrequency = program.getUniformLocation("u_colorFrequency");
@@ -84,6 +91,19 @@ public class TerrestrialPlanetShader implements Shader {
 		u_random7 = program.getUniformLocation("u_random7");
 		u_random8 = program.getUniformLocation("u_random8");
 		u_random9 = program.getUniformLocation("u_random9");
+	}
+
+	private String createPrefix() {
+		StringBuilder prefix = new StringBuilder();
+		
+		if (getFloatAttributeValue(renderable, TerrestrialPlanetFloatAttribute.ColorNoise, DEFAULT_COLOR_NOISE) != 0.0f) {
+			prefix.append("#define colorNoiseFlag\n");
+		}
+		if (getFloatAttributeValue(renderable, TerrestrialPlanetFloatAttribute.HeightMountains, DEFAULT_HEIGHT_MOUNTAINS) != 0.0f) {
+			prefix.append("#define mountainsFlag\n");
+		}
+		
+		return prefix.toString();
 	}
 
 	@Override
@@ -119,8 +139,9 @@ public class TerrestrialPlanetShader implements Shader {
 		program.setUniformf(u_heightMax, getFloatAttributeValue(renderable, TerrestrialPlanetFloatAttribute.HeightMax, 1.0f));
 		program.setUniformf(u_heightFrequency, getFloatAttributeValue(renderable, TerrestrialPlanetFloatAttribute.HeightFrequency, 5f));
 		program.setUniformf(u_heightWater, getFloatAttributeValue(renderable, TerrestrialPlanetFloatAttribute.HeightWater, 0.0f));
+		program.setUniformf(u_heightMountains, getFloatAttributeValue(renderable, TerrestrialPlanetFloatAttribute.HeightMountains, DEFAULT_HEIGHT_MOUNTAINS));
 		program.setUniformf(u_iceLevel, getFloatAttributeValue(renderable, TerrestrialPlanetFloatAttribute.IceLevel, 0.0f));
-		program.setUniformf(u_colorNoise, getFloatAttributeValue(renderable, TerrestrialPlanetFloatAttribute.ColorNoise, 0.2f));
+		program.setUniformf(u_colorNoise, getFloatAttributeValue(renderable, TerrestrialPlanetFloatAttribute.ColorNoise, DEFAULT_COLOR_NOISE));
 		program.setUniformf(u_colorFrequency, getFloatAttributeValue(renderable, TerrestrialPlanetFloatAttribute.ColorFrequency, 20.0f));
 		
 		// random

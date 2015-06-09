@@ -25,6 +25,9 @@ public class TerrestrialPlanetFloatAttribute extends FloatAttribute {
 	public static final String ColorFrequencyAlias = "colorFrequency";
 	public static final long ColorFrequency = register(ColorFrequencyAlias);
 
+	public static final String HeightMountainsAlias = "heightMountains";
+	public static final long HeightMountains = register(HeightMountainsAlias);
+
 	public static TerrestrialPlanetFloatAttribute createHeightMin (float value) {
 		return new TerrestrialPlanetFloatAttribute(HeightMin, value);
 	}
@@ -51,6 +54,10 @@ public class TerrestrialPlanetFloatAttribute extends FloatAttribute {
 
 	public static TerrestrialPlanetFloatAttribute createColorFrequency (float value) {
 		return new TerrestrialPlanetFloatAttribute(ColorFrequency, value);
+	}
+
+	public static TerrestrialPlanetFloatAttribute createHeightMountains (float value) {
+		return new TerrestrialPlanetFloatAttribute(HeightMountains, value);
 	}
 
 	private TerrestrialPlanetFloatAttribute(long type, float value) {

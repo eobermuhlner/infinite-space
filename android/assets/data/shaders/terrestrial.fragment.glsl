@@ -12,10 +12,18 @@ precision highp float;
 uniform float u_heightMin;
 uniform float u_heightMax;
 uniform float u_heightFrequency;
-uniform float u_heightWater;
+
+#ifdef mountainsFlag
+uniform float u_heightMountains;
+#endif
+
 uniform float u_iceLevel;
+
+#ifdef colorNoiseFlag
 uniform float u_colorNoise;
+uniform float u_heightWater;
 uniform float u_colorFrequency;
+#endif
 
 uniform float u_time;
 
@@ -197,33 +205,36 @@ void main() {
 	height += fractalNoise(v_texCoords0, base, range);
 	height = clamp(height, u_heightMin, u_heightMax);
 
-	const float mountainRange = 1.0;
+	#ifdef mountainsFlag
 	float mountainFrequency = u_heightFrequency;
-	float mountainHeight = ridge(2 * fractalNoise(v_texCoords0, 2.0, 1.0) - 1.0) * mountainRange;
+	float mountainHeight = ridge(2 * fractalNoise(v_texCoords0, 2.0, 1.0) - 1.0) * u_heightMountains;
 	float mountainFactor = smoothstep(0.0, 0.6, ((pnoise2(v_texCoords0+r9, mountainFrequency) + 1) * 0.5));
 	height = max(height, mountainHeight * mountainFactor);
-
+	#endif
+	
 	float distEquator = abs(v_texCoords0.t - 0.5) * 2.0;
 	distEquator += pnoise2(v_texCoords0,  8) * 0.04;
 	distEquator += pnoise2(v_texCoords0, 16) * 0.02;
 	distEquator += pnoise2(v_texCoords0, 32) * 0.01;
-
-	float absIceLevel =  abs(u_iceLevel);
+	
+	float absIceLevel = abs(u_iceLevel);
 	distEquator = (1.0 - absIceLevel) * distEquator;
 	if (u_iceLevel >= 0) {
 		distEquator = distEquator + absIceLevel;
 	} else {
 		distEquator = distEquator + absIceLevel * 0.15;
-	} 
+	}
 
 	vec3 color = texture2D(u_diffuseTexture, vec2(clamp(height, 0.0, 1.0), distEquator));
 
-	if (height > 0.40) {
+	#ifdef colorNoiseFlag
+	if (height > u_heightWater) {
 		// make noise on land, not on water
 		float colorNoise = fractalNoise(v_texCoords0+r1, u_colorFrequency, u_colorNoise);
 		color = color * (1.0 + colorNoise);
 	}
-
+	#endif
+	
 	gl_FragColor.rgb = color;
 }
 

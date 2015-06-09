@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import ch.obermuhlner.infinitespace.CommodityItem;
+import ch.obermuhlner.infinitespace.Config;
 import ch.obermuhlner.infinitespace.NameGenerator;
 import ch.obermuhlner.infinitespace.model.Node;
 import ch.obermuhlner.infinitespace.model.OrbitingNode;
@@ -292,7 +293,6 @@ public class Generator {
 		double starLumininosity = star.getLuminosity();
 		double theoreticalTemperature = theoreticalTemperature(starLumininosity, 0.1, starDistance);
 		boolean lifeSupportingZone = theoreticalTemperature > Units.celsiusToKelvin(-50) && theoreticalTemperature < Units.celsiusToKelvin(60);
-		System.out.println("theoreticalTemperature = " + Units.kelvinToString(theoreticalTemperature));
 		
 		// set Planet: type, mass, radius, childCount
 		if (parent.mass > Units.SUN_MASS * 0.05) {
@@ -315,7 +315,7 @@ public class Generator {
 			planet.radius = random.nextGaussian (parent.radius / 10);
 			planet.childCount = 0;
 		}
-		
+
 		// set Planet orbit
 		planet.orbitPeriod = Math.pow(planet.orbitRadius/Units.ASTRONOMICAL_UNIT, 3.0/2.0) * Units.SECONDS_PER_YEAR;
 		planet.rotation = random.nextGaussian (25 * Units.SECONDS_PER_DAY);
@@ -337,8 +337,8 @@ public class Generator {
 		default :
 		case ICE: //FIXME ??
 		case STONE: {
-			planet.atmospherePressure = MathUtil.smoothstep(Units.EARTH_MASS / 10, Units.EARTH_MASS * 10, planet.mass); // FIXME real function for atmosphere density
-			planet.breathableAtmosphere = planet.atmospherePressure > 0.1 && random.nextBoolean(0.1);
+			planet.atmospherePressure = MathUtil.smoothstep(Units.EARTH_MASS / 10, Units.EARTH_MASS * 10, planet.mass) * Units.EARTH_ATMOSPHERE_PRESSURE; // FIXME real function for atmosphere density
+			planet.breathableAtmosphere = planet.atmospherePressure > Units.EARTH_ATMOSPHERE_PRESSURE * 0.1 && random.nextBoolean(0.1);
 			if (lifeSupportingZone) {
 				planet.breathableAtmosphere = random.nextBoolean(0.3);
 				if (planet.breathableAtmosphere) {
@@ -358,7 +358,7 @@ public class Generator {
 						p(random.nextGaussian(0.005), Molecule.CO2)
 						);
 			} else {
-				if (planet.atmospherePressure > 0.1) {
+				if (planet.atmospherePressure > Units.EARTH_ATMOSPHERE_PRESSURE * 0.1 ) {
 					if (random.nextBoolean(0.5)) {
 						// mars/venus-like atmosphere
 						planet.atmosphere = random.nextProbabilityMap(
@@ -421,11 +421,12 @@ public class Generator {
 		Star star = findParentStar(planet);
 		
 		double albedo = Math.min(1.0, planet.albedo);
-		double theoreticalTemperature = theoreticalTemperature(star.getLuminosity(), albedo, accumulateOrbitRadius(planet, star));
+		double distance = accumulateOrbitRadius(planet, star) - star.radius;
+		double theoreticalTemperature = theoreticalTemperature(star.getLuminosity(), albedo, distance);
 		
 		// FIXME apply correct model of greenhouse effect
 		if (planet.breathableAtmosphere) {
-			theoreticalTemperature *= 1.1; 
+			theoreticalTemperature *= 1.1;
 		}
 		
 		return theoreticalTemperature;
@@ -458,6 +459,9 @@ public class Generator {
 
 	private double calculateOrbitRadius (Node parent, Random parentRandom, long index) {
 		double baseDist = parent instanceof Planet ? ((Planet)parent).radius * parentRandom.nextInt (5, 20) : Units.ASTRONOMICAL_UNIT ;
+		if (Config.DEBUG_LINEAR_ORBITS) {
+			return baseDist + index * baseDist * 0.25;
+		}
 		double distConst = parentRandom.nextGaussian (0.4, 0.01) * baseDist;
 		double distFactor = parentRandom.nextGaussian (0.3, 0.01) * baseDist;
 		double orbitRadius = distConst + distFactor * (index == 0 ? 0 : Math.pow(2, index));
