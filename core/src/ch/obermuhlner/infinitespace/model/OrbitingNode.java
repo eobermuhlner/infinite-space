@@ -8,6 +8,7 @@ public class OrbitingNode extends Node {
 
 	public double orbitRadius; // m
 	public double orbitPeriod; // seconds
+	public double orbitStartAngle; // radian
 	public double rotation; // seconds
 	public double mass; // kg
 	public Population population;

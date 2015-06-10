@@ -286,6 +286,7 @@ public class Generator {
 		planet.name = getNameGenerator().generateNodeName(random, planet);
 		
 		planet.orbitRadius = calculateOrbitRadius(parent, parentRandom, index);
+		planet.orbitStartAngle = random.nextDouble(2 * Math.PI);
 		planet.rotation = random.nextGaussian(25);
 		
 		Star star = findParentStar(planet);
