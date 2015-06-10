@@ -16,10 +16,12 @@ import ch.obermuhlner.infinitespace.util.Units;
 
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.CheckBox;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
+import com.badlogic.gdx.utils.Array;
 
 public class InfoScreen extends AbstractNodeStageScreen {
 
@@ -34,6 +36,32 @@ public class InfoScreen extends AbstractNodeStageScreen {
 	protected void prepareStage (Stage stage, Table rootTable) {
 		rootTable.row();
 		rootTable.add(new Label("Info " + node.getName(), skin, TITLE));
+
+		Array<String> modelInstanceNames = getModelInstanceNames();
+		if (modelInstanceNames.size > 0) {
+			Table tableNames = table();
+			rootTable.row();
+			rootTable.add(new ScrollPane(tableNames, skin));
+			
+			for (final String name : modelInstanceNames) {
+				visibleModelInstanceNames.add(name);
+
+				tableNames.row();
+				final CheckBox checkBoxName = new CheckBox(name, skin);
+				tableNames.add(checkBoxName);
+				checkBoxName.setChecked(true);
+				checkBoxName.addListener(new ChangeListener() {
+					@Override
+					public void changed(ChangeEvent event, Actor actor) {
+						if (checkBoxName.isChecked()) {
+							visibleModelInstanceNames.add(name);
+						} else {
+							visibleModelInstanceNames.remove(name);
+						}
+					}
+				});
+			}
+		}
 		
 		Table tablePhysics = table();
 		rootTable.row();
@@ -67,7 +95,7 @@ public class InfoScreen extends AbstractNodeStageScreen {
 			AsteroidBelt asteroidBelt = (AsteroidBelt)node;
 			addRow(tablePhysics, "Width", Units.meterSizeToString(asteroidBelt.width));
 			addRow(tablePhysics, "Height", Units.meterSizeToString(asteroidBelt.height));
-			addRow(tablePhysics, "Density", Units.toString(asteroidBelt.density) + "1/m^3");
+			addRow(tablePhysics, "Density", Units.toString(asteroidBelt.density) + "/m^3");
 			addRow(tablePhysics, "Average Radius", Units.meterSizeToString(asteroidBelt.averageRadius));
 		}
 

@@ -8,6 +8,8 @@ public class UserData {
 
 	public Node node;
 	
+	public String modelName;
+	
 	@Override
 	public String toString () {
 		return "UserData{" + shaderName + ", " + node + "}";

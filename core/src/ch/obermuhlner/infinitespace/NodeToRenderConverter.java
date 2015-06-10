@@ -135,12 +135,12 @@ public class NodeToRenderConverter {
 	}
 
 
-	private <T extends Node> void convertNode (T node, RenderState renderState, boolean calculatePosition) {
+	private <T extends Node> void convertNode (T node, RenderState renderState, boolean realUniverse) {
 		@SuppressWarnings("unchecked")
 		NodeConverter<T> nodeConverter = (NodeConverter<T>)nodeConverters.get(node.getClass());
 		if (nodeConverter != null) {
 			//StopWatch stopWatch = new StopWatch();
-			nodeConverter.convert(node, renderState, calculatePosition);
+			nodeConverter.convert(node, renderState, realUniverse);
 			//System.out.println("Converting to render " + node + " in " + stopWatch);
 		}
 	}
@@ -148,7 +148,7 @@ public class NodeToRenderConverter {
 	private class StarConverter implements NodeConverter<Star> {
 
 		@Override
-		public void convert (Star node, RenderState renderState, boolean calculatePosition) {
+		public void convert (Star node, RenderState renderState, boolean realUniverse) {
 			float radius = calculateStarRadius(node);
 			float x = 0;
 			float y = 0;
@@ -201,7 +201,7 @@ public class NodeToRenderConverter {
 	private class PlanetConverter implements NodeConverter<Planet> {
 
 		@Override
-		public void convert (Planet node, RenderState renderState, boolean calculatePosition) {
+		public void convert (Planet node, RenderState renderState, boolean realUniverse) {
 			Random random = node.seed.getRandom();
 			
 			float radius = calculatePlanetRadius(node);
@@ -246,14 +246,17 @@ public class NodeToRenderConverter {
 									if (node.hasLife) {
 										textureName = "terrestrial_colors.png";
 										float water = (float)node.water;
-										float heightMin = MathUtil.transform(0f, 1f, 0.6f, 0.0f, water);
-										float heightMax = MathUtil.transform(0f, 1f, 1.0f, 0.4f, water);
+										float heightMin = MathUtil.transform(0f, 1f, 0.4f, 0.0f, water);
+										float heightMax = MathUtil.transform(0f, 1f, 1.0f, 0.6f, water);
+										float heightFrequency = random.nextFloat(2f, 15f);
 										float iceLevel = MathUtil.transform((float)Units.celsiusToKelvin(-50), (float)Units.celsiusToKelvin(50), 1f, -1f, (float)node.temperature);
 										materialAttributes.add(TerrestrialPlanetFloatAttribute.createHeightWater(0.4f)); // depends on texture
 										materialAttributes.add(TerrestrialPlanetFloatAttribute.createHeightMin(heightMin));
 										materialAttributes.add(TerrestrialPlanetFloatAttribute.createHeightMax(heightMax));
-										materialAttributes.add(TerrestrialPlanetFloatAttribute.createHeightFrequency(random.nextFloat(2f, 15f)));
-										materialAttributes.add(TerrestrialPlanetFloatAttribute.createHeightMountains(1.0f));
+										materialAttributes.add(TerrestrialPlanetFloatAttribute.createHeightFrequency(heightFrequency));
+										if (heightFrequency < random.nextFloat(5f, 10f)) {
+											materialAttributes.add(TerrestrialPlanetFloatAttribute.createHeightMountains(random.nextFloat(0.8f, 1.0f)));
+										}
 										materialAttributes.add(TerrestrialPlanetFloatAttribute.createIceLevel(iceLevel));
 										materialAttributes.add(TerrestrialPlanetFloatAttribute.createColorNoise(random.nextFloat(0.1f, 0.3f)));
 										materialAttributes.add(TerrestrialPlanetFloatAttribute.createColorFrequency(random.nextFloat(15f, 25f)));
@@ -330,21 +333,22 @@ public class NodeToRenderConverter {
 					}
 				}
 
+				if (! realUniverse) {
+					createSphere(renderState, node, "Inner Core", radius * 0.25f, new Material(new ColorAttribute(ColorAttribute.Emissive, Color.YELLOW)));
+					createSphere(renderState, node, "Outer Core", radius * 0.50f, new Material(new ColorAttribute(ColorAttribute.Emissive, Color.RED)));
+					createSphere(renderState, node, "Mantle", radius * 0.85f, new Material(new ColorAttribute(ColorAttribute.Emissive, Color.MAROON)));
+				}
+
 				{
-					Model sphereModel = modelBuilder.createSphere(radius, radius, radius, PLANET_SPHERE_DIVISIONS_U, PLANET_SPHERE_DIVISIONS_V,
-						material, Usage.Position | Usage.Normal | Usage.TextureCoordinates);
-					ModelInstance sphere = new ModelInstance(sphereModel);
-					if (calculatePosition) {
+					ModelInstance sphere = createSphere(renderState, node, "Planet Surface", radius, material);
+					if (realUniverse) {
 						sphere.transform.setToTranslation(position);
 					}
 	
-					UserData userData = new UserData();
-					userData.node = node;
 					if (!RENDER_PROCEDURAL_SHADERS_TO_TEXTURES) {
-						userData.shaderName = shaderName;						
+						UserData userData = (UserData) sphere.userData;
+						userData.shaderName = shaderName;				
 					}
-					sphere.userData = userData;
-					renderState.instances.add(sphere);
 				}
 				
 				if (RENDER_CLOUDS && node.breathableAtmosphere) {
@@ -353,24 +357,36 @@ public class NodeToRenderConverter {
 					Texture texture = assetManager.get(InfiniteSpaceGame.getTexturePath("clouds.png"), Texture.class);
 					float blend = MathUtil.transform(0.0f, 0.7f, 0.0f, 1.0f, (float)node.water);
 					Material materialClouds = new Material(new TextureAttribute(TextureAttribute.Diffuse, texture), new BlendingAttribute(blend));
-					Model sphereModel = modelBuilder.createSphere(atmosphereRadius, atmosphereRadius, atmosphereRadius, PLANET_SPHERE_DIVISIONS_U, PLANET_SPHERE_DIVISIONS_V,
-							materialClouds, Usage.Position | Usage.Normal | Usage.TextureCoordinates);
-					ModelInstance sphereClouds = new ModelInstance(sphereModel);
-					if (calculatePosition) {
-						sphereClouds.transform.setToTranslation(position);
+					ModelInstance sphere = createSphere(renderState, node, "Atmosphere", atmosphereRadius, materialClouds);
+					if (realUniverse) {
+						sphere.transform.setToTranslation(position);
 					}
-					renderState.instances.add(sphereClouds);
 				}
 			}
 
 			createOrbit(renderState, node, orbitRadius, parentPosition);
+		}
+
+		private ModelInstance createSphere(RenderState renderState, Planet node, String name, float radius, Material material) {
+			Model sphereModel = modelBuilder.createSphere(radius, radius, radius, PLANET_SPHERE_DIVISIONS_U, PLANET_SPHERE_DIVISIONS_V,
+				material, Usage.Position | Usage.Normal | Usage.TextureCoordinates);
+			ModelInstance sphere = new ModelInstance(sphereModel);
+
+			UserData userData = new UserData();
+			userData.node = node;
+			userData.modelName = name;
+			sphere.userData = userData;
+			
+			renderState.instances.add(sphere);
+			
+			return sphere;
 		}
 	}
 
 	private class AsteroidBeltConverter implements NodeConverter<AsteroidBelt> {
 
 		@Override
-		public void convert (AsteroidBelt node, RenderState renderState, boolean calculatePosition) {
+		public void convert (AsteroidBelt node, RenderState renderState, boolean realUniverse) {
 			float radius = calculateOrbitRadius(node);
 			Vector3 position = calculatePosition(node.parent);
 
@@ -402,7 +418,7 @@ public class NodeToRenderConverter {
 			ModelInstance ring = new ModelInstance(model);
 			ring.userData = userData;
 
-			if (calculatePosition) {
+			if (realUniverse) {
 				ring.transform.setToTranslation(position);
 			}
 			renderState.instances.add(ring);
@@ -492,7 +508,7 @@ public class NodeToRenderConverter {
 	private class SpaceStationConverter implements NodeConverter<SpaceStation> {
 
 		@Override
-		public void convert (SpaceStation node, RenderState renderState, boolean calculatePosition) {
+		public void convert (SpaceStation node, RenderState renderState, boolean realUniverse) {
 			float orbitRadius = calculateOrbitRadius(node);
 			Vector3 position = calculatePosition(node);
 			Vector3 parentPosition = calculatePosition(node.parent);
@@ -523,7 +539,7 @@ public class NodeToRenderConverter {
 					break;
 				}
 				station = new ModelInstance(stationModel);
-				if (calculatePosition) {
+				if (realUniverse) {
 					station.transform.setToTranslation(position);
 				}
 

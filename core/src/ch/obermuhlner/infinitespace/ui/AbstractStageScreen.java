@@ -1,10 +1,14 @@
 package ch.obermuhlner.infinitespace.ui;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import ch.obermuhlner.infinitespace.Config;
 import ch.obermuhlner.infinitespace.Effects;
 import ch.obermuhlner.infinitespace.GamePreferences;
 import ch.obermuhlner.infinitespace.InfiniteSpaceGame;
 import ch.obermuhlner.infinitespace.RenderState;
+import ch.obermuhlner.infinitespace.UserData;
 import ch.obermuhlner.infinitespace.render.UberShaderProvider;
 
 import com.badlogic.gdx.Gdx;
@@ -14,6 +18,7 @@ import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.g3d.ModelBatch;
+import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
@@ -24,6 +29,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.Align;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
 public abstract class AbstractStageScreen extends AbstractInfiniteSpaceGameScreen {
@@ -40,6 +46,8 @@ public abstract class AbstractStageScreen extends AbstractInfiniteSpaceGameScree
 	protected Stage stage;
 
 	protected CameraInputController cameraInputController;
+	
+	protected Set<String> visibleModelInstanceNames = new HashSet<String>();
 
 	public AbstractStageScreen (InfiniteSpaceGame game) {
 		super(game);
@@ -79,7 +87,7 @@ public abstract class AbstractStageScreen extends AbstractInfiniteSpaceGameScree
 	@Override
 	public void resize (int width, int height) {
 		super.resize(width, height);
-	   stage.getViewport().update(width, height, true);
+		stage.getViewport().update(width, height, true);
 	}
 	
 	@Override
@@ -94,10 +102,38 @@ public abstract class AbstractStageScreen extends AbstractInfiniteSpaceGameScree
 		stage.act(delta);
 
 		modelBatch.begin(camera);
-		modelBatch.render(renderState.instances, renderState.environment);
+		//modelBatch.render(renderState.instances, renderState.environment);
+		for(ModelInstance modelInstance : renderState.instances) {
+			if (isVisible(modelInstance)) {
+				modelBatch.render(modelInstance, renderState.environment);
+			}
+		}
 		modelBatch.end();
 
 		stage.draw();
+	}
+
+	protected Array<String> getModelInstanceNames() {
+		Array<String> array = new Array<String>();
+
+		for(ModelInstance modelInstance : renderState.instances) {
+			if (modelInstance.userData instanceof UserData) {
+				UserData userData = (UserData) modelInstance.userData;
+				if (userData.modelName != null) {
+					array.add(userData.modelName);
+				}
+			}
+		}
+		
+		return array;
+	}
+	
+	private boolean isVisible(ModelInstance modelInstance) {
+		if (modelInstance.userData instanceof UserData) {
+			UserData userData = (UserData) modelInstance.userData;
+			return userData.modelName == null || visibleModelInstanceNames.contains(userData.modelName);
+		}
+		return true;
 	}
 
 	private void createCamera () {
