@@ -334,9 +334,18 @@ public class NodeToRenderConverter {
 				}
 
 				if (! realUniverse) {
-					createSphere(renderState, node, "Inner Core", radius * 0.25f, new Material(new ColorAttribute(ColorAttribute.Emissive, Color.YELLOW)));
-					createSphere(renderState, node, "Outer Core", radius * 0.50f, new Material(new ColorAttribute(ColorAttribute.Emissive, Color.RED)));
-					createSphere(renderState, node, "Mantle", radius * 0.85f, new Material(new ColorAttribute(ColorAttribute.Emissive, Color.MAROON)));
+					createSphere(renderState, node, "Inner Core", radius * 0.191f, new Material(new ColorAttribute(ColorAttribute.Emissive, Color.YELLOW)));
+					createSphere(renderState, node, "Outer Core", radius * 0.547f, new Material(new ColorAttribute(ColorAttribute.Emissive, Color.RED)));
+					createSphere(renderState, node, "Mantle", radius * 0.990f, new Material(new ColorAttribute(ColorAttribute.Emissive, Color.MAROON)));
+					//createSphere(renderState, node, "Crust", radius * 0.995f, new Material(new ColorAttribute(ColorAttribute.Diffuse, new Color(0x5c4033ff))));
+					
+					Material materialGrid = new Material(ColorAttribute.createDiffuse(new Color(0, 0.2f, 0, 1f)));
+					Model gridModel = modelBuilder.createLineGrid(30, 30, radius/20, radius/20, materialGrid, Usage.Position);
+					ModelInstance gridInstance = new ModelInstance(gridModel);
+					UserData userData = new UserData();
+					userData.modelName = "Grid";
+					gridInstance.userData = userData;
+					renderState.instances.add(gridInstance);
 				}
 
 				{
@@ -365,21 +374,6 @@ public class NodeToRenderConverter {
 			}
 
 			createOrbit(renderState, node, orbitRadius, parentPosition);
-		}
-
-		private ModelInstance createSphere(RenderState renderState, Planet node, String name, float radius, Material material) {
-			Model sphereModel = modelBuilder.createSphere(radius, radius, radius, PLANET_SPHERE_DIVISIONS_U, PLANET_SPHERE_DIVISIONS_V,
-				material, Usage.Position | Usage.Normal | Usage.TextureCoordinates);
-			ModelInstance sphere = new ModelInstance(sphereModel);
-
-			UserData userData = new UserData();
-			userData.node = node;
-			userData.modelName = name;
-			sphere.userData = userData;
-			
-			renderState.instances.add(sphere);
-			
-			return sphere;
 		}
 	}
 
@@ -435,9 +429,15 @@ public class NodeToRenderConverter {
 		while (current instanceof OrbitingNode) {
 			OrbitingNode orbiting = (OrbitingNode) current;
 			float orbitRadius = calculateOrbitRadius (orbiting);
-			x += orbitRadius;
-			y += 0;
-			z += 0;
+			if (Config.DEBUG_ORBIT_LINEUP) {
+				x += orbitRadius;
+				y += 0;
+				z += 0;
+			} else {
+				x += Math.sin(orbiting.orbitStartAngle) * orbitRadius;
+				y += 0;
+				z += Math.cos(orbiting.orbitStartAngle) * orbitRadius;
+			}
 			current = current.parent;
 		}
 		
@@ -592,17 +592,32 @@ public class NodeToRenderConverter {
 		return orbitRadius;
 	}
 	
-	private void createOrbit (RenderState renderState, OrbitingNode node, float orbitRadius, Vector3 parentPosition) {
-		{
-			Color color = node instanceof SpaceStation ? Color.NAVY : node.parent instanceof Planet ? Color.MAGENTA : Color.BLUE;
-			Material material = new Material(ColorAttribute.createDiffuse(color));
-			Model orbitModel = createOrbit(modelBuilder, orbitRadius, material, Usage.Position);
-			ModelInstance orbit = new ModelInstance(orbitModel);
-			orbit.transform.scl(orbitRadius);
-			orbit.transform.setToTranslation(parentPosition);
+	private ModelInstance createSphere(RenderState renderState, Planet node, String name, float radius, Material material) {
+		Model sphereModel = modelBuilder.createSphere(radius, radius, radius, PLANET_SPHERE_DIVISIONS_U, PLANET_SPHERE_DIVISIONS_V,
+			material, Usage.Position | Usage.Normal | Usage.TextureCoordinates);
+		ModelInstance sphere = new ModelInstance(sphereModel);
 
-			renderState.instancesAlways.add(orbit);
-		}
+		UserData userData = new UserData();
+		userData.node = node;
+		userData.modelName = name;
+		sphere.userData = userData;
+		
+		renderState.instances.add(sphere);
+		
+		return sphere;
+	}
+
+	private ModelInstance createOrbit (RenderState renderState, OrbitingNode node, float orbitRadius, Vector3 parentPosition) {
+		Color color = node instanceof SpaceStation ? Color.NAVY : node.parent instanceof Planet ? Color.MAGENTA : Color.BLUE;
+		Material material = new Material(ColorAttribute.createDiffuse(color));
+		Model orbitModel = createOrbit(modelBuilder, orbitRadius, material, Usage.Position);
+		ModelInstance orbit = new ModelInstance(orbitModel);
+		orbit.transform.scl(orbitRadius);
+		orbit.transform.setToTranslation(parentPosition);
+
+		renderState.instancesAlways.add(orbit);
+		
+		return orbit;
 	}
 
 	private static Model createOrbit (ModelBuilder modelBuilder, float radius, Material material, long attributes) {
