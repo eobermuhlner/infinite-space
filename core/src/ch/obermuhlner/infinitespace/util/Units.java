@@ -168,10 +168,17 @@ public class Units {
 					return -Double.compare(o1.getValue(), o2.getValue());
 				}
 			});
+			
+			boolean first = true;
 			for (Map.Entry<Molecule, Double> entry : entries) {
+				if (first) {
+					first = false;
+				} else {
+					stringBuilder.append(" | ");
+				}
 				stringBuilder.append(percentToString(entry.getValue()));
+				stringBuilder.append(" ");
 				stringBuilder.append(entry.getKey().name());
-				stringBuilder.append("  ");
 			}
 		}
 		
