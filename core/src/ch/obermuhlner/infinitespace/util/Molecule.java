@@ -11,6 +11,8 @@ public enum Molecule {
 	Ne,
 	Kr,
 	Xe,
+	Ni,
+	Fe,
 	O2,
 	N2,
 	/**
@@ -46,4 +48,14 @@ public enum Molecule {
 	C2H6,
 	SO2,
 	PH3,
+	
+	SiO2,
+	MgO,
+	FeO,
+	Al2O3,
+	CaO,
+	Na2O,
+	K2O,
+	TiO2,
+	P2O5
 }

@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.badlogic.gdx.utils.Array;
+
 import ch.obermuhlner.infinitespace.CommodityItem;
 import ch.obermuhlner.infinitespace.Config;
 import ch.obermuhlner.infinitespace.NameGenerator;
@@ -319,7 +321,7 @@ public class Generator {
 
 		// set Planet orbit
 		planet.orbitPeriod = Math.pow(planet.orbitRadius/Units.ASTRONOMICAL_UNIT, 3.0/2.0) * Units.SECONDS_PER_YEAR;
-		planet.rotation = random.nextGaussian (25 * Units.SECONDS_PER_DAY);
+		planet.rotation = random.nextGaussian (1 * Units.SECONDS_PER_DAY); // TODO rotation of tide locked moons
 
 		// set Planet atmosphere
 		switch(planet.type) {
@@ -338,6 +340,55 @@ public class Generator {
 		default :
 		case ICE: //FIXME ??
 		case STONE: {
+			planet.core = new Array<Planet.PartInfo>();
+			double coreTemperature = random.nextDouble(4800, 5400);
+			// TODO core temperature depends on size and age of system
+			Map<Molecule, Double> coreComposition = random.nextProbabilityMap(
+					p(random.nextGaussian(60), Molecule.Fe),
+					p(random.nextGaussian(40), Molecule.Ni)
+					);
+			planet.core.add(new Planet.PartInfo(
+					"Inner Core",
+					"Liquid inner core.",
+					random.nextDouble(0.1, 0.3) * planet.radius,
+					coreTemperature,
+					coreComposition));
+			planet.core.add(new Planet.PartInfo(
+					"Outer Core",
+					"Liquid outer core.",
+					random.nextDouble(0.4, 0.6) * planet.radius,
+					coreTemperature * 0.8,
+					coreComposition));
+			planet.core.add(new Planet.PartInfo(
+					"Mantle",
+					"The mantle.",
+					planet.radius - random.nextDouble(10, 50),
+					coreTemperature * 0.3,
+					random.nextProbabilityMap(
+							p(random.nextGaussian(45), Molecule.SiO2),
+							p(random.nextGaussian(40), Molecule.MgO),
+							p(random.nextGaussian(8), Molecule.FeO),
+							p(random.nextGaussian(4), Molecule.Al2O3),
+							p(random.nextGaussian(3), Molecule.CaO),
+							p(random.nextGaussian(0.5), Molecule.Na2O),
+							p(random.nextGaussian(0.05), Molecule.K2O)
+							)));
+			planet.core.add(new Planet.PartInfo(
+					"Crust",
+					"The crust.",
+					planet.radius,
+					300.0,
+					random.nextProbabilityMap(
+							p(random.nextGaussian(60), Molecule.SiO2),
+							p(random.nextGaussian(16), Molecule.Al2O3),
+							p(random.nextGaussian(6), Molecule.CaO),
+							p(random.nextGaussian(5), Molecule.MgO),
+							p(random.nextGaussian(3), Molecule.FeO),
+							p(random.nextGaussian(2), Molecule.K2O),
+							p(random.nextGaussian(0.7), Molecule.TiO2),
+							p(random.nextGaussian(0.1), Molecule.P2O5)
+							)));
+			
 			planet.atmospherePressure = MathUtil.smoothstep(Units.EARTH_MASS / 10, Units.EARTH_MASS * 10, planet.mass) * Units.EARTH_ATMOSPHERE_PRESSURE; // FIXME real function for atmosphere density
 			planet.breathableAtmosphere = planet.atmospherePressure > Units.EARTH_ATMOSPHERE_PRESSURE * 0.1 && random.nextBoolean(0.1);
 			if (lifeSupportingZone) {

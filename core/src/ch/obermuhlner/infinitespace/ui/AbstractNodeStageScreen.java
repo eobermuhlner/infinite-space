@@ -29,7 +29,7 @@ public abstract class AbstractNodeStageScreen extends AbstractStageScreen {
 
 		camera.near = radius / 100;
 		camera.far = radius * 100;
-		camera.position.set(radius*1, radius*1, radius*1);
+		camera.position.set(radius*2, radius*2, radius*2);
 		camera.update(true);
 		
 		cameraInputController.translateUnits = radius;

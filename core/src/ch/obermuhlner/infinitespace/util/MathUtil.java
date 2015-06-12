@@ -50,4 +50,12 @@ public class MathUtil {
 		}
 		return (value - fromMin) / (fromMax - fromMin) * (toMax - toMin) + toMin;
 	}
+
+	public static double nextPowerOfTen(double value) {
+		double result = 1.0;
+		while (result < value) {
+			result *= 10.0;
+		}
+		return result;
+	}
 }

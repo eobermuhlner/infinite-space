@@ -78,6 +78,10 @@ public abstract class AbstractStageScreen extends AbstractInfiniteSpaceGameScree
 		// does nothing
 	}
 
+	protected RenderState getRenderState() {
+		return renderState;
+	}
+	
 	@Override
 	public void hide () {
 		super.hide();

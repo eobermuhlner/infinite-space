@@ -10,6 +10,7 @@ import ch.obermuhlner.infinitespace.model.OrbitingSpheroidNode;
 import ch.obermuhlner.infinitespace.model.random.Random;
 import ch.obermuhlner.infinitespace.model.universe.AsteroidBelt;
 import ch.obermuhlner.infinitespace.model.universe.Planet;
+import ch.obermuhlner.infinitespace.model.universe.Planet.PartInfo;
 import ch.obermuhlner.infinitespace.model.universe.SpaceStation;
 import ch.obermuhlner.infinitespace.model.universe.Star;
 import ch.obermuhlner.infinitespace.render.ColorArrayAttribute;
@@ -87,6 +88,8 @@ public class NodeToRenderConverter {
 	}
 	
 	public void convertNodes (Iterable<Node> universe, RenderState renderState) {
+		StopWatch stopWatch = new StopWatch();
+		
 		{
 			// create grid
 			Material material = new Material(ColorAttribute.createDiffuse(new Color(0, 0.2f, 0, 1f)));
@@ -94,11 +97,15 @@ public class NodeToRenderConverter {
 			renderState.instancesAlways.add(new ModelInstance(gridModel));
 		}
 		
+		int nodeCount = 0;
 		for (Node node : universe) {
 			convertNode(node, renderState, true);
+			nodeCount++;
 		}
 
 		createSkyBox(renderState);
+		
+		System.out.println("Converted " + nodeCount + " nodes to rendering in " + stopWatch);
 	}
 
 	private void createSkyBox(RenderState renderState) {
@@ -334,16 +341,28 @@ public class NodeToRenderConverter {
 				}
 
 				if (! realUniverse) {
-					createSphere(renderState, node, "Inner Core", radius * 0.191f, new Material(new ColorAttribute(ColorAttribute.Emissive, Color.YELLOW)));
-					createSphere(renderState, node, "Outer Core", radius * 0.547f, new Material(new ColorAttribute(ColorAttribute.Emissive, Color.RED)));
-					createSphere(renderState, node, "Mantle", radius * 0.990f, new Material(new ColorAttribute(ColorAttribute.Emissive, Color.MAROON)));
-					//createSphere(renderState, node, "Crust", radius * 0.995f, new Material(new ColorAttribute(ColorAttribute.Diffuse, new Color(0x5c4033ff))));
+					if (node.core != null) {
+						for (int i = 0; i < node.core.size; i++) {
+							PartInfo coreInfo = node.core.get(i);
+							// TODO solve problem with cores z-fighting
+							if (coreInfo.radius != node.radius) {
+								float coreRadius = calculatePlanetRadius(coreInfo.radius) * 0.95f; // make cores bit smaller to avoid z-fighting with surface 
+								ModelInstance sphere = createSphere(renderState, node, coreInfo.name, coreRadius, new Material(temperatureToColorAttribute(coreInfo.temperature)));
+								asUserData(sphere).description = coreInfo.description;
+								asUserData(sphere).composition = coreInfo.composition;
+							}
+						}
+					}
 					
+					double gridSize = MathUtil.nextPowerOfTen(node.radius * 2) / 100;
+					int gridSteps = (int) Math.round(node.radius * 2 * 1.5 / gridSize);
+					float gridRenderSize = calculatePlanetRadius(gridSize);
 					Material materialGrid = new Material(ColorAttribute.createDiffuse(new Color(0, 0.2f, 0, 1f)));
-					Model gridModel = modelBuilder.createLineGrid(30, 30, radius/20, radius/20, materialGrid, Usage.Position);
+					Model gridModel = modelBuilder.createLineGrid(gridSteps, gridSteps, gridRenderSize, gridRenderSize, materialGrid, Usage.Position);
 					ModelInstance gridInstance = new ModelInstance(gridModel);
 					UserData userData = new UserData();
 					userData.modelName = "Grid";
+					userData.description = "Grid shows " + Units.meterSizeToString(gridSteps*gridSize) + "\nin steps of " + Units.meterSizeToString(gridSize) + ".";
 					gridInstance.userData = userData;
 					renderState.instances.add(gridInstance);
 				}
@@ -355,8 +374,7 @@ public class NodeToRenderConverter {
 					}
 	
 					if (!RENDER_PROCEDURAL_SHADERS_TO_TEXTURES) {
-						UserData userData = (UserData) sphere.userData;
-						userData.shaderName = shaderName;				
+						asUserData(sphere).shaderName = shaderName;
 					}
 				}
 				
@@ -367,6 +385,8 @@ public class NodeToRenderConverter {
 					float blend = MathUtil.transform(0.0f, 0.7f, 0.0f, 1.0f, (float)node.water);
 					Material materialClouds = new Material(new TextureAttribute(TextureAttribute.Diffuse, texture), new BlendingAttribute(blend));
 					ModelInstance sphere = createSphere(renderState, node, "Atmosphere", atmosphereRadius, materialClouds);
+					asUserData(sphere).description = "Surface pressure: " + Units.pascalToString(node.atmospherePressure);
+					asUserData(sphere).composition = node.atmosphere;
 					if (realUniverse) {
 						sphere.transform.setToTranslation(position);
 					}
@@ -442,6 +462,29 @@ public class NodeToRenderConverter {
 		}
 		
 		return new Vector3 (x, y, z);
+	}
+
+	public ColorAttribute temperatureToColorAttribute(double temperature) {
+		if (temperature > 500) {
+			return new ColorAttribute(ColorAttribute.Emissive, colorFromRange(Color.RED, Color.YELLOW, 500, 5000, temperature));
+		} else {
+			return new ColorAttribute(ColorAttribute.Diffuse, colorFromRange(Color.MAROON, Color.RED, 0, 500, temperature));
+		}
+	}
+
+	private Color colorFromRange(Color startColor, Color endColor, int start, int end, double value) {
+		if (value < start) {
+			return startColor;
+		}
+		if (value > end) {
+			return endColor;
+		}
+		float mix = (float) ((value - start) / (end - start)); 
+		return new Color(
+				(endColor.r - startColor.r) * mix + startColor.r,
+				(endColor.g - startColor.g) * mix + startColor.g,
+				(endColor.b - startColor.b) * mix + startColor.b,
+				(endColor.a - startColor.a) * mix + startColor.a);
 	}
 
 	public Texture renderTexture (Material material, UserData userData) {
@@ -572,9 +615,13 @@ public class NodeToRenderConverter {
 	}
 	
 	public static float calculatePlanetRadius(Planet node) {
-		return (float)(node.radius * SIZE_FACTOR * SIZE_ZOOM_FACTOR);
+		return calculatePlanetRadius(node.radius);
 	}
-	
+
+	public static float calculatePlanetRadius(double radius) {
+		return (float)(radius * SIZE_FACTOR * SIZE_ZOOM_FACTOR);
+	}
+
 	private static float calculateSpaceStationRadius (SpaceStation node) {
 		return (float) (Math.max(Math.max(node.width, node.height), node.length) * SIZE_FACTOR * SIZE_ZOOM_FACTOR);
 	}
@@ -593,7 +640,8 @@ public class NodeToRenderConverter {
 	}
 	
 	private ModelInstance createSphere(RenderState renderState, Planet node, String name, float radius, Material material) {
-		Model sphereModel = modelBuilder.createSphere(radius, radius, radius, PLANET_SPHERE_DIVISIONS_U, PLANET_SPHERE_DIVISIONS_V,
+		float size = radius * 2;
+		Model sphereModel = modelBuilder.createSphere(size, size, size, PLANET_SPHERE_DIVISIONS_U, PLANET_SPHERE_DIVISIONS_V,
 			material, Usage.Position | Usage.Normal | Usage.TextureCoordinates);
 		ModelInstance sphere = new ModelInstance(sphereModel);
 
@@ -618,6 +666,15 @@ public class NodeToRenderConverter {
 		renderState.instancesAlways.add(orbit);
 		
 		return orbit;
+	}
+	
+	private static UserData asUserData(ModelInstance modelInstance) {
+		UserData userData = (UserData) modelInstance.userData;
+		if (userData == null) {
+			userData = new UserData();
+			modelInstance.userData = userData;
+		}
+		return userData;
 	}
 
 	private static Model createOrbit (ModelBuilder modelBuilder, float radius, Material material, long attributes) {

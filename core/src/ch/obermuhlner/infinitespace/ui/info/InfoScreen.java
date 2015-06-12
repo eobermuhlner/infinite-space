@@ -1,7 +1,10 @@
 package ch.obermuhlner.infinitespace.ui.info;
 
+import java.util.Map;
+
 import ch.obermuhlner.infinitespace.I18N;
 import ch.obermuhlner.infinitespace.InfiniteSpaceGame;
+import ch.obermuhlner.infinitespace.UserData;
 import ch.obermuhlner.infinitespace.model.Node;
 import ch.obermuhlner.infinitespace.model.OrbitingNode;
 import ch.obermuhlner.infinitespace.model.OrbitingSpheroidNode;
@@ -12,14 +15,19 @@ import ch.obermuhlner.infinitespace.model.universe.Star;
 import ch.obermuhlner.infinitespace.model.universe.population.Industry;
 import ch.obermuhlner.infinitespace.ui.AbstractGameScreen;
 import ch.obermuhlner.infinitespace.ui.AbstractNodeStageScreen;
+import ch.obermuhlner.infinitespace.util.Molecule;
 import ch.obermuhlner.infinitespace.util.Units;
 
+import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Button;
 import com.badlogic.gdx.scenes.scene2d.ui.CheckBox;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.ui.Window;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.Array;
 
@@ -33,7 +41,7 @@ public class InfoScreen extends AbstractNodeStageScreen {
 	}
 
 	@Override
-	protected void prepareStage (Stage stage, Table rootTable) {
+	protected void prepareStage (final Stage stage, Table rootTable) {
 		rootTable.row();
 		rootTable.add(new Label("Info " + node.getName(), skin, TITLE));
 
@@ -59,6 +67,34 @@ public class InfoScreen extends AbstractNodeStageScreen {
 							visibleModelInstanceNames.remove(name);
 						}
 					}
+				});
+				Button buttonDetails = new TextButton("Details", skin);
+				tableNames.add(buttonDetails);
+				buttonDetails.addListener(new ChangeListener() {
+					@Override
+					public void changed(ChangeEvent event, Actor actor) {
+//						final Dialog dialog = new Dialog(name, skin);
+//						UserData userData = findUserData(name);
+//						if (userData != null) {
+//							if (userData.description != null) {
+//								Label labelText = new Label(userData.description, skin);
+//								labelText.setWrap(true);
+//								dialog.text(labelText);
+//							}
+//							if (userData.composition != null) {
+//								for(Map.Entry<Molecule, Double> entry : userData.composition.entrySet()) {
+//									dialog.text(entry.getKey().name() + " : " + Units.percentToString(entry.getValue()));
+//								}
+//							}
+//						} else {
+//							dialog.text("No information found.");
+//						}
+//						dialog.button(new TextButton("OK", skin));
+//						dialog.show(stage);
+						
+						showModelDetailWindow(stage, name);
+					}
+
 				});
 			}
 		}
@@ -139,6 +175,62 @@ public class InfoScreen extends AbstractNodeStageScreen {
 		}));
 	}
 	
+	private void showModelDetailWindow(final Stage stage, final String name) {
+		final Window window = new Window(name, skin);
+
+		boolean hasInfo = false;
+		UserData userData = findUserData(name);
+		if (userData != null) {
+			if (userData.description != null) {
+				Label labelText = new Label(userData.description, skin);
+				window.row();
+				window.add(labelText).left().colspan(2);
+				hasInfo = true;
+			}
+			if (userData.composition != null) {
+				for(Map.Entry<Molecule, Double> entry : userData.composition.entrySet()) {
+					window.row();
+					window.add(new Label(entry.getKey().name(), skin)).left();
+					window.add(new Label(Units.percentToString(entry.getValue()), skin)).right();
+					hasInfo = true;
+				}
+			}
+		}
+		
+		if (!hasInfo){
+			window.row();
+			window.add(new Label("No information found.", skin)).left();
+		}
+		
+		window.row().colspan(2);
+		TextButton buttonOk = new TextButton("OK", skin);
+		buttonOk.addListener(new ChangeListener() {
+			@Override
+			public void changed(ChangeEvent event, Actor actor) {
+				window.remove();
+			}
+		});
+		window.add(buttonOk);
+		
+		window.pack();
+		window.setPosition(Math.round((stage.getWidth() - window.getWidth()) / 2), Math.round((stage.getHeight() - window.getHeight()) / 2));
+		stage.addActor(window);
+	}
+
+	protected UserData findUserData(String name) {
+		Array<ModelInstance> instances = getRenderState().instances;
+		for (int i = 0; i < instances.size; i++) {
+			ModelInstance modelInstance = instances.get(i);
+			if (modelInstance.userData instanceof UserData) {
+				UserData userData = (UserData) modelInstance.userData;
+				if (name.equals(userData.modelName)) {
+					return userData;
+				}
+			}
+		}
+		return null;
+	}
+
 	private void addRow(Table table, String label, Object data) {
 		table.row();
 		table.add(new Label(label, skin));
