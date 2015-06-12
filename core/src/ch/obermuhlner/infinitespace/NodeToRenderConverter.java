@@ -49,7 +49,6 @@ public class NodeToRenderConverter {
 	private static final boolean RENDER_PROCEDURAL_SHADERS_TO_TEXTURES = true;
 
 	private static final double PROBABILITY_GENERATED_PLANET = 1.0;
-	private static final boolean RENDER_CLOUDS = Config.DEBUG_RENDER_CLOUDS;
 
 	private static final double SUN_RADIUS = Units.SUN_RADIUS;
 
@@ -373,12 +372,13 @@ public class NodeToRenderConverter {
 						sphere.transform.setToTranslation(position);
 					}
 	
+					asUserData(sphere).description = "Temperature: " + Units.kelvinToString(node.temperature);
 					if (!RENDER_PROCEDURAL_SHADERS_TO_TEXTURES) {
 						asUserData(sphere).shaderName = shaderName;
 					}
 				}
 				
-				if (RENDER_CLOUDS && node.breathableAtmosphere) {
+				if (node.breathableAtmosphere) {
 					float atmosphereRadiusFactor = 1.01f;
 					float atmosphereRadius = radius * atmosphereRadiusFactor; 
 					Texture texture = assetManager.get(InfiniteSpaceGame.getTexturePath("clouds.png"), Texture.class);

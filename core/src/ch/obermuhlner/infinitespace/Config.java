@@ -6,7 +6,6 @@ public class Config {
 
 	public static final boolean DEBUG_PROFILING = true;
 	public static final boolean DEBUG_LINEAR_ORBITS = true;
-	public static final boolean DEBUG_RENDER_CLOUDS = true;
 	public static final boolean DEBUG_ORBIT_LINEUP = false;
 
 	public static boolean useScreenControls = true;
