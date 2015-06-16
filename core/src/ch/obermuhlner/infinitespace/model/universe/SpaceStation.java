@@ -31,9 +31,19 @@ public class SpaceStation extends OrbitingNode {
 				return length * diameter * Math.PI;
 			}
 		},
+		BALANCED {
+			public double volume(double height, double width, double length) {
+				return height * width * height * 2;
+			}
+		},
 		CUBE {
 			public double volume(double height, double width, double length) {
 				return height * width * length;
+			}
+		},
+		BLOCKY {
+			public double volume(double height, double width, double length) {
+				return height * width * length * 0.6;
 			}
 		},
 		CONGLOMERATE {

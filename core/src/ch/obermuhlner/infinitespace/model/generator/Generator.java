@@ -326,6 +326,40 @@ public class Generator {
 		// set Planet atmosphere
 		switch(planet.type) {
 		case GAS: {
+			planet.core = new Array<Planet.PartInfo>();
+			double coreTemperature = random.nextDouble(30000, 50000);
+			// TODO core temperature depends on size and age of system
+			planet.core.add(new Planet.PartInfo(
+					"Rocky Core",
+					"Liquid inner core.",
+					random.nextDouble(0.02, 0.05) * planet.radius,
+					coreTemperature,
+					null));
+			planet.core.add(new Planet.PartInfo(
+					"Metallic Hydrogen",
+					"...",
+					random.nextDouble(0.75, 0.80) * planet.radius,
+					coreTemperature * 0.25,
+					null));
+			planet.core.add(new Planet.PartInfo(
+					"Liquid Hydrogen",
+					"...",
+					random.nextDouble(0.85, 0.95) * planet.radius,
+					random.nextDouble(50, 200), // unknown values
+					null));
+			planet.core.add(new Planet.PartInfo(
+					"Gassy Hydrogen",
+					"...",
+					random.nextDouble(0.96, 0.98) * planet.radius,
+					random.nextDouble(20, 50), // unknown values
+					null));
+			planet.core.add(new Planet.PartInfo(
+					"Cloud Layers",
+					"...",
+					planet.radius,
+					random.nextDouble(20, 50), // unknown values
+					null));
+			
 			// jupiter-like atmosphere
 			planet.atmosphere = random.nextProbabilityMap(
 					p(random.nextGaussian(90), Molecule.H2),
@@ -541,19 +575,42 @@ public class Generator {
 		}
 		
 		station.type = random.nextProbability(
-			p(2, SpaceStation.Type.SPHERE),
+			p(3, SpaceStation.Type.SPHERE),
 			p(5, SpaceStation.Type.CYLINDER),
-			p(10, SpaceStation.Type.RING),
+			p(20, SpaceStation.Type.RING),
+			p(10, SpaceStation.Type.BALANCED),
 			p(1, SpaceStation.Type.CUBE),
-			p(8, SpaceStation.Type.CONGLOMERATE)
+			p(20, SpaceStation.Type.BLOCKY),
+			p(10, SpaceStation.Type.CONGLOMERATE)
 			);
 
-		double radius = random.nextDouble(200, 500);
-		station.width = radius;
-		station.height = radius;
-		station.length = random.nextDouble(10, 500);
+		station.type = SpaceStation.Type.RING;
 		
-		if (station.type.allowsAgriculture()) {
+		station.width = random.nextDouble(200, 500);
+		station.height = random.nextDouble(200, 500);
+		station.length = random.nextDouble(200, 500);
+		
+		switch(station.type) {
+		case CYLINDER:
+		case RING:
+		case SPHERE:
+			station.height = station.width;
+			break;
+		case BALANCED:
+			station.height = station.width;
+			station.length *= 2;
+			break;
+		default:
+		case BLOCKY:
+		case CONGLOMERATE:
+		case CUBE:
+			break;
+		}
+		
+		switch(station.type) {
+		case CYLINDER:
+		case RING:
+		case BALANCED:
 			station.rotation = 60 * 60; // TODO rotation of space station
 		}
 		
