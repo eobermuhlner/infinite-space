@@ -2,6 +2,14 @@ package ch.obermuhlner.infinitespace.util;
 
 public class MathUtil {
 
+	public static double sec(double x) {
+		return 1.0 / Math.cos(x);
+	}
+	
+	public static double cosec(double x) {
+		return 1.0 / Math.sin(x);
+	}
+	
 	public static float clamp(float value, float min, float max) {
 		if (value < min) {
 			return min;

@@ -584,7 +584,9 @@ public class Generator {
 			p(10, SpaceStation.Type.CONGLOMERATE)
 			);
 
-		station.type = SpaceStation.Type.RING;
+		if (Config.DEBUG_FORCE_SPACE_STATION_TYPE != null) {
+			station.type = Config.DEBUG_FORCE_SPACE_STATION_TYPE;
+		}
 		
 		station.width = random.nextDouble(200, 500);
 		station.height = random.nextDouble(200, 500);

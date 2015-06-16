@@ -1,12 +1,15 @@
 package ch.obermuhlner.infinitespace;
 
+import ch.obermuhlner.infinitespace.model.universe.SpaceStation;
+
 import com.badlogic.gdx.Gdx;
 
 public class Config {
 
-	public static final boolean DEBUG_PROFILING = true;
-	public static final boolean DEBUG_LINEAR_ORBITS = true;
+	public static final boolean DEBUG_PROFILING = false;
+	public static final boolean DEBUG_LINEAR_ORBITS = false;
 	public static final boolean DEBUG_ORBIT_LINEUP = false;
+	public static final SpaceStation.Type DEBUG_FORCE_SPACE_STATION_TYPE = SpaceStation.Type.RING;
 
 	public static boolean useScreenControls = true;
 

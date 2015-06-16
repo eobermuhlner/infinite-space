@@ -40,6 +40,7 @@ import com.badlogic.gdx.graphics.g3d.attributes.DepthTestAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.PointLight;
 import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder;
+import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.graphics.glutils.FrameBuffer;
 import com.badlogic.gdx.math.MathUtils;
@@ -584,17 +585,15 @@ public class NodeToRenderConverter {
 			{
 				ModelInstance station;
 				
-				Texture textureDiffuse = assetManager.get(InfiniteSpaceGame.getTexturePath("spaceship.jpg"), Texture.class);
+//				Texture textureDiffuse = assetManager.get(InfiniteSpaceGame.getTexturePath("spaceship.jpg"), Texture.class);
 				Texture textureEmissive = assetManager.get(InfiniteSpaceGame.getTexturePath("spaceship_emissive.jpg"), Texture.class);
-				textureDiffuse.setWrap(TextureWrap.Repeat, TextureWrap.Repeat);
-				textureEmissive.setWrap(TextureWrap.Repeat, TextureWrap.Repeat);
-				Material material = new Material(new TextureAttribute(TextureAttribute.Diffuse, textureDiffuse), new TextureAttribute(TextureAttribute.Emissive, textureEmissive));
+//				Material material = new Material(new TextureAttribute(TextureAttribute.Diffuse, textureDiffuse), new TextureAttribute(TextureAttribute.Emissive, textureEmissive));
 
 //				Texture texture = assetManager.get(InfiniteSpaceGame.getTexturePath("pixelcity_windows7.jpg"), Texture.class);
 //				texture.setWrap(TextureWrap.Repeat, TextureWrap.Repeat);
 //				Material material = new Material(new TextureAttribute(TextureAttribute.Diffuse, texture));
 
-//				Material material = new Material(ColorAttribute.createDiffuse(Color.LIGHT_GRAY));
+				Material material = new Material(ColorAttribute.createDiffuse(Color.LIGHT_GRAY), new TextureAttribute(TextureAttribute.Emissive, textureEmissive));
 				
 				Model stationModel;
 				switch(node.type) {
@@ -637,18 +636,18 @@ public class NodeToRenderConverter {
 				renderState.instances.add(station);
 			}
 			
-			if (!realUniverse) {
-				Material material = new Material(ColorAttribute.createDiffuse(new Color(0, 0.2f, 0, 1f)));
-				float axisLength = Math.max(Math.max(width, height), length) * 1.5f;
-				Model axisModel = modelBuilder.createXYZCoordinates(axisLength, material, Usage.Position);
-				ModelInstance axis = new ModelInstance(axisModel);
-
-				UserData userData = new UserData();
-				userData.node = node;
-				userData.modelName = "Coordinates";
-				axis.userData = userData;
-				renderState.instances.add(axis);
-			}
+//			if (!realUniverse) {
+//				Material material = new Material(ColorAttribute.createDiffuse(new Color(0, 0.2f, 0, 1f)));
+//				float axisLength = Math.max(Math.max(width, height), length) * 1.5f;
+//				Model axisModel = modelBuilder.createXYZCoordinates(axisLength, material, Usage.Position);
+//				ModelInstance axis = new ModelInstance(axisModel);
+//
+//				UserData userData = new UserData();
+//				userData.node = node;
+//				userData.modelName = "Coordinates";
+//				axis.userData = userData;
+//				renderState.instances.add(axis);
+//			}
 			
 			createOrbit(renderState, node, orbitRadius, parentPosition);
 		}
@@ -754,29 +753,119 @@ public class NodeToRenderConverter {
 		modelBuilder.begin();
 
 		int axisCount = random.nextInt(3, 10);
-
-		float stepAngle = 360 / axisCount;
+		int ringSegmentCount = axisCount * 2;// random.nextInt(1, 4);
+		float axisStepAngle = 360 / axisCount;
+		float ringSegmentStepAngle = 360 / ringSegmentCount;
+		float ringRadius = length;
+		float outerRingRadius = (float) (length * MathUtil.sec(Math.PI / axisCount));
+		float centerRadius = ringRadius / random.nextInt(3, 6);
+		float centerLength = length / random.nextInt(2, 4);
+		float torusWidth = width / random.nextInt(2, 5);
+		float torusHeight = height / random.nextInt(2, 5); // maybe same as torusWidth
+		float spokeWidth = width / random.nextInt(6, 20);
+		float spokeHeight = height / random.nextInt(6, 20); // maybe same as spokeWidth
+		boolean torusSphereAtSpokeEnd = false;
+		boolean torusSphereAtJoints = false;
+		float torusSphereWidth = torusWidth * 1.1f;
+		float torusSphereHeight = torusHeight * 1.1f;
+		float torusSphereLength = torusSphereWidth; // ??
+		float segmentLength = (float) (2 * (length + torusWidth / 2) * Math.tan(Math.PI / ringSegmentCount));
 
 		com.badlogic.gdx.graphics.g3d.model.Node node = modelBuilder.node();
-		modelBuilder.part("center", GL20.GL_TRIANGLES, (long) (Usage.Position | Usage.Normal | Usage.TextureCoordinates), material).cylinder(width/4, length, height/4, STATION_SPHERE_DIVISIONS_U);
+		modelBuilder.part("center", GL20.GL_TRIANGLES, (long) (Usage.Position | Usage.Normal | Usage.TextureCoordinates), material).cylinder(centerRadius, centerLength, centerRadius,
+				STATION_SPHERE_DIVISIONS_U);
 
 		for (int i = 0; i < axisCount; i++) {
-			float angle = stepAngle * i;
+			float angle = axisStepAngle * i;
 			float angleRad = MathUtils.degreesToRadians * angle;
-			
+			float sinAngle = (float) Math.sin(angleRad);
+			float cosAngle = (float) Math.cos(angleRad);
+
 			node = modelBuilder.node();
-			modelBuilder.part("speiche", GL20.GL_TRIANGLES, (long) (Usage.Position | Usage.Normal | Usage.TextureCoordinates), material).box(width/10, height/10, length * 2);
-			node.rotation.setEulerAngles(angle, 0, 0);
+			modelBuilder.part("spoke", GL20.GL_TRIANGLES, (long) (Usage.Position | Usage.Normal | Usage.TextureCoordinates), material).box(spokeWidth, spokeHeight, ringRadius);
+			node.rotation.setEulerAngles(-angle + 90, 0, 0);
+			node.translation.add(cosAngle * ringRadius / 2, 0, sinAngle * ringRadius / 2);
 			node.calculateTransforms(false);
-			
+
+			if (torusSphereAtSpokeEnd) {
+				node = modelBuilder.node();
+				modelBuilder.part("torusSphere", GL20.GL_TRIANGLES, (long) (Usage.Position | Usage.Normal | Usage.TextureCoordinates), material).sphere(torusSphereWidth, torusSphereHeight,
+						torusSphereLength, STATION_SPHERE_DIVISIONS_U, STATION_SPHERE_DIVISIONS_V);
+				node.translation.add(cosAngle * ringRadius, 0, sinAngle * ringRadius);
+				node.calculateTransforms(false);
+			}
+		}
+
+		for (int i = 0; i < ringSegmentCount; i++) {
+			float angle = ringSegmentStepAngle * i;
+			float angleRad = MathUtils.degreesToRadians * angle;
+
 			node = modelBuilder.node();
-			modelBuilder.part("cylinder", GL20.GL_TRIANGLES, (long) (Usage.Position | Usage.Normal | Usage.TextureCoordinates), material).cylinder(width/5, length*2, height/5, STATION_SPHERE_DIVISIONS_U);
+			modelBuilder.part("ring-segment", GL20.GL_TRIANGLES, (long) (Usage.Position | Usage.Normal | Usage.TextureCoordinates), material).cylinder(torusWidth, segmentLength, torusHeight,
+					STATION_SPHERE_DIVISIONS_U);
 			node.rotation.setFromAxis(1, 0, 0, 90);
 			node.rotation.mul(new Quaternion(new Vector3(0, 0, 1), angle));
-			node.translation.add((float)Math.cos(angleRad) * length, 0, (float)Math.sin(angleRad) * length);
+			node.translation.add((float) Math.cos(angleRad) * ringRadius, 0, (float) Math.sin(angleRad) * ringRadius);
 			node.calculateTransforms(false);
+
+			if (torusSphereAtJoints) {
+				float jointAngle = ringSegmentStepAngle * i + ringSegmentStepAngle / 2;
+				float jointAngleRad = MathUtils.degreesToRadians * jointAngle;
+
+				node = modelBuilder.node();
+				modelBuilder.part("torusSphere", GL20.GL_TRIANGLES, (long) (Usage.Position | Usage.Normal | Usage.TextureCoordinates), material).sphere(torusSphereWidth, torusSphereHeight,
+						torusSphereLength, STATION_SPHERE_DIVISIONS_U, STATION_SPHERE_DIVISIONS_V);
+				node.translation.add((float) Math.cos(jointAngleRad) * outerRingRadius, 0, (float) Math.sin(jointAngleRad) * outerRingRadius);
+				node.calculateTransforms(false);
+			}
 		}
-		
+
+		return modelBuilder.end();
+	}
+
+	private VertexInfo vertTmp3 = new VertexInfo();
+	private VertexInfo vertTmp4 = new VertexInfo();
+
+	private Model createTorus(int primitiveType, long attributes, Material material, float X, float Y, float Z, float widthR, float height, int divisionsU, int divisionsV) {
+
+		ModelBuilder modelBuilder = new ModelBuilder();
+		modelBuilder.begin();
+		MeshPartBuilder builder = modelBuilder.part("torus", primitiveType, attributes, material);
+
+		VertexInfo curr1 = vertTmp3.set(null, null, null, null);
+		curr1.hasUV = curr1.hasPosition = curr1.hasNormal = true;
+		VertexInfo curr2 = vertTmp4.set(null, null, null, null);
+		curr2.hasUV = curr2.hasPosition = curr2.hasNormal = true;
+		short i1, i2, i3 = 0, i4 = 0;
+
+		int i, j, k;
+		double s, t, twopi;
+		twopi = 2 * Math.PI;
+
+		for (i = 0; i < divisionsV; i++) {
+			for (j = 0; j <= divisionsU; j++) {
+				for (k = 1; k >= 0; k--) {
+					s = (i + k) % divisionsV + 0.5;
+					t = j % divisionsU;
+
+					curr1.position.set((float) ((widthR + height * Math.cos(s * twopi / divisionsV)) * Math.cos(t * twopi / divisionsU)),
+							(float) ((widthR + height * Math.cos(s * twopi / divisionsV)) * Math.sin(t * twopi / divisionsU)), (float) (height * Math.sin(s * twopi / divisionsV)));
+					curr1.normal.set(curr1.position).nor();
+					k--;
+					s = (i + k) % divisionsV + 0.5;
+					curr2.position.set((float) ((widthR + height * Math.cos(s * twopi / divisionsV)) * Math.cos(t * twopi / divisionsU)),
+							(float) ((widthR + height * Math.cos(s * twopi / divisionsV)) * Math.sin(t * twopi / divisionsU)), (float) (height * Math.sin(s * twopi / divisionsV)));
+					curr2.normal.set(curr1.normal);
+					// curr2.uv.set((float) s, 0);
+					i1 = builder.vertex(curr1);
+					i2 = builder.vertex(curr2);
+					builder.rect(i4, i2, i1, i3);
+					i4 = i2;
+					i3 = i1;
+				}
+			}
+		}
+
 		return modelBuilder.end();
 	}
 
