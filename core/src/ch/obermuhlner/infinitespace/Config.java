@@ -9,6 +9,7 @@ public class Config {
 	public static final boolean DEBUG_PROFILING = false;
 	public static final boolean DEBUG_LINEAR_ORBITS = false;
 	public static final boolean DEBUG_ORBIT_LINEUP = false;
+	//public static final SpaceStation.Type DEBUG_FORCE_SPACE_STATION_TYPE = null;
 	public static final SpaceStation.Type DEBUG_FORCE_SPACE_STATION_TYPE = SpaceStation.Type.RING;
 
 	public static boolean useScreenControls = true;

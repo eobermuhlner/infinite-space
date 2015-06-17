@@ -25,10 +25,19 @@ public class SpaceStation extends OrbitingNode {
 				return true;
 			}
 		},
+		VARIABLE_CYLINDER {
+			public double volume(double height, double width, double length) {
+				double radius = (height + width) / 2;
+				return length *  radius * radius * Math.PI / 2;
+			}
+		},
 		RING {
 			public double volume(double height, double width, double length) {
 				double diameter = height + width * 3; 
 				return length * diameter * Math.PI;
+			}
+			public boolean allowsAgriculture() {
+				return true;
 			}
 		},
 		BALANCED {

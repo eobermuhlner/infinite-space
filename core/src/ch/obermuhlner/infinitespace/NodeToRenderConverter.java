@@ -591,43 +591,43 @@ public class NodeToRenderConverter {
 			{
 				ModelInstance station;
 				
-//				Texture textureDiffuse = assetManager.get(InfiniteSpaceGame.getTexturePath("spaceship.jpg"), Texture.class);
-				Texture textureEmissive = assetManager.get(InfiniteSpaceGame.getTexturePath("spaceship_emissive.jpg"), Texture.class);
-//				Material material = new Material(new TextureAttribute(TextureAttribute.Diffuse, textureDiffuse), new TextureAttribute(TextureAttribute.Emissive, textureEmissive));
+				Texture textureDiffuse = assetManager.get(InfiniteSpaceGame.getTexturePath("spaceship3.jpg"), Texture.class);
+				//Texture textureEmissive = assetManager.get(InfiniteSpaceGame.getTexturePath("spaceship_emissive.jpg"), Texture.class);
+				Texture textureEmissive = assetManager.get(InfiniteSpaceGame.getTexturePath("pixelcity_windows7.jpg"), Texture.class);
 
-//				Texture texture = assetManager.get(InfiniteSpaceGame.getTexturePath("pixelcity_windows7.jpg"), Texture.class);
-//				texture.setWrap(TextureWrap.Repeat, TextureWrap.Repeat);
-//				Material material = new Material(new TextureAttribute(TextureAttribute.Diffuse, texture));
 
-				Material material = new Material(ColorAttribute.createDiffuse(Color.LIGHT_GRAY), new TextureAttribute(TextureAttribute.Emissive, textureEmissive));
+				Material materialPlain = new Material(new TextureAttribute(TextureAttribute.Diffuse, textureDiffuse));
+				Material materialWindows = new Material(new TextureAttribute(TextureAttribute.Diffuse, textureDiffuse), new TextureAttribute(TextureAttribute.Emissive, textureEmissive));
+
+				//Material materialPlain = new Material(ColorAttribute.createDiffuse(Color.LIGHT_GRAY));
+				//Material materialWindows = new Material(ColorAttribute.createDiffuse(Color.LIGHT_GRAY), new TextureAttribute(TextureAttribute.Emissive, textureEmissive));
 				
 				Model stationModel;
 				switch(node.type) {
 				case RING:
-					if (random.nextBoolean(0.3)) {
-						stationModel = createRing1Model(material, random, width, height, length);
-					} else {
-						stationModel = createRing2Model(material, random, width, height, length);
-					}
+					stationModel = createRingModel(materialPlain, materialWindows, random, width, height, length);
 					break;
 				case BALANCED:
-					stationModel = createBalancedModel(material, random, width, height, length);
+					stationModel = createBalancedModel(materialPlain, materialWindows, random, width, height, length);
+					break;
+				case VARIABLE_CYLINDER:
+					stationModel = createVariableCylinderModel(materialPlain, materialWindows, random, width, height, length);
 					break;
 				case CYLINDER:
-					stationModel = modelBuilder.createCylinder(width, length, height, STATION_SPHERE_DIVISIONS_U, material, Usage.Position | Usage.Normal | Usage.TextureCoordinates);
+					stationModel = createCylinderModel(materialWindows, width, height, length);
 					break;
 				case SPHERE:
-					stationModel = modelBuilder.createSphere(width, length, height, STATION_SPHERE_DIVISIONS_U, STATION_SPHERE_DIVISIONS_V, material, Usage.Position | Usage.Normal | Usage.TextureCoordinates);
+					stationModel = createSphereModel(materialWindows, width, height, length);
 					break;
 				case BLOCKY:
-					stationModel = createBlockyModel(material, random, width, height, length);
+					stationModel = createBlockyModel(materialPlain, materialWindows, random, width, height, length);
 					break;
 				case CONGLOMERATE:
-					stationModel = createConglomerateModel(material, random, width, height, length);
+					stationModel = createConglomerateModel(materialPlain, materialWindows, random, width, height, length);
 					break;
 				default:
 				case CUBE:
-					stationModel = modelBuilder.createBox(width, height, length, material, Usage.Position | Usage.Normal | Usage.TextureCoordinates);
+					stationModel = createCubeModel(materialWindows, width, height, length);
 					break;
 				}
 				
@@ -657,98 +657,129 @@ public class NodeToRenderConverter {
 			
 			createOrbit(renderState, node, orbitRadius, parentPosition);
 		}
-
-		private Model createBlockyModel(Material material, Random random, float width, float height, float length) {
-			modelBuilder.begin();
-
-			int noduleCount = random.nextInt(10, 20);
-
-			for (int i = 0; i < noduleCount; i++) {
-				com.badlogic.gdx.graphics.g3d.model.Node modelNode = modelBuilder.node();
-
-				float noduleWidth = random.nextFloat(width / 4, width); 
-				float noduleHeight = random.nextFloat(height / 4, height); 
-				float noduleLength = random.nextFloat(length / 4, length); 
-
-				BasicPartType partType = random.next(BasicPartType.BOX, BasicPartType.SPHERE, BasicPartType.CYLINDER);
-				createBasicPart(partType, material, noduleWidth, noduleHeight, noduleLength);
-				
-				float x = random.nextFloat(width - noduleWidth) - width / 2;
-				float y = random.nextFloat(height - noduleHeight) - height / 2;
-				float z = random.nextFloat(length - noduleLength) - length / 2;
-				modelNode.translation.add(x, y, z);
-				modelNode.calculateTransforms(false);
-			}
-			
-			return modelBuilder.end();
-		}
-		
-		private Model createConglomerateModel(Material material, Random random, float width, float height, float length) {
-			modelBuilder.begin();
-
-			int noduleCount = random.nextInt(2, 5);
-			
-			float noduleWidth = width / noduleCount; 
-			float noduleHeight = height / noduleCount; 
-			float noduleLength = length / noduleCount; 
-			
-			int xCount = noduleCount;
-			int yCount = noduleCount;
-			for (int x = 0; x < xCount; x++) {
-				for (int y = 0; y < yCount; y++) {
-					float noduleLengthRandomized = random.nextInt(1, 4) * noduleLength;
-					
-					com.badlogic.gdx.graphics.g3d.model.Node modelNode = modelBuilder.node();
-					int r = random.nextInt(5);
-					int divisions = 10;
-					switch(r) {
-					case 0:
-						break;
-					case 1:
-						modelBuilder.part("box", GL20.GL_TRIANGLES, (long) (Usage.Position | Usage.Normal | Usage.TextureCoordinates), material).box(noduleWidth * 0.8f, noduleHeight * 0.8f, noduleLengthRandomized);
-						break;
-					case 2:
-						modelBuilder.part("cylinder", GL20.GL_TRIANGLES, (long) (Usage.Position | Usage.Normal | Usage.TextureCoordinates), material).cylinder(noduleWidth * 0.8f, noduleHeight * 0.8f, noduleLength, divisions);
-						break;
-					case 3:
-						modelBuilder.part("sphere", GL20.GL_TRIANGLES, (long) (Usage.Position | Usage.Normal | Usage.TextureCoordinates), material).sphere(noduleWidth * 0.8f, noduleHeight * 0.8f, noduleLength, divisions, divisions);
-						break;
-					case 4:
-						modelBuilder.part("box", GL20.GL_TRIANGLES, (long) (Usage.Position | Usage.Normal | Usage.TextureCoordinates), material).box(noduleWidth * 0.4f, noduleHeight * 0.4f, noduleLengthRandomized);
-						modelBuilder.part("panel", GL20.GL_TRIANGLES, (long) (Usage.Position | Usage.Normal | Usage.TextureCoordinates), material).box(noduleWidth * 0.9f, noduleHeight * 0.02f, noduleLength * 6);
-						break;
-					}
-					modelNode.translation.add(x * noduleWidth, y * noduleHeight, 0);
-					modelNode.calculateTransforms(false);
-				}
-			}
-			return modelBuilder.end();
-		}
-
-		private Model createRing1Model(Material material, Random random, float width, float height, float length) {
-			modelBuilder.begin();
-
-			int steps = random.nextInt(1, 20);
-			int extremeStep = random.nextInt(0, steps);
-
-			float stepLength = length / steps;
-
-			float stepWidth = random.nextFloat(width * 0.1f, width);
-
-			for (int i = 0; i < steps; i++) {
-				com.badlogic.gdx.graphics.g3d.model.Node node = modelBuilder.node();
-				stepWidth += random.nextFloat(-width * 0.1f, +width * 0.1f);
-				float stepRadius = i == extremeStep ? width : stepWidth;
-				modelBuilder.part("cylinder", GL20.GL_TRIANGLES, (long) (Usage.Position | Usage.Normal | Usage.TextureCoordinates), material).cylinder(stepRadius, stepLength, stepRadius, PLANET_SPHERE_DIVISIONS_U);
-				node.translation.add(0, i * stepLength, 0);
-				node.calculateTransforms(false);
-			}
-			
-			return modelBuilder.end();
-		}
 	}
 	
-	private Model createRing2Model(Material material, Random random, float width, float height, float length) {
+	private Model createCubeModel(Material materialWindows, float width, float height, float length) {
+		modelBuilder.begin();
+
+		createBasicPart(BasicPartType.CUBE, materialWindows, width, height, length);
+
+		return modelBuilder.end();
+	}
+
+	private Model createCylinderModel(Material materialWindows, float width, float height, float length) {
+		modelBuilder.begin();
+
+		createBasicPart(BasicPartType.CYLINDER, materialWindows, width, height, length);
+
+		return modelBuilder.end();
+	}
+
+	private Model createSphereModel(Material materialWindows, float width, float height, float length) {
+		modelBuilder.begin();
+
+		createBasicPart(BasicPartType.SPHERE, materialWindows, width, height, length);
+
+		return modelBuilder.end();
+	}
+
+	private Model createBlockyModel(Material materialPlain, Material materialWindows, Random random, float width, float height, float length) {
+		modelBuilder.begin();
+
+		int noduleCount = random.nextInt(10, 20);
+
+		for (int i = 0; i < noduleCount; i++) {
+			com.badlogic.gdx.graphics.g3d.model.Node modelNode = modelBuilder.node();
+
+			float noduleWidth = random.nextFloat(width/4, width/2); 
+			float noduleHeight = random.nextFloat(height/4, height/2); 
+			float noduleLength = random.nextFloat(length/4, length/2); 
+
+			BasicPartType partType = random.next(BasicPartType.CUBE, BasicPartType.SPHERE, BasicPartType.CYLINDER);
+			Material material = random.nextBoolean(0.75) ? materialWindows : materialPlain;
+			createBasicPart(partType, material, noduleWidth, noduleHeight, noduleLength);
+			
+			float w2 = (width - noduleWidth) / 2;
+			float h2 = (height - noduleHeight) / 2;
+			float l2 = (length - noduleLength) / 2;
+			float x = random.nextFloat(-w2, w2);
+			float y = random.nextFloat(-h2, h2);
+			float z = random.nextFloat(-l2, l2);
+			modelNode.translation.set(x, y, z);
+			modelNode.calculateTransforms(false);
+		}
+		
+		return modelBuilder.end();
+	}
+	
+	private Model createConglomerateModel(Material materialPlain, Material materialWindows, Random random, float width, float height, float length) {
+		modelBuilder.begin();
+
+		int noduleCount = random.nextInt(2, 5);
+		
+		float noduleWidth = width / noduleCount; 
+		float noduleHeight = height / noduleCount; 
+		float noduleLength = length / noduleCount; 
+		
+		int xCount = noduleCount;
+		int yCount = noduleCount;
+		for (int x = 0; x < xCount; x++) {
+			for (int y = 0; y < yCount; y++) {
+				float noduleLengthRandomized = random.nextInt(1, 4) * noduleLength;
+				
+				Material material = random.nextBoolean(0.75) ? materialWindows : materialPlain;
+
+				com.badlogic.gdx.graphics.g3d.model.Node modelNode = modelBuilder.node();
+				int r = random.nextInt(5);
+				int divisions = 10;
+				switch(r) {
+				case 0:
+					break;
+				case 1:
+					modelBuilder.part("box", GL20.GL_TRIANGLES, (long) (Usage.Position | Usage.Normal | Usage.TextureCoordinates), material).box(noduleWidth * 0.8f, noduleHeight * 0.8f, noduleLengthRandomized);
+					break;
+				case 2:
+					modelBuilder.part("cylinder", GL20.GL_TRIANGLES, (long) (Usage.Position | Usage.Normal | Usage.TextureCoordinates), material).cylinder(noduleWidth * 0.8f, noduleHeight * 0.8f, noduleLength, divisions);
+					break;
+				case 3:
+					modelBuilder.part("sphere", GL20.GL_TRIANGLES, (long) (Usage.Position | Usage.Normal | Usage.TextureCoordinates), material).sphere(noduleWidth * 0.8f, noduleHeight * 0.8f, noduleLength, divisions, divisions);
+					break;
+				case 4:
+					modelBuilder.part("box", GL20.GL_TRIANGLES, (long) (Usage.Position | Usage.Normal | Usage.TextureCoordinates), material).box(noduleWidth * 0.4f, noduleHeight * 0.4f, noduleLengthRandomized);
+					modelBuilder.part("panel", GL20.GL_TRIANGLES, (long) (Usage.Position | Usage.Normal | Usage.TextureCoordinates), materialPlain).box(noduleWidth * 0.9f, noduleHeight * 0.02f, noduleLength * 6);
+					break;
+				}
+				modelNode.translation.add(x * noduleWidth, y * noduleHeight, 0);
+				modelNode.calculateTransforms(false);
+			}
+		}
+		return modelBuilder.end();
+	}
+
+	private Model createVariableCylinderModel(Material materialPlain, Material materialWindows, Random random, float width, float height, float length) {
+		modelBuilder.begin();
+
+		int stepCount = random.nextInt(3, 20);
+		int extremeStepIndex = random.nextInt(0, stepCount);
+
+		float stepHeight = height / stepCount;
+
+		float stepRadius = random.nextFloat(width * 0.1f, width);
+
+		for (int i = 0; i < stepCount; i++) {
+			com.badlogic.gdx.graphics.g3d.model.Node node = modelBuilder.node();
+			stepRadius += random.nextFloat(-width * 0.1f, +width * 0.1f);
+			float currentStepRadius = i == extremeStepIndex ? width : stepRadius;
+			createBasicPart(BasicPartType.CYLINDER, materialWindows, currentStepRadius, stepHeight, currentStepRadius);
+			float y = i * stepHeight + stepHeight / 2 - height / 2;
+			node.translation.add(0, y, 0);
+			node.calculateTransforms(false);
+		}
+		
+		return modelBuilder.end();
+	}
+
+	private Model createRingModel(Material materialPlain, Material materialWindows, Random random, float width, float height, float length) {
 		modelBuilder.begin();
 
 		int axisCount = random.nextInt(3, 10);
@@ -756,23 +787,22 @@ public class NodeToRenderConverter {
 		float axisStepAngle = 360 / axisCount;
 		float ringSegmentStepAngle = 360 / ringSegmentCount;
 		float ringRadius = length;
-		float outerRingRadius = (float) (length * MathUtil.sec(Math.PI / axisCount));
+		float outerRingRadius = (float) (length * MathUtil.sec(Math.PI / ringSegmentCount));
 		float centerRadius = ringRadius / random.nextInt(3, 6);
-		float centerLength = length / random.nextInt(2, 4);
+		float centerLength = length;
 		float torusWidth = width / random.nextInt(2, 5);
 		float torusHeight = height / random.nextInt(2, 5); // maybe same as torusWidth
 		float spokeWidth = width / random.nextInt(6, 20);
 		float spokeHeight = height / random.nextInt(6, 20); // maybe same as spokeWidth
-		boolean torusSphereAtSpokeEnd = false;
-		boolean torusSphereAtJoints = false;
+		boolean torusSphereAtSpokeEnd = random.nextBoolean(0.1);
+		boolean torusSphereAtJoints = !torusSphereAtSpokeEnd && random.nextBoolean(0.5);
 		float torusSphereWidth = torusWidth * 1.1f;
 		float torusSphereHeight = torusHeight * 1.1f;
 		float torusSphereLength = torusSphereWidth; // ??
 		float segmentLength = (float) (2 * (length + torusWidth / 2) * Math.tan(Math.PI / ringSegmentCount));
 
 		com.badlogic.gdx.graphics.g3d.model.Node node = modelBuilder.node();
-		modelBuilder.part("center", GL20.GL_TRIANGLES, (long) (Usage.Position | Usage.Normal | Usage.TextureCoordinates), material).cylinder(centerRadius, centerLength, centerRadius,
-				STATION_SPHERE_DIVISIONS_U);
+		modelBuilder.part("center", GL20.GL_TRIANGLES, (long) (Usage.Position | Usage.Normal | Usage.TextureCoordinates), materialWindows).cylinder(centerRadius, centerLength, centerRadius, STATION_SPHERE_DIVISIONS_U);
 
 		for (int i = 0; i < axisCount; i++) {
 			float angle = axisStepAngle * i;
@@ -781,14 +811,15 @@ public class NodeToRenderConverter {
 			float cosAngle = (float) Math.cos(angleRad);
 
 			node = modelBuilder.node();
-			modelBuilder.part("spoke", GL20.GL_TRIANGLES, (long) (Usage.Position | Usage.Normal | Usage.TextureCoordinates), material).box(spokeWidth, spokeHeight, ringRadius);
+			BasicPartType spokePartType = random.next(BasicPartType.CUBE);
+			createBasicPart(spokePartType, materialPlain, spokeWidth, spokeHeight, ringRadius);
 			node.rotation.setEulerAngles(-angle + 90, 0, 0);
 			node.translation.add(cosAngle * ringRadius / 2, 0, sinAngle * ringRadius / 2);
 			node.calculateTransforms(false);
 
 			if (torusSphereAtSpokeEnd) {
 				node = modelBuilder.node();
-				modelBuilder.part("torusSphere", GL20.GL_TRIANGLES, (long) (Usage.Position | Usage.Normal | Usage.TextureCoordinates), material).sphere(torusSphereWidth, torusSphereHeight,
+				modelBuilder.part("torusSphere", GL20.GL_TRIANGLES, (long) (Usage.Position | Usage.Normal | Usage.TextureCoordinates), materialPlain).sphere(torusSphereWidth, torusSphereHeight,
 						torusSphereLength, STATION_SPHERE_DIVISIONS_U, STATION_SPHERE_DIVISIONS_V);
 				node.translation.add(cosAngle * ringRadius, 0, sinAngle * ringRadius);
 				node.calculateTransforms(false);
@@ -807,7 +838,7 @@ public class NodeToRenderConverter {
 			float angleRad = MathUtils.degreesToRadians * angle;
 
 			node = modelBuilder.node();
-			modelBuilder.part("ring-segment", GL20.GL_TRIANGLES, (long) (Usage.Position | Usage.Normal | Usage.TextureCoordinates), material).cylinder(torusWidth, segmentLength, torusHeight,
+			modelBuilder.part("ring-segment", GL20.GL_TRIANGLES, (long) (Usage.Position | Usage.Normal | Usage.TextureCoordinates), materialWindows).cylinder(torusWidth, segmentLength, torusHeight,
 					STATION_SPHERE_DIVISIONS_U);
 			node.rotation.setFromAxis(1, 0, 0, 90);
 			node.rotation.mul(new Quaternion(new Vector3(0, 0, 1), angle));
@@ -819,7 +850,7 @@ public class NodeToRenderConverter {
 				float jointAngleRad = MathUtils.degreesToRadians * jointAngle;
 
 				node = modelBuilder.node();
-				modelBuilder.part("torusSphere", GL20.GL_TRIANGLES, (long) (Usage.Position | Usage.Normal | Usage.TextureCoordinates), material).sphere(torusSphereWidth, torusSphereHeight,
+				modelBuilder.part("torusSphere", GL20.GL_TRIANGLES, (long) (Usage.Position | Usage.Normal | Usage.TextureCoordinates), materialPlain).sphere(torusSphereWidth, torusSphereHeight,
 						torusSphereLength, STATION_SPHERE_DIVISIONS_U, STATION_SPHERE_DIVISIONS_V);
 				node.translation.add((float) Math.cos(jointAngleRad) * outerRingRadius, 0, (float) Math.sin(jointAngleRad) * outerRingRadius);
 				node.calculateTransforms(false);
@@ -882,16 +913,16 @@ public class NodeToRenderConverter {
 		}
 	}
 
-	private Model createBalancedModel(Material material, Random random, float width, float height, float length) {
+	private Model createBalancedModel(Material materialPlain, Material material, Random random, float width, float height, float length) {
 		modelBuilder.begin();
 
 		float noduleWidth = width;
 		float noduleHeight = height;
-		float noduleLength = width; // to make the nodule more cubic
+		float noduleLength = (width + height) / 2; // length is the length of the entire station, reuse width and height to make the nodule more cubic
 
-		BasicPartType leftPartType = random.next(BasicPartType.BOX, BasicPartType.SPHERE, BasicPartType.CYLINDER);
-		BasicPartType centerPartType = random.next(BasicPartType.BOX, BasicPartType.CYLINDER);
-		BasicPartType rightPartType = random.next(BasicPartType.BOX, BasicPartType.SPHERE, BasicPartType.CYLINDER);
+		BasicPartType leftPartType = random.next(BasicPartType.CUBE, BasicPartType.SPHERE, BasicPartType.CYLINDER);
+		BasicPartType centerPartType = random.next(BasicPartType.CUBE, BasicPartType.CYLINDER);
+		BasicPartType rightPartType = random.next(BasicPartType.CUBE, BasicPartType.SPHERE, BasicPartType.CYLINDER);
 		
 		if (random.nextBoolean(0.5)) {
 			leftPartType = rightPartType;
@@ -903,12 +934,12 @@ public class NodeToRenderConverter {
 		com.badlogic.gdx.graphics.g3d.model.Node modelNode;
 		
 		modelNode = modelBuilder.node();
-		modelBuilder.part("spoke", GL20.GL_TRIANGLES, (long) (Usage.Position | Usage.Normal | Usage.TextureCoordinates), material).box(noduleWidth * spokeSizeFactor, noduleHeight * spokeSizeFactor, length);
+		modelBuilder.part("spoke", GL20.GL_TRIANGLES, (long) (Usage.Position | Usage.Normal | Usage.TextureCoordinates), material).box(noduleWidth * spokeSizeFactor, noduleHeight * spokeSizeFactor, length - noduleLength);
 
 		modelNode = modelBuilder.node();
 		createBasicPart(leftPartType, material, noduleWidth, noduleHeight, noduleLength);
 		modelNode.rotation.setEulerAngles(0, 90, 0);
-		modelNode.translation.add(0, 0, length / 2);
+		modelNode.translation.add(0, 0, length / 2 - noduleLength/2);
 		modelNode.calculateTransforms(false);
 			
 		modelNode = modelBuilder.node();
@@ -917,21 +948,21 @@ public class NodeToRenderConverter {
 		modelNode = modelBuilder.node();
 		createBasicPart(rightPartType, material, noduleWidth, noduleHeight, noduleLength);
 		modelNode.rotation.setEulerAngles(0, 90, 0);
-		modelNode.translation.add(0, 0, -length / 2);
+		modelNode.translation.add(0, 0, -(length / 2 - noduleLength/2));
 		modelNode.calculateTransforms(false);
 
 		return modelBuilder.end();
 	}
 	
 	public enum BasicPartType {
-		BOX, SPHERE, CYLINDER
+		CUBE, SPHERE, CYLINDER
 	};
 	public MeshPartBuilder createBasicPart(BasicPartType basicPartType, Material material, float width, float height, float length) {
 		MeshPartBuilder part = modelBuilder.part(basicPartType.name(), GL20.GL_TRIANGLES, (long) (Usage.Position | Usage.Normal | Usage.TextureCoordinates), material);
 		
 		switch(basicPartType) {
 		default:
-		case BOX:
+		case CUBE:
 			part.box(width, height, length);
 			break;
 		case CYLINDER:

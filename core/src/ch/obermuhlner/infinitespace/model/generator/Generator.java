@@ -576,12 +576,13 @@ public class Generator {
 		
 		station.type = random.nextProbability(
 			p(3, SpaceStation.Type.SPHERE),
+			p(3, SpaceStation.Type.VARIABLE_CYLINDER),
 			p(5, SpaceStation.Type.CYLINDER),
-			p(20, SpaceStation.Type.RING),
+			p(30, SpaceStation.Type.RING),
 			p(10, SpaceStation.Type.BALANCED),
 			p(1, SpaceStation.Type.CUBE),
 			p(20, SpaceStation.Type.BLOCKY),
-			p(10, SpaceStation.Type.CONGLOMERATE)
+			p(3, SpaceStation.Type.CONGLOMERATE)
 			);
 
 		if (Config.DEBUG_FORCE_SPACE_STATION_TYPE != null) {
@@ -593,19 +594,20 @@ public class Generator {
 		station.length = random.nextDouble(200, 500);
 		
 		switch(station.type) {
-		case CYLINDER:
 		case RING:
 		case SPHERE:
-			station.height = station.width;
+		case CYLINDER:
+		case VARIABLE_CYLINDER:
+			station.width = station.length;
 			break;
 		case BALANCED:
 			station.height = station.width;
-			station.length *= random.nextDouble(5, 10);
+			station.length *= random.nextDouble(4, 8);
 			break;
-		default:
 		case BLOCKY:
 		case CONGLOMERATE:
 		case CUBE:
+			// no constraints on size
 			break;
 		}
 		
@@ -614,6 +616,9 @@ public class Generator {
 		case RING:
 		case BALANCED:
 			station.rotation = 60 * 60; // TODO rotation of space station
+			break;
+		default:
+			// TODO rotation ? 
 		}
 		
 		double volume = station.type.volume(station.width, station.height, station.length);
