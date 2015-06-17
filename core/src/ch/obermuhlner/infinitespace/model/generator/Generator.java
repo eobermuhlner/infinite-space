@@ -600,7 +600,7 @@ public class Generator {
 			break;
 		case BALANCED:
 			station.height = station.width;
-			station.length *= 2;
+			station.length *= random.nextDouble(5, 10);
 			break;
 		default:
 		case BLOCKY:
