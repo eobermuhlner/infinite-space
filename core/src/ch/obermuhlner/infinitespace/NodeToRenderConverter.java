@@ -781,28 +781,33 @@ public class NodeToRenderConverter {
 	private Model createRingModel(Material materialPlain, Material materialWindows, Random random, float width, float height, float length) {
 		modelBuilder.begin();
 
+		// width and length are the diameter of the ring.
+		// height is the height of the center part
+		
 		int axisCount = random.nextInt(3, 10);
-		int ringSegmentCount = axisCount * 2;// random.nextInt(1, 4);
+		int ringSegmentCount = axisCount * random.nextInt(1, 4);
 		float axisStepAngle = 360 / axisCount;
 		float ringSegmentStepAngle = 360 / ringSegmentCount;
-		float ringRadius = length;
-		float outerRingRadius = (float) (length * MathUtil.sec(Math.PI / ringSegmentCount));
+		float ringRadius = width / 2;
+		float outerRingRadius = (float) (ringRadius * MathUtil.sec(Math.PI / ringSegmentCount));
 		float centerRadius = ringRadius / random.nextInt(3, 6);
-		float centerLength = length;
-		float torusWidth = width / random.nextInt(2, 5);
-		float torusHeight = height / random.nextInt(2, 5); // maybe same as torusWidth
-		float spokeWidth = width / random.nextInt(6, 20);
-		float spokeHeight = height / random.nextInt(6, 20); // maybe same as spokeWidth
+		float centerHeight = height;
+		float torusWidth = height * random.nextFloat(0.1f, 0.5f);
+		float torusHeight = height * random.nextFloat(0.1f, 0.5f); // maybe same as torusWidth
+		float spokeWidth = torusHeight * random.nextFloat(0.02f, 0.2f);
+		float spokeHeight = torusHeight * random.nextFloat(0.02f, 0.8f); // maybe same as spokeWidth
 		boolean torusSphereAtSpokeEnd = random.nextBoolean(0.1);
 		boolean torusSphereAtJoints = !torusSphereAtSpokeEnd && random.nextBoolean(0.5);
 		float torusSphereWidth = torusWidth * 1.1f;
 		float torusSphereHeight = torusHeight * 1.1f;
 		float torusSphereLength = torusSphereWidth; // ??
-		float segmentLength = (float) (2 * (length + torusWidth / 2) * Math.tan(Math.PI / ringSegmentCount));
+		float segmentLength = (float) (2 * (ringRadius + torusWidth / 2) * Math.tan(Math.PI / ringSegmentCount));
+
+		BasicPartType spokePartType = random.next(BasicPartType.CUBE, BasicPartType.CYLINDER, BasicPartType.SPHERE);
 
 		com.badlogic.gdx.graphics.g3d.model.Node node = modelBuilder.node();
 		BasicPartType centerPartType = random.next(BasicPartType.CYLINDER, BasicPartType.SPHERE);
-		createBasicPart(centerPartType, random.nextBoolean(0.5) ? materialWindows : materialPlain, centerRadius, centerLength, centerRadius);
+		createBasicPart(centerPartType, random.nextBoolean(0.5) ? materialWindows : materialPlain, centerRadius, centerHeight, centerRadius);
 
 		for (int i = 0; i < axisCount; i++) {
 			float angle = axisStepAngle * i;
@@ -812,7 +817,6 @@ public class NodeToRenderConverter {
 
 			{
 				node = modelBuilder.node();
-				BasicPartType spokePartType = random.next(BasicPartType.CYLINDER);
 				createBasicPart(spokePartType, materialPlain, spokeWidth, spokeHeight, ringRadius);
 				node.rotation.setEulerAngles(-angle + 90, 0, 0);
 				float x = (float) (cosAngle * ringRadius / 2);
@@ -850,8 +854,8 @@ public class NodeToRenderConverter {
 
 			{
 				node = modelBuilder.node();
-				modelBuilder.part("ring-segment", GL20.GL_TRIANGLES, (long) (Usage.Position | Usage.Normal | Usage.TextureCoordinates), materialWindows).cylinder(torusWidth, segmentLength, torusHeight,
-						STATION_SPHERE_DIVISIONS_U);
+				modelBuilder.part("ring-segment", GL20.GL_TRIANGLES, (long) (Usage.Position | Usage.Normal | Usage.TextureCoordinates), materialWindows)
+					.cylinder(torusWidth, segmentLength, torusHeight, STATION_SPHERE_DIVISIONS_U);
 				node.rotation.setFromAxis(1, 0, 0, 90);
 				node.rotation.mul(new Quaternion(new Vector3(0, 0, 1), (float) angle));
 				float x = (float) (cosAngle * ringRadius);
@@ -866,8 +870,8 @@ public class NodeToRenderConverter {
 				float jointAngleRad = MathUtils.degreesToRadians * jointAngle;
 
 				node = modelBuilder.node();
-				modelBuilder.part("torusSphere", GL20.GL_TRIANGLES, (long) (Usage.Position | Usage.Normal | Usage.TextureCoordinates), materialPlain).sphere(torusSphereWidth, torusSphereHeight,
-						torusSphereLength, STATION_SPHERE_DIVISIONS_U, STATION_SPHERE_DIVISIONS_V);
+				modelBuilder.part("torusSphere", GL20.GL_TRIANGLES, (long) (Usage.Position | Usage.Normal | Usage.TextureCoordinates), materialPlain)
+					.sphere(torusSphereWidth, torusSphereHeight, torusSphereLength, STATION_SPHERE_DIVISIONS_U, STATION_SPHERE_DIVISIONS_V);
 				float x = (float) (Math.cos(jointAngleRad) * outerRingRadius);
 				float y = 0;
 				float z = (float) (Math.sin(jointAngleRad) * outerRingRadius);

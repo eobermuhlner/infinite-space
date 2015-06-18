@@ -589,15 +589,18 @@ public class Generator {
 			station.type = Config.DEBUG_FORCE_SPACE_STATION_TYPE;
 		}
 		
-		station.width = random.nextDouble(200, 500);
-		station.height = random.nextDouble(200, 500);
-		station.length = random.nextDouble(200, 500);
+		station.width = random.nextDouble(100, 500);
+		station.height = random.nextDouble(100, 500);
+		station.length = random.nextDouble(100, 500);
 		
 		switch(station.type) {
-		case RING:
 		case SPHERE:
 		case CYLINDER:
 		case VARIABLE_CYLINDER:
+			station.width = station.length;
+			break;
+		case RING:
+			station.length *= random.nextDouble(2, 3);
 			station.width = station.length;
 			break;
 		case BALANCED:
