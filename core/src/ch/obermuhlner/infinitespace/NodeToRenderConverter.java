@@ -696,8 +696,7 @@ public class NodeToRenderConverter {
 			float noduleLength = random.nextFloat(length/4, length/2); 
 
 			BasicPartType partType = random.next(BasicPartType.CUBE, BasicPartType.SPHERE, BasicPartType.CYLINDER);
-			Material material = random.nextBoolean(0.75) ? materialWindows : materialPlain;
-			createBasicPart(partType, material, noduleWidth, noduleHeight, noduleLength);
+			createBasicPart(partType, random.nextBoolean(0.75) ? materialWindows : materialPlain, noduleWidth, noduleHeight, noduleLength);
 			
 			float w2 = (width - noduleWidth) / 2;
 			float h2 = (height - noduleHeight) / 2;
@@ -802,26 +801,36 @@ public class NodeToRenderConverter {
 		float segmentLength = (float) (2 * (length + torusWidth / 2) * Math.tan(Math.PI / ringSegmentCount));
 
 		com.badlogic.gdx.graphics.g3d.model.Node node = modelBuilder.node();
-		modelBuilder.part("center", GL20.GL_TRIANGLES, (long) (Usage.Position | Usage.Normal | Usage.TextureCoordinates), materialWindows).cylinder(centerRadius, centerLength, centerRadius, STATION_SPHERE_DIVISIONS_U);
+		BasicPartType centerPartType = random.next(BasicPartType.CYLINDER, BasicPartType.SPHERE);
+		createBasicPart(centerPartType, random.nextBoolean(0.5) ? materialWindows : materialPlain, centerRadius, centerLength, centerRadius);
 
 		for (int i = 0; i < axisCount; i++) {
 			float angle = axisStepAngle * i;
 			float angleRad = MathUtils.degreesToRadians * angle;
-			float sinAngle = (float) Math.sin(angleRad);
-			float cosAngle = (float) Math.cos(angleRad);
+			double sinAngle = Math.sin(angleRad);
+			double cosAngle = Math.cos(angleRad);
 
-			node = modelBuilder.node();
-			BasicPartType spokePartType = random.next(BasicPartType.CUBE);
-			createBasicPart(spokePartType, materialPlain, spokeWidth, spokeHeight, ringRadius);
-			node.rotation.setEulerAngles(-angle + 90, 0, 0);
-			node.translation.add(cosAngle * ringRadius / 2, 0, sinAngle * ringRadius / 2);
-			node.calculateTransforms(false);
-
+			{
+				node = modelBuilder.node();
+				BasicPartType spokePartType = random.next(BasicPartType.CYLINDER);
+				createBasicPart(spokePartType, materialPlain, spokeWidth, spokeHeight, ringRadius);
+				node.rotation.setEulerAngles(-angle + 90, 0, 0);
+				float x = (float) (cosAngle * ringRadius / 2);
+				float y = 0;
+				float z = (float) (sinAngle * ringRadius / 2);
+				node.translation.add(x, y, z);
+				node.calculateTransforms(false);
+			}
+			
 			if (torusSphereAtSpokeEnd) {
 				node = modelBuilder.node();
-				modelBuilder.part("torusSphere", GL20.GL_TRIANGLES, (long) (Usage.Position | Usage.Normal | Usage.TextureCoordinates), materialPlain).sphere(torusSphereWidth, torusSphereHeight,
+				Material materialTorus = random.nextBoolean(0.5) ? materialWindows : materialPlain;
+				modelBuilder.part("torusSphere", GL20.GL_TRIANGLES, (long) (Usage.Position | Usage.Normal | Usage.TextureCoordinates), materialTorus).sphere(torusSphereWidth, torusSphereHeight,
 						torusSphereLength, STATION_SPHERE_DIVISIONS_U, STATION_SPHERE_DIVISIONS_V);
-				node.translation.add(cosAngle * ringRadius, 0, sinAngle * ringRadius);
+				float x = (float) (cosAngle * ringRadius);
+				float y = 0;
+				float z = (float) (sinAngle * ringRadius);
+				node.translation.add(x, y, z);
 				node.calculateTransforms(false);
 			}
 		}
@@ -834,17 +843,24 @@ public class NodeToRenderConverter {
 		 */
 
 		for (int i = 0; i < ringSegmentCount; i++) {
-			float angle = ringSegmentStepAngle * i;
-			float angleRad = MathUtils.degreesToRadians * angle;
+			double angle = ringSegmentStepAngle * i;
+			double angleRad = MathUtils.degreesToRadians * angle;
+			double sinAngle = Math.sin(angleRad);
+			double cosAngle = Math.cos(angleRad);
 
-			node = modelBuilder.node();
-			modelBuilder.part("ring-segment", GL20.GL_TRIANGLES, (long) (Usage.Position | Usage.Normal | Usage.TextureCoordinates), materialWindows).cylinder(torusWidth, segmentLength, torusHeight,
-					STATION_SPHERE_DIVISIONS_U);
-			node.rotation.setFromAxis(1, 0, 0, 90);
-			node.rotation.mul(new Quaternion(new Vector3(0, 0, 1), angle));
-			node.translation.add((float) Math.cos(angleRad) * ringRadius, 0, (float) Math.sin(angleRad) * ringRadius);
-			node.calculateTransforms(false);
-
+			{
+				node = modelBuilder.node();
+				modelBuilder.part("ring-segment", GL20.GL_TRIANGLES, (long) (Usage.Position | Usage.Normal | Usage.TextureCoordinates), materialWindows).cylinder(torusWidth, segmentLength, torusHeight,
+						STATION_SPHERE_DIVISIONS_U);
+				node.rotation.setFromAxis(1, 0, 0, 90);
+				node.rotation.mul(new Quaternion(new Vector3(0, 0, 1), (float) angle));
+				float x = (float) (cosAngle * ringRadius);
+				float y = 0;
+				float z = (float) (sinAngle * ringRadius);
+				node.translation.add(x, y, z);
+				node.calculateTransforms(false);
+			}
+			
 			if (torusSphereAtJoints) {
 				float jointAngle = ringSegmentStepAngle * i + ringSegmentStepAngle / 2;
 				float jointAngleRad = MathUtils.degreesToRadians * jointAngle;
@@ -852,7 +868,10 @@ public class NodeToRenderConverter {
 				node = modelBuilder.node();
 				modelBuilder.part("torusSphere", GL20.GL_TRIANGLES, (long) (Usage.Position | Usage.Normal | Usage.TextureCoordinates), materialPlain).sphere(torusSphereWidth, torusSphereHeight,
 						torusSphereLength, STATION_SPHERE_DIVISIONS_U, STATION_SPHERE_DIVISIONS_V);
-				node.translation.add((float) Math.cos(jointAngleRad) * outerRingRadius, 0, (float) Math.sin(jointAngleRad) * outerRingRadius);
+				float x = (float) (Math.cos(jointAngleRad) * outerRingRadius);
+				float y = 0;
+				float z = (float) (Math.sin(jointAngleRad) * outerRingRadius);
+				node.translation.add(x, y, z);
 				node.calculateTransforms(false);
 			}
 		}
