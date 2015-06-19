@@ -240,11 +240,10 @@ public class NodeToRenderConverter {
 					break;
 				case STONE:
 					if (textureName == null) {
-						// TODO use heat of planet to decide whether is is lava
 						if (node.temperature > LAVA_TEMPERATURE) {
 							textureName = "lava_colors.png";
 							shaderName = UberShaderProvider.TERRESTRIAL_PLANET_SHADER;
-							materialAttributes.add(TerrestrialPlanetFloatAttribute.createHeightFrequency(random.nextFloat(20f, 22f)));
+							materialAttributes.add(TerrestrialPlanetFloatAttribute.createHeightFrequency(random.nextFloat(3f, 22f)));
 							materialAttributes.add(TerrestrialPlanetFloatAttribute.createColorNoise(random.nextFloat(0.3f, 0.9f)));
 							materialAttributes.add(TerrestrialPlanetFloatAttribute.createColorFrequency(random.nextFloat(20f, 30f)));
 						}
