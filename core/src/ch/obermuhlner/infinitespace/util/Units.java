@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import ch.obermuhlner.infinitespace.Config;
+
 public class Units {
 	
 	public static final double SECONDS_PER_DAY = 24*60*60;
@@ -39,7 +41,11 @@ public class Units {
 
 	private static NumberFormat numberFormat;
 	static {
-		numberFormat = NumberFormat.getNumberInstance();
+		if (Config.LOCALE == null) {
+			numberFormat = NumberFormat.getNumberInstance();
+		} else {
+			numberFormat = NumberFormat.getNumberInstance(Config.LOCALE);
+		}
 	}
 	
 	private static Unit meterUnits[] = {
@@ -103,11 +109,11 @@ public class Units {
 	}
 
 	public static String kelvinToString(double value) {
-		return toString(value) + " K (" + toString(value - 273.16) + " C)";
+		return toString(value) + " K  (" + toString(value - 273.16) + " C)";
 	}
 
 	public static String pascalToString(double value) {
-		return toString(value) + " Pa (" + toString(value / Units.EARTH_ATMOSPHERE_PRESSURE) + " bar)";
+		return toString(value) + " Pa  (" + toString(value / Units.EARTH_ATMOSPHERE_PRESSURE) + " bar)";
 	}
 	
 	public static String volumeToString(double value) {
@@ -134,7 +140,7 @@ public class Units {
 				if (shown) {
 					stringBuilder.append(", ");
 				} else {
-					stringBuilder.append(" (");
+					stringBuilder.append("  (");
 				}
 				stringBuilder.append(earthString);
 				shown = true;
