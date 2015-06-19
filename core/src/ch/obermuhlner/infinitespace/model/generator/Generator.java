@@ -273,7 +273,7 @@ public class Generator {
 		return belt;
 	}
 	
-	public Node generatePlanet(OrbitingSpheroidNode parent, long index) {
+	public Planet generatePlanet(OrbitingSpheroidNode parent, long index) {
 		Seed seed = new Seed(parent.seed, index);
 		Random random = seed.getRandom();
 		
@@ -299,7 +299,7 @@ public class Generator {
 		
 		// set Planet: type, mass, radius, childCount
 		if (parent.mass > Units.SUN_MASS * 0.05) {
-			int firstGasPlanet = parentRandom.nextInt(3, 4);
+			int firstGasPlanet = parentRandom.nextInt(1, 7);
 			int lastGasPlanet = parentRandom.nextInt(8, 11);
 			if ((index > firstGasPlanet && index < lastGasPlanet) || random.nextBoolean(0.01)) {
 				planet.type = Planet.Type.GAS;
@@ -426,11 +426,11 @@ public class Generator {
 			planet.atmospherePressure = MathUtil.smoothstep(Units.EARTH_MASS / 10, Units.EARTH_MASS * 10, planet.mass) * Units.EARTH_ATMOSPHERE_PRESSURE; // FIXME real function for atmosphere density
 			planet.breathableAtmosphere = planet.atmospherePressure > Units.EARTH_ATMOSPHERE_PRESSURE * 0.1 && random.nextBoolean(0.1);
 			if (lifeSupportingZone) {
-				planet.breathableAtmosphere = random.nextBoolean(0.3);
+				planet.breathableAtmosphere = random.nextBoolean(0.8);
 				if (planet.breathableAtmosphere) {
 					planet.water = random.nextDouble();
 				} else {
-					if (random.nextBoolean(0.4)) {
+					if (random.nextBoolean(0.8)) {
 						planet.water = random.nextDouble();
 					}
 				}
@@ -555,7 +555,7 @@ public class Generator {
 		return orbitRadius;
 	}
 	
-	public Node generateSpaceStation(OrbitingSpheroidNode parent, long index) {
+	public SpaceStation generateSpaceStation(OrbitingSpheroidNode parent, long index) {
 		Seed seed = new Seed(parent.seed, index);
 		Random random = seed.getRandom();
 		

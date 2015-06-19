@@ -2,16 +2,20 @@ package ch.obermuhlner.infinitespace.ui.info;
 
 import java.util.Map;
 
+import ch.obermuhlner.infinitespace.Config;
 import ch.obermuhlner.infinitespace.I18N;
 import ch.obermuhlner.infinitespace.InfiniteSpaceGame;
 import ch.obermuhlner.infinitespace.UserData;
 import ch.obermuhlner.infinitespace.model.Node;
 import ch.obermuhlner.infinitespace.model.OrbitingNode;
 import ch.obermuhlner.infinitespace.model.OrbitingSpheroidNode;
+import ch.obermuhlner.infinitespace.model.generator.Generator;
 import ch.obermuhlner.infinitespace.model.universe.AsteroidBelt;
 import ch.obermuhlner.infinitespace.model.universe.Planet;
 import ch.obermuhlner.infinitespace.model.universe.SpaceStation;
 import ch.obermuhlner.infinitespace.model.universe.Star;
+import ch.obermuhlner.infinitespace.model.universe.StarSystem;
+import ch.obermuhlner.infinitespace.model.universe.Universe;
 import ch.obermuhlner.infinitespace.model.universe.population.Industry;
 import ch.obermuhlner.infinitespace.ui.AbstractGameScreen;
 import ch.obermuhlner.infinitespace.ui.AbstractNodeStageScreen;
@@ -25,6 +29,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Button;
 import com.badlogic.gdx.scenes.scene2d.ui.CheckBox;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
+import com.badlogic.gdx.scenes.scene2d.ui.SelectBox;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.ui.Window;
@@ -34,6 +39,10 @@ import com.badlogic.gdx.utils.Array;
 public class InfoScreen extends AbstractNodeStageScreen {
 
 	private AbstractGameScreen backScreen;
+	
+	private static long debugUniverseIndex = 0;
+	private static int debugPlanetIndex = 3;
+	private static String debugNodeType = "SpaceStation";
 
 	public InfoScreen (InfiniteSpaceGame game, Node node, AbstractGameScreen backScreen) {
 		super(game, node);
@@ -42,6 +51,55 @@ public class InfoScreen extends AbstractNodeStageScreen {
 
 	@Override
 	protected void prepareStage (final Stage stage, Table rootTable) {
+		if (Config.DEBUG_TEST_GENERATOR) {
+			rootTable.row();
+
+			Table table = table();
+			rootTable.add(table);
+			
+			table.add(button("Prev", new ChangeListener() {
+				@Override
+				public void changed(ChangeEvent event, Actor actor) {
+					debugUniverseIndex--;
+					updateRandomDebugInfoScreen();
+				}
+			}));
+			
+			table.add(new Label(String.valueOf(debugUniverseIndex), skin));
+
+			table.add(button("Next", new ChangeListener() {
+				@Override
+				public void changed(ChangeEvent event, Actor actor) {
+					debugUniverseIndex++;
+					updateRandomDebugInfoScreen();
+				}
+			}));
+
+			final SelectBox<String> selectNodeType = new SelectBox<String>(skin);
+			selectNodeType.setItems("Star", "Planet", "Moon", "SpaceStation");
+			selectNodeType.setSelected(debugNodeType);
+			selectNodeType.addListener(new ChangeListener() {
+				@Override
+				public void changed(ChangeEvent event, Actor actor) {
+					debugNodeType = selectNodeType.getSelected();
+					updateRandomDebugInfoScreen();
+				}
+			});
+			table.add(selectNodeType);
+			
+			final SelectBox<Integer> selectPlanetIndex = new SelectBox<Integer>(skin);
+			selectPlanetIndex.setItems(1, 2, 3, 4, 5, 6, 7, 8, 9);
+			selectPlanetIndex.setSelected(debugPlanetIndex);
+			selectPlanetIndex.addListener(new ChangeListener() {
+				@Override
+				public void changed(ChangeEvent event, Actor actor) {
+					debugPlanetIndex = selectPlanetIndex.getSelected();
+					updateRandomDebugInfoScreen();
+				}
+			});
+			table.add(selectPlanetIndex);
+		}
+		
 		rootTable.row();
 		rootTable.add(new Label("Info " + node.getName(), skin, TITLE));
 
@@ -73,25 +131,6 @@ public class InfoScreen extends AbstractNodeStageScreen {
 				buttonDetails.addListener(new ChangeListener() {
 					@Override
 					public void changed(ChangeEvent event, Actor actor) {
-//						final Dialog dialog = new Dialog(name, skin);
-//						UserData userData = findUserData(name);
-//						if (userData != null) {
-//							if (userData.description != null) {
-//								Label labelText = new Label(userData.description, skin);
-//								labelText.setWrap(true);
-//								dialog.text(labelText);
-//							}
-//							if (userData.composition != null) {
-//								for(Map.Entry<Molecule, Double> entry : userData.composition.entrySet()) {
-//									dialog.text(entry.getKey().name() + " : " + Units.percentToString(entry.getValue()));
-//								}
-//							}
-//						} else {
-//							dialog.text("No information found.");
-//						}
-//						dialog.button(new TextButton("OK", skin));
-//						dialog.show(stage);
-						
 						showModelDetailWindow(stage, name);
 					}
 
@@ -217,7 +256,7 @@ public class InfoScreen extends AbstractNodeStageScreen {
 		stage.addActor(window);
 	}
 
-	protected UserData findUserData(String name) {
+	private UserData findUserData(String name) {
 		Array<ModelInstance> instances = getRenderState().instances;
 		for (int i = 0; i < instances.size; i++) {
 			ModelInstance modelInstance = instances.get(i);
@@ -237,4 +276,25 @@ public class InfoScreen extends AbstractNodeStageScreen {
 		table.add(new Label(data.toString(), skin));
 	}
 
+	private void updateRandomDebugInfoScreen() {
+		Generator generator = new Generator();
+		Universe universe = generator.generateUniverse(debugUniverseIndex);
+		StarSystem starSystem = generator.generateStarSystem(universe, 0);
+		Star star = generator.generateStar(starSystem, 0);
+		Planet planet = generator.generatePlanet(star, debugPlanetIndex);
+		Planet moon = generator.generatePlanet(planet, 0);
+		SpaceStation spaceStation = generator.generateSpaceStation(moon, 0);
+		
+		Node randomNode = spaceStation;
+		if (debugNodeType.equals("Star")) {
+			randomNode = star;
+		} else if (debugNodeType.equals("Planet")) {
+			randomNode = planet;
+		} else if (debugNodeType.equals("Moon")) {
+			randomNode = moon;
+		} else if (debugNodeType.equals("SpaceStation")) {
+			randomNode = spaceStation;
+		}
+		setScreen(new InfoScreen(infiniteSpaceGame, randomNode, backScreen));
+	}
 }

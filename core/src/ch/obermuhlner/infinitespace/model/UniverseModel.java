@@ -13,7 +13,7 @@ import com.badlogic.gdx.utils.Array;
 
 public class UniverseModel {
 
-	private final Generator generator = new Generator();
+	public final Generator generator = new Generator();
 	
 	private int universeIndex = 0;
 

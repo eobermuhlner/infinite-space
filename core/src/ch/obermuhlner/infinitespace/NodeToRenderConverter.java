@@ -78,6 +78,8 @@ public class NodeToRenderConverter {
 
 	private final ModelBuilder modelBuilder = new ModelBuilder();
 
+	public boolean showNodeBoundingBox = Config.DEBUG_SHOW_NODE_BOUNDING_BOX;
+
 	public NodeToRenderConverter (AssetManager assetManager) {
 		this.assetManager = assetManager;
 
@@ -248,58 +250,57 @@ public class NodeToRenderConverter {
 						}
 					}
 					
-					if (textureName == null && node.radius < 1000E3) {
-						textureName = random.next ("phobos.jpg", "deimos.jpg");
-					} else {
-						if (textureName == null) {
-							if (node.atmospherePressure > 0.1) {
-								if (node.breathableAtmosphere) {
-									if (node.hasLife) {
-										textureName = "terrestrial_colors.png";
-										float water = (float)node.water;
-										float heightMin = MathUtil.transform(0f, 1f, 0.4f, 0.0f, water);
-										float heightMax = MathUtil.transform(0f, 1f, 1.0f, 0.6f, water);
-										float heightFrequency = random.nextFloat(2f, 15f);
-										float iceLevel = MathUtil.transform((float)Units.celsiusToKelvin(-50), (float)Units.celsiusToKelvin(50), 1f, -1f, (float)node.temperature);
-										materialAttributes.add(TerrestrialPlanetFloatAttribute.createHeightWater(0.4f)); // depends on texture
-										materialAttributes.add(TerrestrialPlanetFloatAttribute.createHeightMin(heightMin));
-										materialAttributes.add(TerrestrialPlanetFloatAttribute.createHeightMax(heightMax));
-										materialAttributes.add(TerrestrialPlanetFloatAttribute.createHeightFrequency(heightFrequency));
-										if (heightFrequency < random.nextFloat(5f, 10f)) {
-											materialAttributes.add(TerrestrialPlanetFloatAttribute.createHeightMountains(random.nextFloat(0.8f, 1.0f)));
-										}
-										materialAttributes.add(TerrestrialPlanetFloatAttribute.createIceLevel(iceLevel));
-										materialAttributes.add(TerrestrialPlanetFloatAttribute.createColorNoise(random.nextFloat(0.1f, 0.3f)));
-										materialAttributes.add(TerrestrialPlanetFloatAttribute.createColorFrequency(random.nextFloat(15f, 25f)));
-										shaderName = UberShaderProvider.TERRESTRIAL_PLANET_SHADER;
+					if (textureName == null) {
+						if (node.atmospherePressure > 0.1) {
+							if (node.breathableAtmosphere) {
+								if (node.hasLife) {
+									textureName = "terrestrial_colors.png";
+									float water = (float)node.water;
+									float heightMin = MathUtil.transform(0f, 1f, 0.4f, 0.0f, water);
+									float heightMax = MathUtil.transform(0f, 1f, 1.0f, 0.6f, water);
+									float heightFrequency = random.nextFloat(2f, 15f);
+									float iceLevel = MathUtil.transform((float)Units.celsiusToKelvin(-50), (float)Units.celsiusToKelvin(50), 1f, -1f, (float)node.temperature);
+									materialAttributes.add(TerrestrialPlanetFloatAttribute.createHeightWater(0.4f)); // depends on texture
+									materialAttributes.add(TerrestrialPlanetFloatAttribute.createHeightMin(heightMin));
+									materialAttributes.add(TerrestrialPlanetFloatAttribute.createHeightMax(heightMax));
+									materialAttributes.add(TerrestrialPlanetFloatAttribute.createHeightFrequency(heightFrequency));
+									if (heightFrequency < random.nextFloat(5f, 10f)) {
+										materialAttributes.add(TerrestrialPlanetFloatAttribute.createHeightMountains(random.nextFloat(0.8f, 1.0f)));
 									}
-								}
-								if (textureName == null && random.nextBoolean(PROBABILITY_GENERATED_PLANET)) {
-									textureName = "mars_colors.png";
-									materialAttributes.add(TerrestrialPlanetFloatAttribute.createHeightFrequency(random.nextFloat(2f, 15f)));
-									//materialAttributes.add(TerrestrialPlanetFloatAttribute.createColorNoise(random.nextFloat(0.1f, 0.3f)));
-									//materialAttributes.add(TerrestrialPlanetFloatAttribute.createColorFrequency(random.nextFloat(15f, 25f)));
+									materialAttributes.add(TerrestrialPlanetFloatAttribute.createIceLevel(iceLevel));
+									materialAttributes.add(TerrestrialPlanetFloatAttribute.createColorNoise(random.nextFloat(0.1f, 0.3f)));
+									materialAttributes.add(TerrestrialPlanetFloatAttribute.createColorFrequency(random.nextFloat(15f, 25f)));
 									shaderName = UberShaderProvider.TERRESTRIAL_PLANET_SHADER;
 								}
 							}
+							if (textureName == null && random.nextBoolean(0.5)) {
+								textureName = "mars_colors.png";
+								materialAttributes.add(TerrestrialPlanetFloatAttribute.createHeightFrequency(random.nextFloat(2f, 15f)));
+								//materialAttributes.add(TerrestrialPlanetFloatAttribute.createColorNoise(random.nextFloat(0.1f, 0.3f)));
+								//materialAttributes.add(TerrestrialPlanetFloatAttribute.createColorFrequency(random.nextFloat(15f, 25f)));
+								shaderName = UberShaderProvider.TERRESTRIAL_PLANET_SHADER;
+							}
 						}
+					}
 
-						if (textureName == null && random.nextBoolean(PROBABILITY_GENERATED_PLANET)) {
-							textureName = "moon_colors.png";
-							float heightRange = random.nextFloat(0.3f, 1.0f);
-							float heightMin = random.nextFloat(1.0f - heightRange);
-							float heightMax = heightMin + heightRange;
-							materialAttributes.add(TerrestrialPlanetFloatAttribute.createHeightMin(heightMin));
-							materialAttributes.add(TerrestrialPlanetFloatAttribute.createHeightMax(heightMax));
-							materialAttributes.add(TerrestrialPlanetFloatAttribute.createHeightFrequency(random.nextFloat(2f, 15f)));
-							//materialAttributes.add(TerrestrialPlanetFloatAttribute.createColorNoise(random.nextFloat(0.1f, 0.3f)));
-							//materialAttributes.add(TerrestrialPlanetFloatAttribute.createColorFrequency(random.nextFloat(15f, 25f)));
-							shaderName = UberShaderProvider.TERRESTRIAL_PLANET_SHADER;
-						}
+					if (textureName == null) {
+						textureName = "moon_colors.png";
+						float heightRange = random.nextFloat(0.3f, 1.0f);
+						float heightMin = random.nextFloat(1.0f - heightRange);
+						float heightMax = heightMin + heightRange;
+						materialAttributes.add(TerrestrialPlanetFloatAttribute.createHeightMin(heightMin));
+						materialAttributes.add(TerrestrialPlanetFloatAttribute.createHeightMax(heightMax));
+						materialAttributes.add(TerrestrialPlanetFloatAttribute.createHeightFrequency(random.nextFloat(2f, 15f)));
+						//materialAttributes.add(TerrestrialPlanetFloatAttribute.createColorNoise(random.nextFloat(0.1f, 0.3f)));
+						//materialAttributes.add(TerrestrialPlanetFloatAttribute.createColorFrequency(random.nextFloat(15f, 25f)));
+						shaderName = UberShaderProvider.TERRESTRIAL_PLANET_SHADER;
+					}
 
-						if (textureName == null) {
-							textureName = random.next ("io.jpg", "callisto.jpg", "ganymede.jpg", "europa.jpg", "mercury.jpg", "mars.jpg", "moon.jpg", "iapetus.jpg");
-						}
+					if (textureName == null && node.radius < 1000E3) {
+						textureName = random.next ("phobos.jpg", "deimos.jpg");
+					}
+					if (textureName == null) {
+						textureName = random.next ("io.jpg", "callisto.jpg", "ganymede.jpg", "europa.jpg", "mercury.jpg", "mars.jpg", "moon.jpg", "iapetus.jpg");
 					}
 					break;
 				case ICE:
@@ -583,7 +584,7 @@ public class NodeToRenderConverter {
 			float height = (float)(node.height * SIZE_FACTOR * SIZE_ZOOM_FACTOR);
 			float length = (float)(node.length * SIZE_FACTOR * SIZE_ZOOM_FACTOR);
 
-			if (!realUniverse) {
+			if (showNodeBoundingBox && !realUniverse) {
 				convertBoundingBox(renderState, width, height, length,
 						"Width: " + Units.meterSizeToString(node.width) + "\n" +
 						"Height: " + Units.meterSizeToString(node.height) + "\n" +
