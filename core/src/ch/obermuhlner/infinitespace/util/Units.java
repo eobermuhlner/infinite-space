@@ -1,5 +1,7 @@
 package ch.obermuhlner.infinitespace.util;
 
+import java.math.BigDecimal;
+import java.math.MathContext;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -39,6 +41,8 @@ public class Units {
 	public static final double SUN_RADIUS = 700000E3;
 	public static final double SUN_LUMINOSITY = 3.827E26; // W
 
+	private static final MathContext MC_SIGNIFICANT_DIGITS = new MathContext(3);
+	
 	private static NumberFormat numberFormat;
 	static {
 		if (Config.LOCALE == null) {
@@ -89,7 +93,11 @@ public class Units {
 	};
 
 	public static String toString(double value) {
-		return numberFormat.format(value);
+		String string = BigDecimal.valueOf(value).round(MC_SIGNIFICANT_DIGITS).toPlainString();
+		if (string.equals("0.0")) {
+			return "0";
+		}
+		return string;
 	}
 	
 	public static String meterSizeToString(double value) {
@@ -193,6 +201,19 @@ public class Units {
 
 	public static double celsiusToKelvin(double celsius) {
 		return celsius + CELSIUS_BASE;
+	}
+	
+	public static double roundToSignificantDigits(double num, int n) {
+	    if(num == 0) {
+	        return 0;
+	    }
+
+	    final double d = Math.ceil(Math.log10(num < 0 ? -num: num));
+	    final int power = n - (int) d;
+
+	    final double magnitude = Math.pow(10, power);
+	    final long shifted = Math.round(num*magnitude);
+	    return shifted/magnitude;
 	}
 	
 	private static class Unit {
