@@ -3,6 +3,7 @@ package ch.obermuhlner.infinitespace;
 import java.util.Locale;
 
 import ch.obermuhlner.infinitespace.model.universe.SpaceStation;
+import ch.obermuhlner.infinitespace.model.universe.Star;
 
 import com.badlogic.gdx.Gdx;
 
@@ -17,6 +18,8 @@ public class Config {
 
 	public static final boolean DEBUG_TEST_GENERATOR = true;
 
+	public static final Star.Type DEBUG_FORCE_STAR_TYPE = Star.Type.SOL_LIKE;
+	
 	public static final SpaceStation.Type DEBUG_FORCE_SPACE_STATION_TYPE = null;
 	//public static final SpaceStation.Type DEBUG_FORCE_SPACE_STATION_TYPE = SpaceStation.Type.RING;
 

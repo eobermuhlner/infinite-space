@@ -2,11 +2,7 @@ package ch.obermuhlner.infinitespace.model;
 
 import ch.obermuhlner.infinitespace.UniverseCoordinates;
 import ch.obermuhlner.infinitespace.model.generator.Generator;
-import ch.obermuhlner.infinitespace.model.universe.Galaxy;
-import ch.obermuhlner.infinitespace.model.universe.GalaxyQuadrantX;
-import ch.obermuhlner.infinitespace.model.universe.GalaxyQuadrantY;
 import ch.obermuhlner.infinitespace.model.universe.GalaxyQuadrantZ;
-import ch.obermuhlner.infinitespace.model.universe.StarSystem;
 import ch.obermuhlner.infinitespace.model.universe.Universe;
 
 import com.badlogic.gdx.utils.Array;

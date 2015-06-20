@@ -28,6 +28,9 @@ public class TerrestrialPlanetFloatAttribute extends FloatAttribute {
 	public static final String HeightMountainsAlias = "heightMountains";
 	public static final long HeightMountains = register(HeightMountainsAlias);
 
+	public static final String CreateSpecularAlias = "createSpecular";
+	public static final long CreateSpecular = register(CreateSpecularAlias);
+
 	public static TerrestrialPlanetFloatAttribute createHeightMin (float value) {
 		return new TerrestrialPlanetFloatAttribute(HeightMin, value);
 	}
@@ -58,6 +61,10 @@ public class TerrestrialPlanetFloatAttribute extends FloatAttribute {
 
 	public static TerrestrialPlanetFloatAttribute createHeightMountains (float value) {
 		return new TerrestrialPlanetFloatAttribute(HeightMountains, value);
+	}
+
+	public static TerrestrialPlanetFloatAttribute createCreateSpecular () {
+		return new TerrestrialPlanetFloatAttribute(CreateSpecular, 1f);
 	}
 
 	private TerrestrialPlanetFloatAttribute(long type, float value) {

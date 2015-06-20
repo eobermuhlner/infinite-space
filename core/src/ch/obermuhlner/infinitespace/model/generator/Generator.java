@@ -169,6 +169,10 @@ public class Generator {
 				p(2, Star.Type.GIANT),
 				p(1, Star.Type.SUPER_GIANT));
 		
+		if (Config.DEBUG_FORCE_STAR_TYPE != null) {
+			star.type = Config.DEBUG_FORCE_STAR_TYPE;
+		}
+		
 		switch (star.type) {
 		case BROWN_DWARF:
 			star.mass = random.nextGaussian(0.2*Units.SUN_MASS); 
@@ -186,6 +190,11 @@ public class Generator {
 			star.mass = random.nextDouble(0.1*Units.SUN_MASS, 10*Units.SUN_MASS); 
 			star.radius = random.nextDouble(0.1*Units.SUN_RADIUS, 10*Units.SUN_RADIUS);
 			star.temperature = random.nextDouble(2600, 33000);
+			break;
+		case SOL_LIKE:
+			star.mass = random.nextDouble(0.8*Units.SUN_MASS, 1.2*Units.SUN_MASS); 
+			star.radius = random.nextDouble(0.8*Units.SUN_RADIUS, 1.2*Units.SUN_RADIUS);
+			star.temperature = random.nextDouble(4000, 6000);
 			break;
 		case SUB_GIANT:
 			star.mass = random.nextGaussian(3*Units.SUN_MASS); 

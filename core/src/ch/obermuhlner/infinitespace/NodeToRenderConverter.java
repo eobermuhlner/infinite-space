@@ -36,6 +36,7 @@ import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.DepthTestAttribute;
+import com.badlogic.gdx.graphics.g3d.attributes.FloatAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.PointLight;
 import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder;
@@ -189,8 +190,9 @@ public class NodeToRenderConverter {
 					userData.shaderName = UberShaderProvider.SUN_SHADER;
 				}
 
+				System.out.println("STAR " + node.seed + " " + node.name + " " + node.type + " " + Units.meterSizeToString(node.radius) + " " + Units.kelvinToString(node.temperature));
+
 				renderState.instances.add(sphere);
-				
 			}
 
 			renderState.environment.add(new PointLight().set(r2, g2, b2, x, y, z, luminosity));
@@ -227,6 +229,7 @@ public class NodeToRenderConverter {
 			String textureName = node.textureName;
 			String shaderName = null;
 			Color[] planetColors = null;
+			Color specularColor = null;
 			
 			if (textureName == null) {
 				switch (node.type) {
@@ -234,8 +237,10 @@ public class NodeToRenderConverter {
 					shaderName = UberShaderProvider.GAS_PLANET_SHADER;
 					if (node.orbitRadius < 17*AU) {
 						planetColors = GAS_PLANET_COLORS;
+						specularColor = new Color(0.4f, 0.4f, 0.4f, 1.0f);
 					} else {
 						planetColors = ICE_GAS_PLANET_COLORS;							
+						specularColor = new Color(0.4f, 0.4f, 0.4f, 1.0f);
 					}
 					break;
 				case STONE:
@@ -246,6 +251,7 @@ public class NodeToRenderConverter {
 							materialAttributes.add(TerrestrialPlanetFloatAttribute.createHeightFrequency(random.nextFloat(3f, 22f)));
 							materialAttributes.add(TerrestrialPlanetFloatAttribute.createColorNoise(random.nextFloat(0.3f, 0.9f)));
 							materialAttributes.add(TerrestrialPlanetFloatAttribute.createColorFrequency(random.nextFloat(20f, 30f)));
+							specularColor = new Color(0.2f, 0.2f, 0.2f, 1.0f);
 						}
 					}
 					
@@ -259,7 +265,7 @@ public class NodeToRenderConverter {
 									float heightMax = MathUtil.transform(0f, 1f, 1.0f, 0.6f, water);
 									float heightFrequency = random.nextFloat(2f, 15f);
 									float iceLevel = MathUtil.transform((float)Units.celsiusToKelvin(-50), (float)Units.celsiusToKelvin(50), 1f, -1f, (float)node.temperature);
-									materialAttributes.add(TerrestrialPlanetFloatAttribute.createHeightWater(0.4f)); // depends on texture
+									materialAttributes.add(TerrestrialPlanetFloatAttribute.createHeightWater(0.45f)); // depends on texture
 									materialAttributes.add(TerrestrialPlanetFloatAttribute.createHeightMin(heightMin));
 									materialAttributes.add(TerrestrialPlanetFloatAttribute.createHeightMax(heightMax));
 									materialAttributes.add(TerrestrialPlanetFloatAttribute.createHeightFrequency(heightFrequency));
@@ -270,6 +276,7 @@ public class NodeToRenderConverter {
 									materialAttributes.add(TerrestrialPlanetFloatAttribute.createColorNoise(random.nextFloat(0.1f, 0.3f)));
 									materialAttributes.add(TerrestrialPlanetFloatAttribute.createColorFrequency(random.nextFloat(15f, 25f)));
 									shaderName = UberShaderProvider.TERRESTRIAL_PLANET_SHADER;
+									//specularColor = new Color(0.5f, 0.5f, 0.5f, 1.0f);
 								}
 							}
 							if (textureName == null && random.nextBoolean(0.5)) {
@@ -278,6 +285,7 @@ public class NodeToRenderConverter {
 								//materialAttributes.add(TerrestrialPlanetFloatAttribute.createColorNoise(random.nextFloat(0.1f, 0.3f)));
 								//materialAttributes.add(TerrestrialPlanetFloatAttribute.createColorFrequency(random.nextFloat(15f, 25f)));
 								shaderName = UberShaderProvider.TERRESTRIAL_PLANET_SHADER;
+								specularColor = new Color(0.2f, 0.2f, 0.2f, 1.0f);
 							}
 						}
 					}
@@ -293,28 +301,36 @@ public class NodeToRenderConverter {
 						//materialAttributes.add(TerrestrialPlanetFloatAttribute.createColorNoise(random.nextFloat(0.1f, 0.3f)));
 						//materialAttributes.add(TerrestrialPlanetFloatAttribute.createColorFrequency(random.nextFloat(15f, 25f)));
 						shaderName = UberShaderProvider.TERRESTRIAL_PLANET_SHADER;
+						specularColor = new Color(0.2f, 0.2f, 0.2f, 1.0f);
 					}
 
 					if (textureName == null && node.radius < 1000E3) {
 						textureName = random.next ("phobos.jpg", "deimos.jpg");
+						specularColor = new Color(0.2f, 0.2f, 0.2f, 1.0f);
 					}
 					if (textureName == null) {
 						textureName = random.next ("io.jpg", "callisto.jpg", "ganymede.jpg", "europa.jpg", "mercury.jpg", "mars.jpg", "moon.jpg", "iapetus.jpg");
+						specularColor = new Color(0.2f, 0.2f, 0.2f, 1.0f);
 					}
 					break;
 				case ICE:
 					textureName = random.next ("europa.jpg", "mimas.jpg", "rhea.jpg", "enceladus.jpg", "tethys.jpg", "dione.jpg");
+					specularColor = new Color(0.8f, 0.8f, 0.8f, 1.0f);
 					break;
 				}
 			}
 
-			//System.out.println("PLANET " + node.seed + " " + node.name + " " + shaderName + " " + textureName + " " + Units.kelvinToString(node.temperature));
+			System.out.println("PLANET " + node.seed + " " + node.name + " " + shaderName + " " + textureName + " " + Units.kelvinToString(node.temperature));
 			
 			{
 				Material material;
 				if (shaderName == null) {
 					Texture texture = assetManager.get(InfiniteSpaceGame.getTexturePath(textureName), Texture.class);
 					materialAttributes.add(new TextureAttribute(TextureAttribute.Diffuse, texture));
+					if (specularColor != null) {
+						materialAttributes.add(ColorAttribute.createSpecular(specularColor));
+					}
+
 					material = new Material(materialAttributes);
 				} else {
 					if (textureName != null) {
@@ -336,8 +352,23 @@ public class NodeToRenderConverter {
 						StopWatch stopWatch = new StopWatch();
 						UserData userData = new UserData();
 						userData.shaderName = shaderName;
-						Texture texture = renderTexture(material, userData);
-						material = new Material(new TextureAttribute(TextureAttribute.Diffuse, texture));
+						
+						Texture textureDiffuse = renderTextureDiffuse(material, userData);
+						Texture textureSpecular = null;
+						if (specularColor == null && shaderName.equals(UberShaderProvider.TERRESTRIAL_PLANET_SHADER)) {
+							textureSpecular = renderTextureSpecular(material, userData);
+						}
+						
+						materialAttributes.clear();
+						materialAttributes.add(new TextureAttribute(TextureAttribute.Diffuse, textureDiffuse));
+						if (specularColor != null) {
+							materialAttributes.add(ColorAttribute.createSpecular(specularColor));
+						}
+						if (textureSpecular != null) {
+							materialAttributes.add(new TextureAttribute(TextureAttribute.Specular, textureSpecular));
+							specularColor = null;
+						}
+						material = new Material(materialAttributes);
 						if (Config.DEBUG_PROFILING) {
 							System.out.println("Render " + node + " to texture in " + stopWatch);
 						}
@@ -404,7 +435,7 @@ public class NodeToRenderConverter {
 					float atmosphereRadius = radius * atmosphereRadiusFactor; 
 					Texture texture = assetManager.get(InfiniteSpaceGame.getTexturePath("clouds.png"), Texture.class);
 					float blend = MathUtil.transform(0.0f, 0.7f, 0.0f, 1.0f, (float)node.water);
-					Material materialClouds = new Material(new TextureAttribute(TextureAttribute.Diffuse, texture), new BlendingAttribute(blend));
+					Material materialClouds = new Material(new TextureAttribute(TextureAttribute.Diffuse, texture), new BlendingAttribute(blend), ColorAttribute.createSpecular(0.7f, 0.7f, 0.7f, 1.0f));
 					ModelInstance sphere = createSphere(renderState, node, "Atmosphere", atmosphereRadius, materialClouds);
 					asUserData(sphere).description = "Surface pressure: " + Units.pascalToString(node.atmospherePressure);
 					asUserData(sphere).composition = node.atmosphere;
@@ -508,7 +539,12 @@ public class NodeToRenderConverter {
 				(endColor.a - startColor.a) * mix + startColor.a);
 	}
 
-	public Texture renderTexture (Material material, UserData userData) {
+	public Texture renderTextureSpecular (Material material, UserData userData) {
+		material.set(TerrestrialPlanetFloatAttribute.createCreateSpecular());
+		return renderTextureDiffuse(material, userData);
+	}
+	
+	public Texture renderTextureDiffuse (Material material, UserData userData) {
 		final int textureSize = GamePreferences.INSTANCE.preferences.getInteger(GamePreferences.INT_GENERATED_TEXTURES_SIZE);
 		
 		final int rectSize = 1;
@@ -598,8 +634,9 @@ public class NodeToRenderConverter {
 				Texture textureEmissive = assetManager.get(InfiniteSpaceGame.getTexturePath("pixelcity_windows7.jpg"), Texture.class);
 
 
-				Material materialPlain = new Material(new TextureAttribute(TextureAttribute.Diffuse, textureDiffuse));
-				Material materialWindows = new Material(new TextureAttribute(TextureAttribute.Diffuse, textureDiffuse), new TextureAttribute(TextureAttribute.Emissive, textureEmissive));
+				ColorAttribute specular = ColorAttribute.createSpecular(0.5f, 0.5f, 0.5f, 1.0f);
+				Material materialPlain = new Material(new TextureAttribute(TextureAttribute.Diffuse, textureDiffuse), specular);
+				Material materialWindows = new Material(new TextureAttribute(TextureAttribute.Diffuse, textureDiffuse), new TextureAttribute(TextureAttribute.Emissive, textureEmissive), specular);
 
 				//Material materialPlain = new Material(ColorAttribute.createDiffuse(Color.LIGHT_GRAY));
 				//Material materialWindows = new Material(ColorAttribute.createDiffuse(Color.LIGHT_GRAY), new TextureAttribute(TextureAttribute.Emissive, textureEmissive));
@@ -1056,7 +1093,7 @@ public class NodeToRenderConverter {
 		float normalY = 1;
 		float normalZ = 0;
 		meshBuilder.circle(outerRadius, PLANET_SPHERE_DIVISIONS_V, 0, 0, 0, normalX, normalY, normalZ, 0, 180);
-
+		
 		Model sphereModel = modelBuilder.end();
 		ModelInstance sphere = new ModelInstance(sphereModel);
 

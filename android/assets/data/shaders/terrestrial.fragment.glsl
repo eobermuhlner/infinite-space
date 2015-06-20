@@ -211,7 +211,14 @@ void main() {
 	float mountainFactor = smoothstep(0.0, 0.6, ((pnoise2(v_texCoords0+r9, mountainFrequency) + 1) * 0.5));
 	height = max(height, mountainHeight * mountainFactor);
 	#endif
-	
+
+	#ifdef createSpecularFlag
+	if (height > u_heightWater) {
+		gl_FragColor.rgb = vec4(0.2, 0.2, 0.2, 1.0);
+	} else {
+		gl_FragColor.rgb = vec4(0.8, 0.8, 0.8, 1.0);
+	}
+	#else	
 	float distEquator = abs(v_texCoords0.t - 0.5) * 2.0;
 	distEquator += pnoise2(v_texCoords0,  8) * 0.04;
 	distEquator += pnoise2(v_texCoords0, 16) * 0.02;
@@ -236,6 +243,7 @@ void main() {
 	#endif
 	
 	gl_FragColor.rgb = color;
+	#endif
 }
 
 

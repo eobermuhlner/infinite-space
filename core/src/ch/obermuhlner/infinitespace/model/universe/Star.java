@@ -11,6 +11,7 @@ public class Star extends OrbitingSpheroidNode {
 		BROWN_DWARF,
 		WHITE_DWARF,
 		MAIN_SEQUENCE,
+		SOL_LIKE,
 		SUB_GIANT,
 		GIANT,
 		SUPER_GIANT,
