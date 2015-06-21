@@ -16,6 +16,7 @@ public class Planet extends OrbitingSpheroidNode {
 	
 	public Type type;
 	public String textureName;
+	public String textureNormalName;
 	
 	// TODO core radius/temperature (also influences surface temperature)
 	// TODO magnetic field

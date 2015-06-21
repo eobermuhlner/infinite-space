@@ -27,6 +27,7 @@ public class InfiniteSpaceGame extends Game {
 				"mercury.jpg", "venus.jpg", "earth.jpg", "mars.jpg", "jupiter.jpg", "saturn.jpg",
 				"uranus.jpg", "neptune.jpg", "ceres.jpg", "phobos.jpg", "deimos.jpg", "moon.jpg", "io.jpg", "ganymede.jpg", "europa.jpg", "callisto.jpg",
 				"mimas.jpg", "enceladus.jpg", "tethys.jpg", "dione.jpg", "rhea.jpg", "titan.jpg", "iapetus.jpg", "miranda.jpg", "ariel.jpg", "umbriel.jpg", "titania.jpg", "oberon.jpg", "triton.jpg",
+				"earth_normals.jpg", "moon_normals.jpg",
 				"clouds.png",
 				"spaceship.jpg", "spaceship_emissive.jpg", "spaceship3.jpg", "pixelcity_windows7.jpg",
 				}) {

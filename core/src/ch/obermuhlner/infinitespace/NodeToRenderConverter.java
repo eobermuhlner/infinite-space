@@ -54,8 +54,6 @@ public class NodeToRenderConverter {
 
 	private static final boolean RENDER_PROCEDURAL_SHADERS_TO_TEXTURES = true;
 
-	private static final double PROBABILITY_GENERATED_PLANET = 1.0;
-
 	private static final double SUN_RADIUS = Units.SUN_RADIUS;
 
 	private static final double LAVA_TEMPERATURE = Units.celsiusToKelvin(700);
@@ -227,6 +225,7 @@ public class NodeToRenderConverter {
 			Array<Attribute> materialAttributes = new Array<Attribute>();
 			
 			String textureName = node.textureName;
+			String textureNormalName = node.textureNormalName;
 			String shaderName = null;
 			Color[] planetColors = null;
 			Color specularColor = null;
@@ -237,10 +236,8 @@ public class NodeToRenderConverter {
 					shaderName = UberShaderProvider.GAS_PLANET_SHADER;
 					if (node.orbitRadius < 17*AU) {
 						planetColors = GAS_PLANET_COLORS;
-						specularColor = new Color(0.4f, 0.4f, 0.4f, 1.0f);
 					} else {
 						planetColors = ICE_GAS_PLANET_COLORS;							
-						specularColor = new Color(0.4f, 0.4f, 0.4f, 1.0f);
 					}
 					break;
 				case STONE:
@@ -302,6 +299,7 @@ public class NodeToRenderConverter {
 						//materialAttributes.add(TerrestrialPlanetFloatAttribute.createColorFrequency(random.nextFloat(15f, 25f)));
 						shaderName = UberShaderProvider.TERRESTRIAL_PLANET_SHADER;
 						specularColor = new Color(0.2f, 0.2f, 0.2f, 1.0f);
+						textureNormalName = "moon_normals.jpg";
 					}
 
 					if (textureName == null && node.radius < 1000E3) {
@@ -325,8 +323,14 @@ public class NodeToRenderConverter {
 			{
 				Material material;
 				if (shaderName == null) {
-					Texture texture = assetManager.get(InfiniteSpaceGame.getTexturePath(textureName), Texture.class);
-					materialAttributes.add(new TextureAttribute(TextureAttribute.Diffuse, texture));
+					Texture textureDiffuse = assetManager.get(InfiniteSpaceGame.getTexturePath(textureName), Texture.class);
+					materialAttributes.add(new TextureAttribute(TextureAttribute.Diffuse, textureDiffuse));
+					
+					if (textureNormalName != null) {
+						Texture textureNormal = assetManager.get(InfiniteSpaceGame.getTexturePath(textureNormalName), Texture.class);
+						materialAttributes.add(new TextureAttribute(TextureAttribute.Normal, textureNormal));
+					}
+					
 					if (specularColor != null) {
 						materialAttributes.add(ColorAttribute.createSpecular(specularColor));
 					}
@@ -367,6 +371,10 @@ public class NodeToRenderConverter {
 						if (textureSpecular != null) {
 							materialAttributes.add(new TextureAttribute(TextureAttribute.Specular, textureSpecular));
 							specularColor = null;
+						}
+						if (textureNormalName != null) {
+							Texture textureNormal = assetManager.get(InfiniteSpaceGame.getTexturePath(textureNormalName), Texture.class);
+							materialAttributes.add(new TextureAttribute(TextureAttribute.Normal, textureNormal));
 						}
 						material = new Material(materialAttributes);
 						if (Config.DEBUG_PROFILING) {

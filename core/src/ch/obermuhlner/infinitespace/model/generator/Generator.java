@@ -878,6 +878,7 @@ public class Generator {
 		terra.supportsLife = true;
 		terra.hasLife = true;
 		terra.textureName = "earth.jpg";
+		terra.textureNormalName = "earth_normals.jpg";
 		terra.radius = 6378.1E3;
 		terra.rotation = 1 * Units.SECONDS_PER_DAY;
 		terra.mass = 5.9742E24;
@@ -1003,6 +1004,7 @@ public class Generator {
 		luna.childCount = 0;
 		luna.type = Planet.Type.STONE;
 		luna.textureName = "moon.jpg";
+		luna.textureNormalName = "moon_normals.jpg";
 		luna.radius = 1737.1E3;
 		luna.rotation = 27.321582 * Units.SECONDS_PER_DAY;
 		luna.mass = 7.3477E22;
