@@ -62,6 +62,10 @@ uniform sampler2D u_normalTexture;
 varying MED vec2 v_texCoords1;
 #endif
 
+#if defined(normalTextureFlag)
+varying vec3 v_viewVecTangent;
+#endif
+
 #ifdef lightingFlag
 varying vec3 v_lightDiffuse;
 
@@ -111,14 +115,16 @@ varying float v_fog;
 #endif // fogFlag
 
 void main() {
-	#if defined(normalFlag) && defined(normalTextureFlag)
-		vec3 normal = v_normal + texture2D(u_normalTexture, v_texCoords1);
-	#elif defined(normalTextureFlag)
+	#if defined(normalTextureFlag)
 		vec3 normal = texture2D(u_normalTexture, v_texCoords1);
 	#elif defined(normalFlag)
 		vec3 normal = v_normal;
 	#endif
-
+	#if defined(normalTextureFlag)
+		normal = normalize(normal * 2.0 - 1.0);
+		float lambertFactor = clamp(dot(normal, v_viewVecTangent), 0.0, 1.0);
+	#endif
+	
 	#if defined(emissiveTextureFlag) && defined(emissiveColorFlag) && defined(colorFlag)
 		vec4 emissive = texture2D(u_emissiveTexture, v_texCoords0) * v_emissiveColor * v_color;
 	#elif defined(emissiveTextureFlag) && defined(emissiveColorFlag)
@@ -151,6 +157,10 @@ void main() {
 		vec4 diffuse = v_color;
 	#else
 		vec4 diffuse = vec4(0.0);
+	#endif
+
+	#if defined(normalTextureFlag)
+		diffuse = diffuse * lambertFactor;
 	#endif
 
 	#if (!defined(lightingFlag))  

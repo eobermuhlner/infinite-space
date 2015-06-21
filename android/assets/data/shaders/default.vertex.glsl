@@ -6,7 +6,7 @@
 #define specularFlag
 #endif
 
-#if defined(specularFlag) || defined(fogFlag)
+#if defined(specularFlag) || defined(fogFlag) || defined(normalTextureFlag) || defined (emissiveColorFlag)
 #define cameraPositionFlag
 #endif
 
@@ -20,8 +20,11 @@ attribute vec4 a_color;
 
 #ifdef normalFlag
 attribute vec3 a_normal;
+attribute vec3 a_tangent;
 uniform mat3 u_normalMatrix;
+#if !defined(normalTextureFlag)
 varying vec3 v_normal;
+#endif
 #endif // normalFlag
 
 #ifdef textureFlag
@@ -30,10 +33,13 @@ varying vec2 v_texCoords0;
 #endif // textureFlag
 
 #ifdef normalTextureFlag
-#define vertexNormal
 attribute vec2 a_texCoord1;
 varying vec2 v_texCoords1;
 #endif // normalTextureFlag
+
+#if defined(normalTextureFlag)
+varying vec3 v_viewVecTangent;
+#endif
 
 #ifdef boneWeight0Flag
 #define boneWeightsFlag
@@ -141,9 +147,6 @@ varying vec3 v_lightSpecular;
 #ifdef emissiveColorFlag
 uniform vec4 u_emissiveColor;
 varying vec4 v_emissiveColor;
-#ifndef cameraPositionFlag 
-uniform vec4 u_cameraPosition;
-#endif 
 #endif
 
 #ifdef cameraPositionFlag
@@ -192,6 +195,10 @@ varying vec3 v_ambientLight;
 void main() {
 	#ifdef textureFlag
 		v_texCoords0 = a_texCoord0;
+	#endif // textureFlag
+
+	#ifdef normalTextureFlag
+		v_texCoords1 = a_texCoord0;
 	#endif // textureFlag
 	
 	#if defined(colorFlag)
@@ -251,13 +258,28 @@ void main() {
 		v_shadowMapUv.z = min(spos.z * 0.5 + 0.5, 0.998);
 	#endif //shadowMapFlag
 	
+	#if defined(normalTextureFlag) || defined(specularFlag) 
+		vec3 viewVec = normalize(u_cameraPosition.xyz - pos.xyz);
+	#endif
+	
 	#if defined(normalFlag)
 		#if defined(skinningFlag)
 			vec3 normal = normalize((u_worldTrans * skinning * vec4(a_normal, 0.0)).xyz);
 		#else
 			vec3 normal = normalize(u_normalMatrix * a_normal);
 		#endif
-		v_normal = normal;
+
+		#if defined(normalTextureFlag)
+			// matrix to convert eye space into tangent space
+			vec3 n = normalize (gl_NormalMatrix * a_normal);
+			vec3 t = normalize (gl_NormalMatrix * a_tangent);
+			vec3 b = cross (n, t);
+			
+			// normalized vector from vertex position to camera position in tangent space - passed to fragment shader
+			v_viewVecTangent = normalize (vec3(dot (viewVec, t), dot (viewVec, b), dot (viewVec, n)));
+		#else
+			v_normal = normal;
+		#endif
 	#endif // normalFlag
 
     #ifdef fogFlag
@@ -307,7 +329,6 @@ void main() {
 			
 		#ifdef specularFlag
 			v_lightSpecular = vec3(0.0);
-			vec3 viewVec = normalize(u_cameraPosition.xyz - pos.xyz);
 		#endif // specularFlag
 		
 		#ifdef emissiveColorFlag
