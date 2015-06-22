@@ -105,6 +105,9 @@ public class TerrestrialPlanetShader implements Shader {
 		if (getFloatAttributeValue(renderable, TerrestrialPlanetFloatAttribute.CreateSpecular, 0.0f) != 0.0f) {
 			prefix.append("#define createSpecularFlag\n");
 		}
+		if (getFloatAttributeValue(renderable, TerrestrialPlanetFloatAttribute.CreateNormal, 0.0f) != 0.0f) {
+			prefix.append("#define createNormalFlag\n");
+		}
 		
 		return prefix.toString();
 	}

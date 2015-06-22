@@ -186,7 +186,7 @@ float ridge(float x) {
 	return exp(-8.0 * (x * x));
 }
 
-void main() {
+float calculateHeight(vec2 P) {
 	vec2 r1 = vec2(u_random0+u_random1, u_random1+u_random0);
 	vec2 r2 = vec2(u_random2+u_random1, u_random3+u_random0);
 	vec2 r3 = vec2(u_random4+u_random1, u_random5+u_random0);
@@ -202,47 +202,64 @@ void main() {
 	const float range = u_heightMax - u_heightMin;
 
 	float height = baseHeight;
-	height += fractalNoise(v_texCoords0, base, range);
+	height += fractalNoise(P, base, range);
 	height = clamp(height, u_heightMin, u_heightMax);
 
 	#ifdef mountainsFlag
-	float mountainFrequency = u_heightFrequency;
-	float mountainHeight = ridge(2 * fractalNoise(v_texCoords0, 2.0, 1.0) - 1.0) * u_heightMountains;
-	float mountainFactor = smoothstep(0.0, 0.6, ((pnoise2(v_texCoords0+r9, mountainFrequency) + 1) * 0.5));
-	height = max(height, mountainHeight * mountainFactor);
-	#endif
-
-	#ifdef createSpecularFlag
-	if (height > u_heightWater) {
-		gl_FragColor.rgb = vec4(0.2, 0.2, 0.2, 1.0);
-	} else {
-		gl_FragColor.rgb = vec4(0.8, 0.8, 0.8, 1.0);
-	}
-	#else	
-	float distEquator = abs(v_texCoords0.t - 0.5) * 2.0;
-	distEquator += pnoise2(v_texCoords0,  8) * 0.04;
-	distEquator += pnoise2(v_texCoords0, 16) * 0.02;
-	distEquator += pnoise2(v_texCoords0, 32) * 0.01;
-	
-	float absIceLevel = abs(u_iceLevel);
-	distEquator = (1.0 - absIceLevel) * distEquator;
-	if (u_iceLevel >= 0) {
-		distEquator = distEquator + absIceLevel;
-	} else {
-		distEquator = distEquator + absIceLevel * 0.15;
-	}
-
-	vec3 color = texture2D(u_diffuseTexture, vec2(clamp(height, 0.0, 1.0), distEquator));
-
-	#ifdef colorNoiseFlag
-	if (height > u_heightWater) {
-		// make noise on land, not on water
-		float colorNoise = fractalNoise(v_texCoords0+r1, u_colorFrequency, u_colorNoise);
-		color = color * (1.0 + colorNoise);
-	}
+		float mountainFrequency = u_heightFrequency;
+		float mountainHeight = ridge(2 * fractalNoise(P, 2.0, 1.0) - 1.0) * u_heightMountains;
+		float mountainFactor = smoothstep(0.0, 0.6, ((pnoise2(P+r9, mountainFrequency) + 1) * 0.5));
+		height = max(height, mountainHeight * mountainFactor);
 	#endif
 	
-	gl_FragColor.rgb = color;
+	return height;
+}
+
+void main() {
+	vec2 r1 = vec2(u_random0+u_random5, u_random1+u_random4);
+
+	float height = calculateHeight(v_texCoords0);
+
+	#if defined(createNormalFlag)
+		float offset = 0.0001;
+		float heightDeltaX = calculateHeight(v_texCoords0 + vec2(offset, 0.0));
+		float heightDeltaY = calculateHeight(v_texCoords0 + vec2(0.0, offset));
+		float deltaX = height - heightDeltaX;
+		float deltaY = height - heightDeltaY;
+		//vec3 normal = normalize(cross(vec3(offset, 0.0, deltaX), vec3(0.0, offset, deltaY)));
+		vec3 normal = normalize(vec3(deltaX, deltaY, 0.0001));
+		gl_FragColor.rgb = normal;		
+	#elif defined(createSpecularFlag)
+		if (height > u_heightWater) {
+			gl_FragColor.rgb = vec4(0.2, 0.2, 0.2, 1.0);
+		} else {
+			gl_FragColor.rgb = vec4(0.8, 0.8, 0.8, 1.0);
+		}
+	#else
+		float distEquator = abs(v_texCoords0.t - 0.5) * 2.0;
+		distEquator += pnoise2(v_texCoords0,  8) * 0.04;
+		distEquator += pnoise2(v_texCoords0, 16) * 0.02;
+		distEquator += pnoise2(v_texCoords0, 32) * 0.01;
+		
+		float absIceLevel = abs(u_iceLevel);
+		distEquator = (1.0 - absIceLevel) * distEquator;
+		if (u_iceLevel >= 0) {
+			distEquator = distEquator + absIceLevel;
+		} else {
+			distEquator = distEquator + absIceLevel * 0.15;
+		}
+	
+		vec3 color = texture2D(u_diffuseTexture, vec2(clamp(height, 0.0, 1.0), distEquator));
+	
+		#ifdef colorNoiseFlag
+			if (height > u_heightWater) {
+				// make noise on land, not on water
+				float colorNoise = fractalNoise(v_texCoords0+r1, u_colorFrequency, u_colorNoise);
+				color = color * (1.0 + colorNoise);
+			}
+		#endif
+		
+		gl_FragColor.rgb = color;
 	#endif
 }
 

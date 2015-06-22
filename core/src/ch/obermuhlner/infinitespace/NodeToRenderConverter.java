@@ -283,6 +283,7 @@ public class NodeToRenderConverter {
 								//materialAttributes.add(TerrestrialPlanetFloatAttribute.createColorFrequency(random.nextFloat(15f, 25f)));
 								shaderName = UberShaderProvider.TERRESTRIAL_PLANET_SHADER;
 								specularColor = new Color(0.2f, 0.2f, 0.2f, 1.0f);
+								textureNormalName = "moon_normals.jpg";
 							}
 						}
 					}
@@ -359,8 +360,12 @@ public class NodeToRenderConverter {
 						
 						Texture textureDiffuse = renderTextureDiffuse(material, userData);
 						Texture textureSpecular = null;
+						Texture textureNormal = null;
 						if (specularColor == null && shaderName.equals(UberShaderProvider.TERRESTRIAL_PLANET_SHADER)) {
 							textureSpecular = renderTextureSpecular(material, userData);
+						}
+						if (textureNormalName == null && shaderName.equals(UberShaderProvider.TERRESTRIAL_PLANET_SHADER)) {
+							//textureNormal = renderTextureNormal(material, userData);
 						}
 						
 						materialAttributes.clear();
@@ -372,8 +377,10 @@ public class NodeToRenderConverter {
 							materialAttributes.add(new TextureAttribute(TextureAttribute.Specular, textureSpecular));
 							specularColor = null;
 						}
-						if (textureNormalName != null) {
-							Texture textureNormal = assetManager.get(InfiniteSpaceGame.getTexturePath(textureNormalName), Texture.class);
+						if (textureNormal != null) {
+							materialAttributes.add(new TextureAttribute(TextureAttribute.Normal, textureNormal));
+						} else if (textureNormalName != null) {
+							textureNormal = assetManager.get(InfiniteSpaceGame.getTexturePath(textureNormalName), Texture.class);
 							materialAttributes.add(new TextureAttribute(TextureAttribute.Normal, textureNormal));
 						}
 						material = new Material(materialAttributes);
@@ -548,7 +555,12 @@ public class NodeToRenderConverter {
 	}
 
 	public Texture renderTextureSpecular (Material material, UserData userData) {
-		material.set(TerrestrialPlanetFloatAttribute.createCreateSpecular());
+		material.set(TerrestrialPlanetFloatAttribute.createCreateSpecular()); // FIXME just adding attribute is wrong, modifies the material
+		return renderTextureDiffuse(material, userData);
+	}
+	
+	public Texture renderTextureNormal (Material material, UserData userData) {
+		material.set(TerrestrialPlanetFloatAttribute.createCreateNormal()); // FIXME just adding attribute is wrong, modifies the material
 		return renderTextureDiffuse(material, userData);
 	}
 	
