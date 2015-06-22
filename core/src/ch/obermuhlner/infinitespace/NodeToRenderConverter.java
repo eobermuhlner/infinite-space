@@ -692,15 +692,15 @@ public class NodeToRenderConverter {
 				
 				Texture textureDiffuse = assetManager.get(InfiniteSpaceGame.getTexturePath("spaceship3.jpg"), Texture.class);
 				//Texture textureEmissive = assetManager.get(InfiniteSpaceGame.getTexturePath("spaceship_emissive.jpg"), Texture.class);
-				Texture textureEmissive = assetManager.get(InfiniteSpaceGame.getTexturePath("pixelcity_windows7.jpg"), Texture.class);
-
+				Texture textureEmissive = assetManager.get(InfiniteSpaceGame.getTexturePath("windows1.jpg"), Texture.class);
+				Texture textureSpecular = assetManager.get(InfiniteSpaceGame.getTexturePath("windows1_specular.jpg"), Texture.class);
 
 				ColorAttribute specular = ColorAttribute.createSpecular(0.5f, 0.5f, 0.5f, 1.0f);
 				Material materialPlain = new Material(new TextureAttribute(TextureAttribute.Diffuse, textureDiffuse), specular);
-				Material materialWindows = new Material(new TextureAttribute(TextureAttribute.Diffuse, textureDiffuse), new TextureAttribute(TextureAttribute.Emissive, textureEmissive), specular);
+				Material materialWindows = new Material(new TextureAttribute(TextureAttribute.Diffuse, textureDiffuse), new TextureAttribute(TextureAttribute.Emissive, textureEmissive), new TextureAttribute(TextureAttribute.Specular, textureSpecular));
 
 				//Material materialPlain = new Material(ColorAttribute.createDiffuse(Color.LIGHT_GRAY));
-				//Material materialWindows = new Material(ColorAttribute.createDiffuse(Color.LIGHT_GRAY), new TextureAttribute(TextureAttribute.Emissive, textureEmissive));
+				//Material materialWindows = new Material(ColorAttribute.createDiffuse(Color.LIGHT_GRAY), new TextureAttribute(TextureAttribute.Emissive, textureEmissive), new TextureAttribute(TextureAttribute.Specular, textureSpecular));
 				
 				Model stationModel;
 				switch(node.type) {

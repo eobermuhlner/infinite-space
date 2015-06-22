@@ -29,7 +29,7 @@ public class InfiniteSpaceGame extends Game {
 				"mimas.jpg", "enceladus.jpg", "tethys.jpg", "dione.jpg", "rhea.jpg", "titan.jpg", "iapetus.jpg", "miranda.jpg", "ariel.jpg", "umbriel.jpg", "titania.jpg", "oberon.jpg", "triton.jpg",
 				"earth_normals.jpg", "moon_normals.jpg",
 				"clouds.png",
-				"spaceship.jpg", "spaceship_emissive.jpg", "spaceship3.jpg", "pixelcity_windows7.jpg",
+				"spaceship.jpg", "spaceship_emissive.jpg", "spaceship3.jpg", "windows1.jpg", "windows1_specular.jpg",
 				}) {
 				assetManager.load(InfiniteSpaceGame.getTexturePath(textureName), Texture.class, textureParameter);
 			}
