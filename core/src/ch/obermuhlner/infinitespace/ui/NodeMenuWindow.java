@@ -32,6 +32,7 @@ public class NodeMenuWindow extends Window {
 	private void fillMenuItems () {
 		//defaults().expandX();
 		
+		//addNodeAction("System Info", SystemInfoNodeAction.INSTANCE);
 		addNodeAction("Info", InfoNodeAction.INSTANCE);
 		addNodeAction("Land", LandNodeAction.INSTANCE);
 		addNodeAction("Leave Hyperspace", LeaveHyperspaceNodeAction.INSTANCE);
