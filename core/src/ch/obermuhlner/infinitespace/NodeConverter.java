@@ -1,7 +1,14 @@
 package ch.obermuhlner.infinitespace;
 
+import com.badlogic.gdx.graphics.g3d.ModelInstance;
+import com.badlogic.gdx.graphics.g3d.environment.BaseLight;
+import com.badlogic.gdx.utils.Array;
+
 
 public interface NodeConverter<T> {
 
-	public void convert (T node, RenderState renderState, boolean realUniverse);
+	public Array<ModelInstance> convertToModelInstances (T node, boolean realUniverse);
+
+	public BaseLight convertToLight (T node, boolean realUniverse);
+
 }

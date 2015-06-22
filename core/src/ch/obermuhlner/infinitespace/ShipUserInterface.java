@@ -1,5 +1,8 @@
 package ch.obermuhlner.infinitespace;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import ch.obermuhlner.infinitespace.game.Player;
 import ch.obermuhlner.infinitespace.model.Node;
 import ch.obermuhlner.infinitespace.model.OrbitingNode;
@@ -76,10 +79,11 @@ public class ShipUserInterface {
 	private AbstractGameScreen screen;
 
 	private Environment environment;
-	public Array<ModelInstance> instances;
-	private Array<Button> cursorButtons;
-
+	private Map<ModelInstance, Button> modelInstanceToButtons = new HashMap<ModelInstance, Button>();
+	
 	public int starSystemIndex;
+
+	final Array<Node> massiveNodes = new Array<Node>();
 
 	public ShipUserInterface (InfiniteSpaceGame game, Skin uiSkin, AbstractGameScreen screen, final Player player, Camera camera) {
 		this.game = game;
@@ -196,7 +200,6 @@ public class ShipUserInterface {
 		return x + margin + size;
 	}
 
-	final Array<Node> massiveNodes = new Array<Node>(); 
 	public void setUniverse (Iterable<Node> universe) {
 		massiveNodes.clear();
 		for (Node node : universe) {
@@ -206,37 +209,33 @@ public class ShipUserInterface {
 		}
 	}
 
-	public void setZoomObject(Array<ModelInstance> instances) {
-		this.instances = instances;
-		
-		if (cursorButtons != null) {
-			for (int i = 0; i < cursorButtons.size; i++) {
-				Button button = cursorButtons.get(i);
-				if (button != null) {
-					button.remove();
-				}
+	public void setZoomObject(Map<Node, Array<ModelInstance>> nodeToInstances) {
+		for (Button button : modelInstanceToButtons.values()) {
+			if (button != null) {
+				button.remove();
 			}
 		}
+		modelInstanceToButtons.clear();
 		
-		cursorButtons = new Array<Button>(instances.size);
-		for (int i = 0; i < instances.size; i++) {
-			cursorButtons.add(null);
-			ModelInstance instance = instances.get(i);
-			if (instance.userData instanceof UserData) {
-				UserData userData = (UserData)instance.userData;
-				if (userData.node != null) {
-					final Node node = userData.node;
-					final Button button = new Button(uiSkin, "crosshair");
-					button.setSize(CROSSHAIR_SIZE, CROSSHAIR_SIZE);
-					button.setUserObject(userData);
-					button.addListener(new ChangeListener() {
-						@Override
-						public void changed (ChangeEvent event, Actor actor) {
-							showMenu(button, node);							
-						}
-					});
-					stageDirect.addActor(button);
-					cursorButtons.set(i, button);
+		for(Array<ModelInstance> nodeInstances : nodeToInstances.values()) {
+			for (int i = 0; i < nodeInstances.size; i++) {
+				ModelInstance instance = nodeInstances.get(i);
+				if (instance.userData instanceof UserData) {
+					UserData userData = (UserData)instance.userData;
+					if (userData.node != null) {
+						final Node node = userData.node;
+						final Button button = new Button(uiSkin, "crosshair");
+						button.setSize(CROSSHAIR_SIZE, CROSSHAIR_SIZE);
+						button.setUserObject(userData);
+						button.addListener(new ChangeListener() {
+							@Override
+							public void changed (ChangeEvent event, Actor actor) {
+								showMenu(button, node);							
+							}
+						});
+						stageDirect.addActor(button);
+						modelInstanceToButtons.put(instance, button);
+					}
 				}
 			}
 		}
@@ -254,9 +253,8 @@ public class ShipUserInterface {
 			return;
 		}
 		
-		for (int i = 0; i < cursorButtons.size; i++) {
-			Button cursorButton = cursorButtons.get(i);
-			if (cursorButton != null && cursorButton != button) {
+		for (Button cursorButton : modelInstanceToButtons.values()) {
+			if (cursorButton != button) {
 				cursorButton.setChecked(false);
 			}
 		}
@@ -284,19 +282,18 @@ public class ShipUserInterface {
 
 		player.update(deltaTime);
 
-		for (int i = 0; i < cursorButtons.size; i++) {
-			Button button = cursorButtons.get(i);
-			if (button != null) {
-				ModelInstance instance = instances.get(i);
-				Vector3 pos = new Vector3();
-				instance.transform.getTranslation(pos);
-				if (camera.frustum.pointInFrustum(pos)) {
-					Vector3 screenPos = camera.project(pos);
-					button.setPosition(screenPos.x-button.getWidth()/2, screenPos.y-button.getHeight()/2);
-					button.setVisible(true);
-				} else {
-					button.setVisible(false);
-				}
+		for (Map.Entry<ModelInstance, Button> entry : modelInstanceToButtons.entrySet()) {
+			ModelInstance instance = entry.getKey();
+			Button button = entry.getValue();
+
+			Vector3 pos = new Vector3();
+			instance.transform.getTranslation(pos);
+			if (camera.frustum.pointInFrustum(pos)) {
+				Vector3 screenPos = camera.project(pos);
+				button.setPosition(screenPos.x-button.getWidth()/2, screenPos.y-button.getHeight()/2);
+				button.setVisible(true);
+			} else {
+				button.setVisible(false);
 			}
 		}
 	}

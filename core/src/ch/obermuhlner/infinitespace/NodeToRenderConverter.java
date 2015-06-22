@@ -36,8 +36,8 @@ import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.DepthTestAttribute;
-import com.badlogic.gdx.graphics.g3d.attributes.FloatAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
+import com.badlogic.gdx.graphics.g3d.environment.BaseLight;
 import com.badlogic.gdx.graphics.g3d.environment.PointLight;
 import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo;
@@ -113,7 +113,23 @@ public class NodeToRenderConverter {
 		System.out.println("Converted " + nodeCount + " nodes to rendering in " + stopWatch);
 	}
 
-	private void createSkyBox(RenderState renderState) {
+	private <T extends Node> void convertNode (T node, RenderState renderState, boolean realUniverse) {
+		@SuppressWarnings("unchecked")
+		NodeConverter<T> nodeConverter = (NodeConverter<T>)nodeConverters.get(node.getClass());
+		if (nodeConverter != null) {
+			//StopWatch stopWatch = new StopWatch();
+			Array<ModelInstance> instances = nodeConverter.convertToModelInstances(node, realUniverse);
+			renderState.nodeToInstances.put(node, instances);
+			
+			BaseLight light = nodeConverter.convertToLight(node, realUniverse);
+			if (light != null) {
+				renderState.environment.add(light);
+			}
+			//System.out.println("Converting to render " + node + " in " + stopWatch);
+		}
+	}
+
+	public void createSkyBox(RenderState renderState) {
 		float boxSize = 500f;
 		Vector3 v000 = new Vector3(-boxSize, -boxSize, -boxSize);
 		Vector3 v001 = new Vector3(-boxSize, -boxSize, boxSize);
@@ -147,25 +163,13 @@ public class NodeToRenderConverter {
 	}
 
 
-	private <T extends Node> void convertNode (T node, RenderState renderState, boolean realUniverse) {
-		@SuppressWarnings("unchecked")
-		NodeConverter<T> nodeConverter = (NodeConverter<T>)nodeConverters.get(node.getClass());
-		if (nodeConverter != null) {
-			//StopWatch stopWatch = new StopWatch();
-			nodeConverter.convert(node, renderState, realUniverse);
-			//System.out.println("Converting to render " + node + " in " + stopWatch);
-		}
-	}
-
 	private class StarConverter implements NodeConverter<Star> {
 
 		@Override
-		public void convert (Star node, RenderState renderState, boolean realUniverse) {
+		public Array<ModelInstance> convertToModelInstances (Star node, boolean realUniverse) {
+			Array<ModelInstance> instances = new Array<ModelInstance>();
+
 			float radius = calculateStarRadius(node);
-			float x = 0;
-			float y = 0;
-			float z = 0;
-			float luminosity = 1.0f;
 			// TODO color
 			float r2 = 1.0f;
 			float g2 = 0.9f;
@@ -190,10 +194,25 @@ public class NodeToRenderConverter {
 
 				System.out.println("STAR " + node.seed + " " + node.name + " " + node.type + " " + Units.meterSizeToString(node.radius) + " " + Units.kelvinToString(node.temperature));
 
-				renderState.instances.add(sphere);
+				instances.add(sphere);
 			}
 
-			renderState.environment.add(new PointLight().set(r2, g2, b2, x, y, z, luminosity));
+			return instances;
+		}
+		
+		@Override
+		public BaseLight convertToLight(Star node, boolean realUniverse) {
+			float x = 0;
+			float y = 0;
+			float z = 0;
+			float luminosity = 1.0f;
+
+			// TODO color
+			float r2 = 1.0f;
+			float g2 = 0.9f;
+			float b2 = 0.6f;
+
+			return new PointLight().set(r2, g2, b2, x, y, z, luminosity);
 		}
 	}
 
@@ -214,7 +233,9 @@ public class NodeToRenderConverter {
 	private class PlanetConverter implements NodeConverter<Planet> {
 
 		@Override
-		public void convert (Planet node, RenderState renderState, boolean realUniverse) {
+		public Array<ModelInstance> convertToModelInstances (Planet node, boolean realUniverse) {
+			Array<ModelInstance> instances = new Array<ModelInstance>();
+
 			Random random = node.seed.getRandom();
 			
 			float radius = calculatePlanetRadius(node);
@@ -403,10 +424,11 @@ public class NodeToRenderConverter {
 								Material coreMaterial = new Material(temperatureToColorAttribute(coreInfo.temperature));
 								ModelInstance sphere; 
 								if (i == 0) {
-									sphere = createSphere(renderState, node, coreInfo.name, coreOuterRadius, coreMaterial);
+									sphere = createSphere(node, coreInfo.name, coreOuterRadius, coreMaterial);
 								} else {
-									sphere = createSphereShell(renderState, node, coreInfo.name, coreInnerRadius, coreOuterRadius, angleFrom, angleTo, coreMaterial);									
+									sphere = createSphereShell(node, coreInfo.name, coreInnerRadius, coreOuterRadius, angleFrom, angleTo, coreMaterial);									
 								}
+								instances.add(sphere);
 								asUserData(sphere).description = (coreInfo.description == null ? "" : coreInfo.description) 
 										+ ((coreInnerRadius == 0) ? "" : "\nInner Radius: " + Units.meterSizeToString(coreInnerRadius))
 										+ "\nOuter Radius: " + Units.meterSizeToString(coreInfo.radius)
@@ -430,11 +452,12 @@ public class NodeToRenderConverter {
 					userData.modelName = "Grid";
 					userData.description = "Grid shows " + Units.meterSizeToString(gridSteps*gridSize) + "\nin steps of " + Units.meterSizeToString(gridSize) + ".";
 					gridInstance.userData = userData;
-					renderState.instances.add(gridInstance);
+					instances.add(gridInstance);
 				}
 
 				{
-					ModelInstance sphere = createSphere(renderState, node, "Planet Surface", radius, material);
+					ModelInstance sphere = createSphere(node, "Planet Surface", radius, material);
+					instances.add(sphere);
 					if (realUniverse) {
 						sphere.transform.setToTranslation(position);
 					}
@@ -451,7 +474,8 @@ public class NodeToRenderConverter {
 					Texture texture = assetManager.get(InfiniteSpaceGame.getTexturePath("clouds.png"), Texture.class);
 					float blend = MathUtil.transform(0.0f, 0.7f, 0.0f, 1.0f, (float)node.water);
 					Material materialClouds = new Material(new TextureAttribute(TextureAttribute.Diffuse, texture), new BlendingAttribute(blend), ColorAttribute.createSpecular(0.7f, 0.7f, 0.7f, 1.0f));
-					ModelInstance sphere = createSphere(renderState, node, "Atmosphere", atmosphereRadius, materialClouds);
+					ModelInstance sphere = createSphere(node, "Atmosphere", atmosphereRadius, materialClouds);
+					instances.add(sphere);
 					asUserData(sphere).description = "Surface pressure: " + Units.pascalToString(node.atmospherePressure);
 					asUserData(sphere).composition = node.atmosphere;
 					if (realUniverse) {
@@ -460,14 +484,23 @@ public class NodeToRenderConverter {
 				}
 			}
 
-			createOrbit(renderState, node, orbitRadius, parentPosition);
+			instances.addAll(createOrbit(node, orbitRadius, parentPosition));
+			
+			return instances;
 		}
+		
+		@Override
+		public BaseLight convertToLight(Planet node, boolean realUniverse) {
+			return null;
+		}    
 	}
 
 	private class AsteroidBeltConverter implements NodeConverter<AsteroidBelt> {
 
 		@Override
-		public void convert (AsteroidBelt node, RenderState renderState, boolean realUniverse) {
+		public Array<ModelInstance>  convertToModelInstances (AsteroidBelt node, boolean realUniverse) {
+			Array<ModelInstance> instances = new Array<ModelInstance>();
+			
 			float radius = calculateOrbitRadius(node);
 			Vector3 position = calculatePosition(node.parent);
 
@@ -502,10 +535,16 @@ public class NodeToRenderConverter {
 			if (realUniverse) {
 				ring.transform.setToTranslation(position);
 			}
-			renderState.instances.add(ring);
+			instances.add(ring);
+			
+			return instances;
 		}
 
-}
+		@Override
+		public BaseLight convertToLight(AsteroidBelt node, boolean realUniverse) {
+			return null;
+		}
+	}
 	
 	public static Vector3 calculatePosition(Node node) {
 		float x = 0;
@@ -628,7 +667,9 @@ public class NodeToRenderConverter {
 	private class SpaceStationConverter implements NodeConverter<SpaceStation> {
 
 		@Override
-		public void convert (SpaceStation node, RenderState renderState, boolean realUniverse) {
+		public Array<ModelInstance> convertToModelInstances (SpaceStation node, boolean realUniverse) {
+			Array<ModelInstance> instances = new Array<ModelInstance>();
+
 			float orbitRadius = calculateOrbitRadius(node);
 			Vector3 position = calculatePosition(node);
 			Vector3 parentPosition = calculatePosition(node.parent);
@@ -640,10 +681,10 @@ public class NodeToRenderConverter {
 			float length = (float)(node.length * SIZE_FACTOR * SIZE_ZOOM_FACTOR);
 
 			if (showNodeBoundingBox && !realUniverse) {
-				convertBoundingBox(renderState, width, height, length,
+				instances.add(createBoundingBox(width, height, length,
 						"Width: " + Units.meterSizeToString(node.width) + "\n" +
 						"Height: " + Units.meterSizeToString(node.height) + "\n" +
-						"Length: " + Units.meterSizeToString(node.length) + "\n");
+						"Length: " + Units.meterSizeToString(node.length) + "\n"));
 			}
 			
 			{
@@ -698,7 +739,7 @@ public class NodeToRenderConverter {
 				UserData userData = new UserData();
 				userData.node = node;
 				station.userData = userData;
-				renderState.instances.add(station);
+				instances.add(station);
 			}
 			
 //			if (!realUniverse) {
@@ -714,7 +755,14 @@ public class NodeToRenderConverter {
 //				renderState.instances.add(axis);
 //			}
 			
-			createOrbit(renderState, node, orbitRadius, parentPosition);
+			instances.add(createOrbit(node, orbitRadius, parentPosition));
+
+			return instances;
+		}
+		
+		@Override
+		public BaseLight convertToLight(SpaceStation node, boolean realUniverse) {
+			return null;
 		}
 	}
 	
@@ -942,7 +990,7 @@ public class NodeToRenderConverter {
 		return modelBuilder.end();
 	}
 
-	public void convertBoundingBox(RenderState renderState, float width, float height, float length, String description) {
+	public ModelInstance createBoundingBox(float width, float height, float length, String description) {
 		Material material = new Material(ColorAttribute.createDiffuse(Color.RED));
 		Model boxModel = modelBuilder.createBox(width, height, length, GL20.GL_LINES, material, Usage.Position);
 		ModelInstance box = new ModelInstance(boxModel);
@@ -952,7 +1000,7 @@ public class NodeToRenderConverter {
 		userData.description = description;
 		box.userData = userData;
 		
-		renderState.instances.add(box);
+		return box;
 	}
 
 	private VertexInfo vertTmp3 = new VertexInfo();
@@ -1101,7 +1149,7 @@ public class NodeToRenderConverter {
 		return orbitRadius;
 	}
 
-	private ModelInstance createSphereShell(RenderState renderState, Planet node, String name, float innerRadius, float outerRadius, float angleFrom, float angleTo, Material material) {
+	private ModelInstance createSphereShell(Planet node, String name, float innerRadius, float outerRadius, float angleFrom, float angleTo, Material material) {
 		float size = outerRadius * 2;
 		modelBuilder.begin();
 		modelBuilder.node();
@@ -1122,12 +1170,10 @@ public class NodeToRenderConverter {
 		userData.modelName = name;
 		sphere.userData = userData;
 		
-		renderState.instances.add(sphere);
-		
 		return sphere;
 	}
 	
-	private ModelInstance createSphere(RenderState renderState, Planet node, String name, float radius, Material material) {
+	private ModelInstance createSphere(Planet node, String name, float radius, Material material) {
 		float size = radius * 2;
 		Model sphereModel = modelBuilder.createSphere(size, size, size, PLANET_SPHERE_DIVISIONS_U, PLANET_SPHERE_DIVISIONS_V,
 			material, Usage.Position | Usage.Normal | Usage.TextureCoordinates);
@@ -1138,12 +1184,10 @@ public class NodeToRenderConverter {
 		userData.modelName = name;
 		sphere.userData = userData;
 		
-		renderState.instances.add(sphere);
-		
 		return sphere;
 	}
 
-	private ModelInstance createOrbit (RenderState renderState, OrbitingNode node, float orbitRadius, Vector3 parentPosition) {
+	private ModelInstance createOrbit (OrbitingNode node, float orbitRadius, Vector3 parentPosition) {
 		Color color = node instanceof SpaceStation ? Color.NAVY : node.parent instanceof Planet ? Color.MAGENTA : Color.BLUE;
 		Material material = new Material(ColorAttribute.createDiffuse(color));
 		Model orbitModel = createOrbit(modelBuilder, orbitRadius, material, Usage.Position);
@@ -1151,8 +1195,6 @@ public class NodeToRenderConverter {
 		orbit.transform.scl(orbitRadius);
 		orbit.transform.setToTranslation(parentPosition);
 
-		renderState.instancesAlways.add(orbit);
-		
 		return orbit;
 	}
 	

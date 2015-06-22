@@ -21,6 +21,7 @@ import com.badlogic.gdx.graphics.g3d.ModelBatch;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.utils.Array;
 
 public class GameScreen extends AbstractInfiniteSpaceGameScreen {
 
@@ -71,7 +72,7 @@ public class GameScreen extends AbstractInfiniteSpaceGameScreen {
 		renderState.environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.1f, 0.1f, 0.1f, 1f));
 		
 		updateUniverse();
-		shipUserInterface.setZoomObject(renderState.instances);
+		shipUserInterface.setZoomObject(renderState.nodeToInstances);
 	}
 	
 	@Override
@@ -147,15 +148,19 @@ public class GameScreen extends AbstractInfiniteSpaceGameScreen {
 	
 			// render these instances only if visible
 			if (USE_FRUSTUM_CULLING) {
-				for (final ModelInstance instance : renderState.instances) {
-					if (isVisible(camera, instance)) {
-						modelBatch.render(instance, renderState.environment);
-						visibleCount++;
+				for(Array<ModelInstance> nodeInstances : renderState.nodeToInstances.values()) {
+					for (final ModelInstance instance : nodeInstances) {
+						if (isVisible(camera, instance)) {
+							modelBatch.render(instance, renderState.environment);
+							visibleCount++;
+						}
 					}
 				}
 			} else {
-				visibleCount += renderState.instances.size;
-				modelBatch.render(renderState.instances, renderState.environment);
+				for(Array<ModelInstance> nodeInstances : renderState.nodeToInstances.values()) {
+					visibleCount += nodeInstances.size;
+					modelBatch.render(nodeInstances, renderState.environment);
+				}
 			}
 			modelBatch.flush();
 		}
@@ -179,8 +184,9 @@ public class GameScreen extends AbstractInfiniteSpaceGameScreen {
 			infiniteSpaceGame.universeModel.setStarSystemIndex(starSystemIndex);
 			Iterable<Node> universe = infiniteSpaceGame.universeModel.getUniverse();
 			infiniteSpaceGame.genericNodeConverter.convertNodes(universe, renderState);
+			infiniteSpaceGame.genericNodeConverter.createSkyBox(renderState);
 			shipUserInterface.setUniverse(universe);
-			shipUserInterface.setZoomObject(renderState.instances);
+			shipUserInterface.setZoomObject(renderState.nodeToInstances);
 			changed = true;
 		}
 		
@@ -191,7 +197,7 @@ public class GameScreen extends AbstractInfiniteSpaceGameScreen {
 	}
 
 	private void disposeInstances () {
-		renderState.instances.clear();
+		renderState.nodeToInstances.clear(); // FIXME correct?
 		renderState.instancesAlways.clear();
 		renderState.instancesFar.clear();
 	}

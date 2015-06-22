@@ -257,13 +257,14 @@ public class InfoScreen extends AbstractNodeStageScreen {
 	}
 
 	private UserData findUserData(String name) {
-		Array<ModelInstance> instances = getRenderState().instances;
-		for (int i = 0; i < instances.size; i++) {
-			ModelInstance modelInstance = instances.get(i);
-			if (modelInstance.userData instanceof UserData) {
-				UserData userData = (UserData) modelInstance.userData;
-				if (name.equals(userData.modelName)) {
-					return userData;
+		for(Array<ModelInstance> nodeInstances : getRenderState().nodeToInstances.values()) {
+			for (int i = 0; i < nodeInstances.size; i++) {
+				ModelInstance modelInstance = nodeInstances.get(i);
+				if (modelInstance.userData instanceof UserData) {
+					UserData userData = (UserData) modelInstance.userData;
+					if (name.equals(userData.modelName)) {
+						return userData;
+					}
 				}
 			}
 		}

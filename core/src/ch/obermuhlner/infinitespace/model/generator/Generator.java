@@ -6,8 +6,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.badlogic.gdx.utils.Array;
-
 import ch.obermuhlner.infinitespace.CommodityItem;
 import ch.obermuhlner.infinitespace.Config;
 import ch.obermuhlner.infinitespace.NameGenerator;
@@ -34,6 +32,8 @@ import ch.obermuhlner.infinitespace.util.Molecule;
 import ch.obermuhlner.infinitespace.util.Tuple2;
 import ch.obermuhlner.infinitespace.util.Units;
 
+import com.badlogic.gdx.utils.Array;
+
 public class Generator {
 
 	private static final double MAX_ANGLE = 2 * Math.PI;
@@ -48,7 +48,7 @@ public class Generator {
 	private static final long SEED_PRICE = 3;
 
 	private final Map<Seed, Node> storedNodes = new HashMap<Seed, Node>();
-
+	
 	private NameGenerator nameGenerator;
 	
 	public Generator () {
@@ -74,7 +74,7 @@ public class Generator {
 			childNode.parent = node;
 			return childNode;
 		}
-		
+
 		Node childNode = node.getChild(this, index);
 		return childNode;
 	}

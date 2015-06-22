@@ -107,9 +107,11 @@ public abstract class AbstractStageScreen extends AbstractInfiniteSpaceGameScree
 
 		modelBatch.begin(camera);
 		//modelBatch.render(renderState.instances, renderState.environment);
-		for(ModelInstance modelInstance : renderState.instances) {
-			if (isVisible(modelInstance)) {
-				modelBatch.render(modelInstance, renderState.environment);
+		for(Array<ModelInstance> nodeInstances : renderState.nodeToInstances.values()) {
+			for(ModelInstance modelInstance : nodeInstances) {
+				if (isVisible(modelInstance)) {
+					modelBatch.render(modelInstance, renderState.environment);
+				}
 			}
 		}
 		modelBatch.end();
@@ -120,11 +122,13 @@ public abstract class AbstractStageScreen extends AbstractInfiniteSpaceGameScree
 	protected Array<String> getModelInstanceNames() {
 		Array<String> array = new Array<String>();
 
-		for(ModelInstance modelInstance : renderState.instances) {
-			if (modelInstance.userData instanceof UserData) {
-				UserData userData = (UserData) modelInstance.userData;
-				if (userData.modelName != null) {
-					array.add(userData.modelName);
+		for(Array<ModelInstance> nodeInstances : renderState.nodeToInstances.values()) {
+			for(ModelInstance modelInstance : nodeInstances) {
+				if (modelInstance.userData instanceof UserData) {
+					UserData userData = (UserData) modelInstance.userData;
+					if (userData.modelName != null) {
+						array.add(userData.modelName);
+					}
 				}
 			}
 		}

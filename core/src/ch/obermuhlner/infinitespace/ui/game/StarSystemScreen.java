@@ -4,7 +4,9 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.g3d.ModelBatch;
+import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
+import com.badlogic.gdx.utils.Array;
 
 import ch.obermuhlner.infinitespace.GameState;
 import ch.obermuhlner.infinitespace.InfiniteSpaceGame;
@@ -62,7 +64,9 @@ public class StarSystemScreen extends AbstractInfiniteSpaceGameScreen {
 		modelBatch.begin(camera);
 
 		modelBatch.render(renderState.instancesAlways, renderState.environment);
-		modelBatch.render(renderState.instances, renderState.environment);
+		for(Array<ModelInstance> nodeInstances : renderState.nodeToInstances.values()) {
+			modelBatch.render(nodeInstances, renderState.environment);
+		}
 
 		modelBatch.flush();
 

@@ -35,10 +35,7 @@ public class Node {
 	
 	@Override
 	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((seed == null) ? 0 : seed.hashCode());
-		return result;
+		return seed == null ? 42 : seed.hashCode();
 	}
 
 	@Override
