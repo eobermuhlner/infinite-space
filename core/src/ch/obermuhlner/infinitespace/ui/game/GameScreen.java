@@ -68,8 +68,7 @@ public class GameScreen extends AbstractInfiniteSpaceGameScreen {
 		shipUserInterface = new ShipUserInterface(infiniteSpaceGame, skin, this, player, camera);
 		shipUserInterface.starSystemIndex = GameState.INSTANCE.starSystem;
 		
-		renderState.environment.set(
-				new ColorAttribute(ColorAttribute.AmbientLight, 0.1f, 0.1f, 0.1f, 1f));
+		renderState.environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.1f, 0.1f, 0.1f, 1f));
 		
 		updateUniverse();
 		shipUserInterface.setZoomObject(renderState.instances);
