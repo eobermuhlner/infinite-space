@@ -6,6 +6,7 @@ import java.util.Map;
 import ch.obermuhlner.infinitespace.game.Player;
 import ch.obermuhlner.infinitespace.model.Node;
 import ch.obermuhlner.infinitespace.model.OrbitingNode;
+import ch.obermuhlner.infinitespace.model.universe.Star;
 import ch.obermuhlner.infinitespace.ui.AbstractGameScreen;
 import ch.obermuhlner.infinitespace.ui.NodeMenuWindow;
 
@@ -48,6 +49,8 @@ public class ShipUserInterface {
 	private static final String TOUCH_KNOB = "touchKnob";
 	private static final String TOUCH_BACKGROUND = "touchBackground";
 	private static final String BUTTON_UP = TOUCH_KNOB;
+
+	private static final float ORBIT_SELECTABLE_FACTOR = 10;
 
 	private Player player;
 	
@@ -288,16 +291,29 @@ public class ShipUserInterface {
 
 			Vector3 pos = new Vector3();
 			instance.transform.getTranslation(pos);
+			float distance = pos.dst(camera.position);
 			if (camera.frustum.pointInFrustum(pos)) {
 				Vector3 screenPos = camera.project(pos);
 				button.setPosition(screenPos.x-button.getWidth()/2, screenPos.y-button.getHeight()/2);
-				button.setVisible(true);
+				Node node = ((UserData) instance.userData).node;
+				if (node instanceof Star || distance < getOrbit(node) * ORBIT_SELECTABLE_FACTOR) {
+					button.setVisible(true);
+				} else {
+					button.setVisible(false);
+				}
 			} else {
 				button.setVisible(false);
 			}
 		}
 	}
 	
+	private float getOrbit(Node node) {
+		if (node instanceof OrbitingNode) {
+			return NodeToRenderConverter.calculateOrbitRadius((OrbitingNode) node);
+		}
+		return 0;
+	}
+
 	public void render() {
 		stageDirect.act();
 		stageDirect.draw();
