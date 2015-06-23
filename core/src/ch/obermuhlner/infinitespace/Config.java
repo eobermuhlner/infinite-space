@@ -21,7 +21,7 @@ public class Config {
 	public static final Star.Type DEBUG_FORCE_STAR_TYPE = Star.Type.SOL_LIKE;
 	
 	public static final SpaceStation.Type DEBUG_FORCE_SPACE_STATION_TYPE = null;
-	//public static final SpaceStation.Type DEBUG_FORCE_SPACE_STATION_TYPE = SpaceStation.Type.RING;
+	//public static final SpaceStation.Type DEBUG_FORCE_SPACE_STATION_TYPE = SpaceStation.Type.BLOCKY;
 
 	public static final Locale LOCALE = Locale.US;
 	

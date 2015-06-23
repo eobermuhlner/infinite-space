@@ -691,14 +691,25 @@ public class NodeToRenderConverter {
 				ModelInstance station;
 				
 				Texture textureDiffuse = assetManager.get(InfiniteSpaceGame.getTexturePath("spaceship3.jpg"), Texture.class);
-				//Texture textureEmissive = assetManager.get(InfiniteSpaceGame.getTexturePath("spaceship_emissive.jpg"), Texture.class);
-				Texture textureEmissive = assetManager.get(InfiniteSpaceGame.getTexturePath("windows1.jpg"), Texture.class);
-				Texture textureSpecular = assetManager.get(InfiniteSpaceGame.getTexturePath("windows1_specular.jpg"), Texture.class);
+				float plainTextureSize = (float)(100 * SIZE_FACTOR * SIZE_ZOOM_FACTOR); // m
+
+				Texture textureEmissive;
+				Texture textureSpecular;
+				float windowTextureSize; 
+				if (random.nextBoolean(0.6)) {
+					textureEmissive = assetManager.get(InfiniteSpaceGame.getTexturePath("windows1.jpg"), Texture.class);
+					textureSpecular = assetManager.get(InfiniteSpaceGame.getTexturePath("windows1_specular.jpg"), Texture.class);
+					windowTextureSize = (float)(60 * SIZE_FACTOR * SIZE_ZOOM_FACTOR); // m
+				} else {
+					textureEmissive = assetManager.get(InfiniteSpaceGame.getTexturePath("windows2.jpg"), Texture.class);
+					textureSpecular = assetManager.get(InfiniteSpaceGame.getTexturePath("windows2_specular.jpg"), Texture.class);
+					windowTextureSize = (float)(16 * SIZE_FACTOR * SIZE_ZOOM_FACTOR); // m
+				}
 
 				ColorAttribute specular = ColorAttribute.createSpecular(0.5f, 0.5f, 0.5f, 1.0f);
 				Material materialPlain = new Material(new TextureAttribute(TextureAttribute.Diffuse, textureDiffuse), specular);
 				Material materialWindows = new Material(new TextureAttribute(TextureAttribute.Diffuse, textureDiffuse), new TextureAttribute(TextureAttribute.Emissive, textureEmissive), new TextureAttribute(TextureAttribute.Specular, textureSpecular));
-
+				
 				//Material materialPlain = new Material(ColorAttribute.createDiffuse(Color.LIGHT_GRAY));
 				//Material materialWindows = new Material(ColorAttribute.createDiffuse(Color.LIGHT_GRAY), new TextureAttribute(TextureAttribute.Emissive, textureEmissive), new TextureAttribute(TextureAttribute.Specular, textureSpecular));
 				
@@ -717,17 +728,17 @@ public class NodeToRenderConverter {
 					stationModel = createCylinderModel(materialWindows, width, height, length);
 					break;
 				case SPHERE:
-					stationModel = createSphereModel(materialWindows, width, height, length);
+					stationModel = createSphereModel(materialWindows, windowTextureSize, width, height, length);
 					break;
 				case BLOCKY:
-					stationModel = createBlockyModel(materialPlain, materialWindows, random, width, height, length);
+					stationModel = createBlockyModel(materialPlain, plainTextureSize, materialWindows, windowTextureSize, random, width, height, length);
 					break;
 				case CONGLOMERATE:
 					stationModel = createConglomerateModel(materialPlain, materialWindows, random, width, height, length);
 					break;
 				default:
 				case CUBE:
-					stationModel = createCubeModel(materialWindows, width, height, length);
+					stationModel = createCubeModel(materialWindows, windowTextureSize, width, height, length);
 					break;
 				}
 				
@@ -766,31 +777,37 @@ public class NodeToRenderConverter {
 		}
 	}
 	
-	private Model createCubeModel(Material materialWindows, float width, float height, float length) {
+	private Model createCubeModel(Material material, float textureSize, float width, float height, float length) {
 		modelBuilder.begin();
 
-		createBasicPart(BasicPartType.CUBE, materialWindows, width, height, length);
+		MeshPartBuilder part = createBasicPart(BasicPartType.CUBE, material, width, height, length);
+		float minSize = Math.min(Math.min(width, height), length);
+		float uvSize = minSize / textureSize;
+		part.setUVRange(0f, 0f, uvSize, uvSize);
 
 		return modelBuilder.end();
 	}
 
-	private Model createCylinderModel(Material materialWindows, float width, float height, float length) {
+	private Model createCylinderModel(Material material, float width, float height, float length) {
 		modelBuilder.begin();
 
-		createBasicPart(BasicPartType.CYLINDER, materialWindows, width, height, length);
+		createBasicPart(BasicPartType.CYLINDER, material, width, height, length);
 
 		return modelBuilder.end();
 	}
 
-	private Model createSphereModel(Material materialWindows, float width, float height, float length) {
+	private Model createSphereModel(Material material, float textureSize, float width, float height, float length) {
 		modelBuilder.begin();
 
-		createBasicPart(BasicPartType.SPHERE, materialWindows, width, height, length);
+		MeshPartBuilder part = createBasicPart(BasicPartType.SPHERE, material, width, height, length);
+		float minSize = Math.min(Math.min(width, height), length);
+		float uvSize = minSize / textureSize;
+		part.setUVRange(0f, 0f, uvSize, uvSize);
 
 		return modelBuilder.end();
 	}
 
-	private Model createBlockyModel(Material materialPlain, Material materialWindows, Random random, float width, float height, float length) {
+	private Model createBlockyModel(Material materialPlain, float plainTextureSize, Material materialWindows, float windowsTextureSize, Random random, float width, float height, float length) {
 		modelBuilder.begin();
 
 		int noduleCount = random.nextInt(10, 20);
@@ -802,8 +819,15 @@ public class NodeToRenderConverter {
 			float noduleHeight = random.nextFloat(height/4, height/2); 
 			float noduleLength = random.nextFloat(length/4, length/2); 
 
+			boolean useWindowsMaterial = random.nextBoolean(0.75);
+			Material material = useWindowsMaterial ? materialWindows : materialPlain;
+			float textureSize = useWindowsMaterial ? windowsTextureSize : plainTextureSize;
+			
 			BasicPartType partType = random.next(BasicPartType.CUBE, BasicPartType.SPHERE, BasicPartType.CYLINDER);
-			createBasicPart(partType, random.nextBoolean(0.75) ? materialWindows : materialPlain, noduleWidth, noduleHeight, noduleLength);
+			MeshPartBuilder part = createBasicPart(partType, material, noduleWidth, noduleHeight, noduleLength);
+			float minSize = Math.min(Math.min(width, height), length);
+			float uvSize = minSize / textureSize / partType.textureFactor();
+			part.setUVRange(0f, 0f, uvSize, uvSize);
 			
 			float w2 = (width - noduleWidth) / 2;
 			float h2 = (height - noduleHeight) / 2;
@@ -1085,7 +1109,19 @@ public class NodeToRenderConverter {
 	}
 	
 	public enum BasicPartType {
-		CUBE, SPHERE, CYLINDER
+		CUBE(1),
+		SPHERE(3.14f),
+		CYLINDER(3.14f);
+
+		private float textureFactor;
+
+		private BasicPartType(float textureFactor) {
+			this.textureFactor = textureFactor;
+		}
+		
+		public float textureFactor() {
+			return textureFactor;
+		}
 	};
 	public MeshPartBuilder createBasicPart(BasicPartType basicPartType, Material material, float width, float height, float length) {
 		MeshPartBuilder part = modelBuilder.part(basicPartType.name(), PRIMITIVE_TYPE, (long) (Usage.Position | Usage.Normal | Usage.TextureCoordinates), material);
