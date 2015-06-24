@@ -54,13 +54,11 @@ public class NodeToRenderConverter {
 
 	private static final boolean RENDER_PROCEDURAL_SHADERS_TO_TEXTURES = true;
 
-	private static final double SUN_RADIUS = Units.SUN_RADIUS;
-
 	private static final double LAVA_TEMPERATURE = Units.celsiusToKelvin(700);
 
 	private static final double AU = Units.ASTRONOMICAL_UNIT;
 	
-	public static double SIZE_FACTOR = 1 / SUN_RADIUS / 10;
+	public static double SIZE_FACTOR = 1 / 100000E5;
 	private static double SIZE_STAR_ZOOM_FACTOR = 10;
 	private static double SIZE_ZOOM_FACTOR = 10;
 	private static float SIZE_MOON_ORBIT_ZOOM_FACTOR = 10;
@@ -690,12 +688,37 @@ public class NodeToRenderConverter {
 			{
 				ModelInstance station;
 				
-				Texture textureDiffuse = assetManager.get(InfiniteSpaceGame.getTexturePath("spaceship3.jpg"), Texture.class);
-				float plainTextureSize = (float)(100 * SIZE_FACTOR * SIZE_ZOOM_FACTOR); // m
+				Array<Attribute> materialPlainAttributes = new Array<Attribute>();
+				Array<Attribute> materialWindowsAttributes = new Array<Attribute>();
 
+				float plainTextureSize;
+				float windowTextureSize; 
+				
+				// base material: diffuse texture or color + specular color
+				if(random.nextBoolean(0.6)) {
+					Texture textureDiffuse = assetManager.get(InfiniteSpaceGame.getTexturePath("spaceship3.jpg"), Texture.class);
+					TextureAttribute diffuseAttribute = new TextureAttribute(TextureAttribute.Diffuse, textureDiffuse);
+					materialPlainAttributes.add(diffuseAttribute);
+					materialWindowsAttributes.add(diffuseAttribute);
+
+					Texture textureNormal = assetManager.get(InfiniteSpaceGame.getTexturePath("spaceship3_normals.png"), Texture.class);
+					TextureAttribute normalAttribute = new TextureAttribute(TextureAttribute.Normal, textureNormal);
+					materialPlainAttributes.add(normalAttribute);
+
+					plainTextureSize = (float)(100 * SIZE_FACTOR * SIZE_ZOOM_FACTOR); // m
+				} else {
+					float grayLuminance = random.nextFloat(0.25f, 0.75f);
+					ColorAttribute grayAttribute = ColorAttribute.createDiffuse(new Color(grayLuminance, grayLuminance, grayLuminance, 1f));
+					materialPlainAttributes.add(grayAttribute);
+					materialWindowsAttributes.add(grayAttribute);
+					plainTextureSize = 1f;
+				}
+				float specularValue = random.nextFloat(0.4f, 0.7f);
+				materialPlainAttributes.add(ColorAttribute.createSpecular(specularValue, specularValue, specularValue, 1.0f));
+
+				// windows: emissive + specular texture
 				Texture textureEmissive;
 				Texture textureSpecular;
-				float windowTextureSize; 
 				if (random.nextBoolean(0.6)) {
 					textureEmissive = assetManager.get(InfiniteSpaceGame.getTexturePath("windows1.jpg"), Texture.class);
 					textureSpecular = assetManager.get(InfiniteSpaceGame.getTexturePath("windows1_specular.jpg"), Texture.class);
@@ -703,17 +726,15 @@ public class NodeToRenderConverter {
 				} else {
 					textureEmissive = assetManager.get(InfiniteSpaceGame.getTexturePath("windows2.jpg"), Texture.class);
 					textureSpecular = assetManager.get(InfiniteSpaceGame.getTexturePath("windows2_specular.jpg"), Texture.class);
-					windowTextureSize = (float)(16 * SIZE_FACTOR * SIZE_ZOOM_FACTOR); // m
+					windowTextureSize = (float)(60 * SIZE_FACTOR * SIZE_ZOOM_FACTOR); // m
 				}
+				materialWindowsAttributes.add(new TextureAttribute(TextureAttribute.Emissive, textureEmissive));
+				materialWindowsAttributes.add(new TextureAttribute(TextureAttribute.Specular, textureSpecular));
 
-				ColorAttribute specular = ColorAttribute.createSpecular(0.5f, 0.5f, 0.5f, 1.0f);
-				Material materialPlain = new Material(new TextureAttribute(TextureAttribute.Diffuse, textureDiffuse), specular);
-				Material materialWindows = new Material(new TextureAttribute(TextureAttribute.Diffuse, textureDiffuse), new TextureAttribute(TextureAttribute.Emissive, textureEmissive), new TextureAttribute(TextureAttribute.Specular, textureSpecular));
+				Material materialPlain = new Material(materialPlainAttributes);
+				Material materialWindows = new Material(materialWindowsAttributes);
 				
-				//Material materialPlain = new Material(ColorAttribute.createDiffuse(Color.LIGHT_GRAY));
-				//Material materialWindows = new Material(ColorAttribute.createDiffuse(Color.LIGHT_GRAY), new TextureAttribute(TextureAttribute.Emissive, textureEmissive), new TextureAttribute(TextureAttribute.Specular, textureSpecular));
-				
-				Model stationModel;
+				Model stationModel = null;
 				switch(node.type) {
 				case RING:
 					stationModel = createRingModel(materialPlain, materialWindows, random, width, height, length);
@@ -736,7 +757,6 @@ public class NodeToRenderConverter {
 				case CONGLOMERATE:
 					stationModel = createConglomerateModel(materialPlain, materialWindows, random, width, height, length);
 					break;
-				default:
 				case CUBE:
 					stationModel = createCubeModel(materialWindows, windowTextureSize, width, height, length);
 					break;
@@ -753,19 +773,6 @@ public class NodeToRenderConverter {
 				instances.add(station);
 			}
 			
-//			if (!realUniverse) {
-//				Material material = new Material(ColorAttribute.createDiffuse(new Color(0, 0.2f, 0, 1f)));
-//				float axisLength = Math.max(Math.max(width, height), length) * 1.5f;
-//				Model axisModel = modelBuilder.createXYZCoordinates(axisLength, material, Usage.Position);
-//				ModelInstance axis = new ModelInstance(axisModel);
-//
-//				UserData userData = new UserData();
-//				userData.node = node;
-//				userData.modelName = "Coordinates";
-//				axis.userData = userData;
-//				renderState.instances.add(axis);
-//			}
-			
 			instances.add(createOrbit(node, orbitRadius, parentPosition));
 
 			return instances;
@@ -779,11 +786,12 @@ public class NodeToRenderConverter {
 	
 	private Model createCubeModel(Material material, float textureSize, float width, float height, float length) {
 		modelBuilder.begin();
-
-		MeshPartBuilder part = createBasicPart(BasicPartType.CUBE, material, width, height, length);
+		MeshPartBuilder part = modelBuilder.part("cube", PRIMITIVE_TYPE, (Usage.Position | Usage.Normal | Usage.TextureCoordinates), material);
 		float minSize = Math.min(Math.min(width, height), length);
 		float uvSize = minSize / textureSize;
 		part.setUVRange(0f, 0f, uvSize, uvSize);
+
+		part.box(width, height, length);
 
 		return modelBuilder.end();
 	}
@@ -1212,7 +1220,7 @@ public class NodeToRenderConverter {
 	private ModelInstance createSphere(Planet node, String name, float radius, Material material) {
 		float size = radius * 2;
 		Model sphereModel = modelBuilder.createSphere(size, size, size, PLANET_SPHERE_DIVISIONS_U, PLANET_SPHERE_DIVISIONS_V,
-			material, Usage.Position | Usage.Normal | Usage.TextureCoordinates);
+				material, Usage.Position | Usage.Normal | Usage.TextureCoordinates);
 		ModelInstance sphere = new ModelInstance(sphereModel);
 
 		UserData userData = new UserData();
