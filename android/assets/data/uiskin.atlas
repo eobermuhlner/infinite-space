@@ -34,6 +34,14 @@ default-round-large
   orig: 20, 20
   offset: 0, 0
   index: -1
+crosshair-mini
+  rotate: false
+  xy: 46, 7
+  size: 11, 11
+  split: 4, 4, 4, 4
+  orig: 4, 4
+  offset: 0, 0
+  index: -1
 crosshair-box
   rotate: false
   xy: 57, 7

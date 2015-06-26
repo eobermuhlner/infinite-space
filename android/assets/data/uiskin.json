@@ -24,6 +24,7 @@ com.badlogic.gdx.scenes.scene2d.ui.Skin$TintedDrawable: {
 	table: { name: default-round, color: alpha20 },
 	ship-default-round: { name: default-round, color: alpha50 },
 	ship-default-round-down: { name: default-round-down, color: alpha50 },
+	crosshair-mini-white: { name: crosshair-mini, color: white },
 	crosshair-box-red: { name: crosshair-box, color: red },
 	crosshair-box-green: { name: crosshair-box, color: green },
 	crosshair-box-blue: { name: crosshair-box, color: blue },

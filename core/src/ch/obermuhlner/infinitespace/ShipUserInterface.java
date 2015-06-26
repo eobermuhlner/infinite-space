@@ -28,6 +28,7 @@ import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Button;
+import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
@@ -65,6 +66,8 @@ public class ShipUserInterface {
 	 */
 	private Stage stageDirect;
 	private Label debugInfo;
+
+	private Image imageCenter;
 	
 	private Touchpad touchpadLeft;
 	private Touchpad touchpadLeftSecondary;
@@ -107,8 +110,19 @@ public class ShipUserInterface {
 		skin.add(BUTTON_UP, new Texture("data/ui/textures/buttonUp.png"));
 		skin.add(FONT, new BitmapFont());
 		
+		ScreenViewport viewport = new ScreenViewport();
+		stage = new Stage(viewport);
+		viewport.setUnitsPerPixel(Config.getUnitsPerPixel());
+
+		ScreenViewport viewportDirect = new ScreenViewport();
+		stageDirect = new Stage(viewportDirect);
+
 		labelStyle = new Label.LabelStyle(skin.getFont(FONT), Color.WHITE);
 
+		imageCenter = new Image(uiSkin, "crosshair-mini-white");
+		imageCenter.setPosition(Math.round(stageDirect.getWidth() / 2), Math.round(stageDirect.getHeight() / 2));
+		stageDirect.addActor(imageCenter);
+		
 		touchpadStyle = new TouchpadStyle();
 		touchpadStyle.background = skin.getDrawable(TOUCH_BACKGROUND);
 		touchpadStyle.knob = skin.getDrawable(TOUCH_KNOB);
@@ -117,14 +131,8 @@ public class ShipUserInterface {
 		environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.1f, 0.1f, 0.1f, 1f));
 		environment.add(new DirectionalLight().set(Color.WHITE, -1, 0, 0));
 		
-		ScreenViewport viewport = new ScreenViewport();
-		stage = new Stage(viewport);
-		viewport.setUnitsPerPixel(Config.getUnitsPerPixel());
 		debugInfo = new Label("", labelStyle);
 		debugInfo.setBounds(0, skin.getFont(FONT).getLineHeight(), 0, 0);
-
-		ScreenViewport viewportDirect = new ScreenViewport();
-		stageDirect = new Stage(viewportDirect);
 
 		InputMultiplexer inputMultiplexer = new InputMultiplexer();
 		
