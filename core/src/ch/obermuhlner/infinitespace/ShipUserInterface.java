@@ -82,7 +82,7 @@ public class ShipUserInterface {
 	private AbstractGameScreen screen;
 
 	private Environment environment;
-	private Map<ModelInstance, Button> modelInstanceToButtons = new HashMap<ModelInstance, Button>();
+	private Map<ModelInstance, CrossHair> modelInstanceToButtons = new HashMap<ModelInstance, CrossHair>();
 	
 	public int starSystemIndex;
 
@@ -261,9 +261,9 @@ public class ShipUserInterface {
 	}
 
 	public void setZoomObject(Map<Node, Array<ModelInstance>> nodeToInstances) {
-		for (Button button : modelInstanceToButtons.values()) {
-			if (button != null) {
-				button.remove();
+		for (CrossHair crosshair : modelInstanceToButtons.values()) {
+			if (crosshair != null) {
+				crosshair.remove();
 			}
 		}
 		modelInstanceToButtons.clear();
@@ -274,18 +274,9 @@ public class ShipUserInterface {
 				if (instance.userData instanceof UserData) {
 					UserData userData = (UserData)instance.userData;
 					if (userData.node != null) {
-						final Node node = userData.node;
-						final Button button = new Button(uiSkin, "crosshair");
-						button.setSize(CROSSHAIR_SIZE, CROSSHAIR_SIZE);
-						button.setUserObject(userData);
-						button.addListener(new ChangeListener() {
-							@Override
-							public void changed (ChangeEvent event, Actor actor) {
-								showMenu(button, node);							
-							}
-						});
-						stageDirect.addActor(button);
-						modelInstanceToButtons.put(instance, button);
+						CrossHair crosshair = new CrossHair(userData, uiSkin);
+						stageDirect.addActor(crosshair);
+						modelInstanceToButtons.put(instance, crosshair);
 					}
 				}
 			}
@@ -304,9 +295,9 @@ public class ShipUserInterface {
 			return;
 		}
 		
-		for (Button cursorButton : modelInstanceToButtons.values()) {
-			if (cursorButton != button) {
-				cursorButton.setChecked(false);
+		for (CrossHair crosshair : modelInstanceToButtons.values()) {
+			if (crosshair.button != button) {
+				crosshair.button.setChecked(false);
 			}
 		}
 		
@@ -333,24 +324,32 @@ public class ShipUserInterface {
 
 		player.update(deltaTime);
 
-		for (Map.Entry<ModelInstance, Button> entry : modelInstanceToButtons.entrySet()) {
+		for (Map.Entry<ModelInstance, CrossHair> entry : modelInstanceToButtons.entrySet()) {
 			ModelInstance instance = entry.getKey();
-			Button button = entry.getValue();
+			CrossHair crosshair = entry.getValue();
 
 			Vector3 pos = new Vector3();
 			instance.transform.getTranslation(pos);
 			float distance = pos.dst(camera.position);
 			if (camera.frustum.pointInFrustum(pos)) {
 				Vector3 screenPos = camera.project(pos);
-				button.setPosition(screenPos.x-button.getWidth()/2, screenPos.y-button.getHeight()/2);
+				crosshair.setPosition(screenPos.x-crosshair.getWidth()/2, screenPos.y-crosshair.getHeight()/2);
 				Node node = ((UserData) instance.userData).node;
-				if (node instanceof Star || distance < getOrbit(node) * ORBIT_SELECTABLE_FACTOR) {
-					button.setVisible(true);
+				if (crosshair.button.isChecked()) {
+					crosshair.labelTop.setVisible(true);
+					crosshair.labelBottom.setVisible(true);
 				} else {
-					button.setVisible(false);
+					crosshair.labelTop.setVisible(false);
+					crosshair.labelBottom.setVisible(false);
+				}
+				if (crosshair.button.isChecked() || node instanceof Star || distance < getOrbit(node) * ORBIT_SELECTABLE_FACTOR) {
+					crosshair.setVisible(true);
+					crosshair.labelBottom.setText(Units.meterDistanceToString(distance/NodeToRenderConverter.SIZE_FACTOR)); // FIXME
+				} else {
+					crosshair.setVisible(false);
 				}
 			} else {
-				button.setVisible(false);
+				crosshair.setVisible(false);
 			}
 		}
 		
@@ -433,5 +432,37 @@ public class ShipUserInterface {
 	public void resize (int width, int height) {
 		stage.getViewport().update(width, height, true);
 		stageDirect.getViewport().update(width, height, true);
+	}
+	
+	private class CrossHair extends Table {
+		public Button button;
+		public Label labelTop;
+		public Label labelBottom;
+		
+		public CrossHair(final UserData userData, Skin skin) {
+			super(skin);
+			defaults().center();
+			
+			row();
+			labelTop = new Label(userData.node.name, skin);
+			labelTop.setColor(uiSkin.getColor("blue"));
+			add(labelTop);
+			
+			row();
+			button = new Button(skin, "crosshair");
+			button.setUserObject(userData);
+			button.addListener(new ChangeListener() {
+				@Override
+				public void changed (ChangeEvent event, Actor actor) {
+					showMenu(button, userData.node);							
+				}
+			});
+			add(button).size(CROSSHAIR_SIZE);
+
+			row();
+			labelBottom = new Label("", skin);
+			labelBottom.setColor(uiSkin.getColor("blue"));
+			add(labelBottom);
+		}
 	}
 }
