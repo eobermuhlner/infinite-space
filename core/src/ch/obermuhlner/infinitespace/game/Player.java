@@ -5,6 +5,7 @@ import ch.obermuhlner.infinitespace.Throttle;
 import ch.obermuhlner.infinitespace.game.ship.Ship;
 import ch.obermuhlner.infinitespace.model.Node;
 import ch.obermuhlner.infinitespace.model.universe.Planet;
+import ch.obermuhlner.infinitespace.model.universe.SpaceStation;
 import ch.obermuhlner.infinitespace.model.universe.Star;
 import ch.obermuhlner.infinitespace.util.MathUtil;
 
@@ -14,11 +15,14 @@ import com.badlogic.gdx.utils.Array;
 
 public class Player {
 
+	private static final float HYPER_DRAG_RADII = 1000;
 	public Ship ship;
 	public Camera camera;
 	
 	public float velocity = 1.0f;
-
+	public float warpDrag = 0.0f;
+	public Node warpDragNode;
+	
 	public Throttle thrustForwardThrottle = new Throttle();
 	//public float thrustForward = 0;
 	public float thrustUp = 0;
@@ -31,7 +35,6 @@ public class Player {
 	// optimization: temporary variable
 	private final Vector3 vec3 = new Vector3();
 
-	
 	public Player (Ship ship, Camera camera) {
 		this.ship = ship;
 		this.camera = camera;
@@ -90,8 +93,12 @@ public class Player {
 	}
 
 	public void calculateHyperVelocity (Array<Node> massiveNodes) {
-		velocity = 500.0f;
+		velocity = 100.0f;
 
+		String strongestDebugInfo = "";
+		
+		float strongestDragFactor = 1f;
+		Node strongestDragNode = null;
 		for (int i = 0; i < massiveNodes.size; i++) {
 			Node node = massiveNodes.get(i);
 			Vector3 position = NodeToRenderConverter.calculatePosition(node);
@@ -103,22 +110,32 @@ public class Player {
 			} else if (node instanceof Star) {
 				Star star = (Star)node;
 				radius = NodeToRenderConverter.calculateStarRadius(star);
+			} else if (node instanceof SpaceStation) {
+				SpaceStation spaceStation = (SpaceStation)node;
+				radius = NodeToRenderConverter.calculateSpaceStationRadius(spaceStation);
 			} else {
-				radius = 0.1f;
+				radius = 0.01f;
 			}
 			float distance = position.len();
 			float dot = position.nor().dot(camera.direction);
-			float directionFactor = Math.min(1f, MathUtil.transform(-1f, 1f, 0.8f, 1.01f, dot));
-			float correctedDistance = Math.max(distance - radius * 2, 0.0001f);
+			float directionFactor = MathUtil.smoothstep(0f, 1f, Math.min(1f, MathUtil.transform(-1f, 1f, 0.2f, 1.01f, dot)));
+			//directionFactor = directionFactor * directionFactor;
+			float correctedDistance = Math.max(0, distance - 3 * radius) / radius;
 
-			float maxDelta = 1.0f + Math.min(dot, 0);
-			float delta = 1.001f / (correctedDistance + 1) * directionFactor;
-			delta = 1f - MathUtil.clamp(delta, 0, maxDelta);
-			//System.out.printf("dist=%10.6f corr=%10.6f dirFactor=%10.6f delta=%10.6f => velocity=%10.6f dot=%10.6f %s radius=%10.2f\n", distance, correctedDistance, directionFactor, delta, velocity, dot, node.toString(), radius);
-			velocity *= delta;
+			float drag = directionFactor / (1 + correctedDistance / HYPER_DRAG_RADII);
+			float dragFactor = 1f - MathUtil.clamp(drag, 0, 1.0f);
+			if (dragFactor < strongestDragFactor) {
+//				System.out.printf("dist=%10.6f radii=%10.6f corr=%15.6f dot=%10.6f dirFactor=%10.6f drag=%10.6f dragFactor=%10.6f %s\n", 
+//						distance, radiiDistance, correctedDistance, dot, directionFactor, drag, dragFactor, node.toString());
+				strongestDebugInfo = node.name + " drag:" + dragFactor;
+				strongestDragNode = node;
+			}
+			strongestDragFactor = Math.min(strongestDragFactor, dragFactor);
 		}
+		warpDrag = strongestDragFactor;
+		warpDragNode = strongestDragNode;
+		velocity *= strongestDragFactor;
 		
-		//System.out.println("velocity " + velocity);
-		//System.out.println();
+		//System.out.println();		
 	}
 }
