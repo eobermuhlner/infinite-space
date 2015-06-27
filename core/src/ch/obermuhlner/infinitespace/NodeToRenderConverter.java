@@ -59,9 +59,9 @@ public class NodeToRenderConverter {
 	private static final double AU = Units.ASTRONOMICAL_UNIT;
 	
 	public static double SIZE_FACTOR = 1 / 100000E5;
-	private static double SIZE_STAR_ZOOM_FACTOR = 10;
-	private static double SIZE_ZOOM_FACTOR = 10;
-	private static float SIZE_MOON_ORBIT_ZOOM_FACTOR = 10;
+	private static double SIZE_STAR_ZOOM_FACTOR = 1;
+	private static double SIZE_ZOOM_FACTOR = 1;
+	private static float SIZE_MOON_ORBIT_ZOOM_FACTOR = 1;
 	
 	private static final int PLANET_SPHERE_DIVISIONS_U = 30;
 	private static final int PLANET_SPHERE_DIVISIONS_V = 30;
@@ -1176,7 +1176,7 @@ public class NodeToRenderConverter {
 		return (float)(radius * SIZE_FACTOR * SIZE_ZOOM_FACTOR);
 	}
 
-	private static float calculateSpaceStationRadius (SpaceStation node) {
+	public static float calculateSpaceStationRadius (SpaceStation node) {
 		return (float) (Math.max(Math.max(node.width, node.height), node.length) / 2 * SIZE_FACTOR * SIZE_ZOOM_FACTOR);
 	}
 
