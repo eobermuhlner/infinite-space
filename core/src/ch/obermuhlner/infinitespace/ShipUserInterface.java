@@ -9,6 +9,7 @@ import ch.obermuhlner.infinitespace.model.OrbitingNode;
 import ch.obermuhlner.infinitespace.model.universe.Star;
 import ch.obermuhlner.infinitespace.ui.AbstractGameScreen;
 import ch.obermuhlner.infinitespace.ui.NodeMenuWindow;
+import ch.obermuhlner.infinitespace.util.Units;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputAdapter;
@@ -25,18 +26,16 @@ import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.scenes.scene2d.Actor;
-import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Button;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
-import com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.ui.Touchpad;
 import com.badlogic.gdx.scenes.scene2d.ui.Touchpad.TouchpadStyle;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
-import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
@@ -65,7 +64,6 @@ public class ShipUserInterface {
 	 * Stage with uncorrected Viewport for pixel accurate UI.
 	 */
 	private Stage stageDirect;
-	private Label debugInfo;
 
 	private Image imageCenter;
 	
@@ -79,7 +77,6 @@ public class ShipUserInterface {
 	private InfiniteSpaceGame game;
 	private Skin uiSkin;
 	private Skin skin;
-	private LabelStyle labelStyle;
 	private TouchpadStyle touchpadStyle;
 	
 	private AbstractGameScreen screen;
@@ -90,6 +87,13 @@ public class ShipUserInterface {
 	public int starSystemIndex;
 
 	final Array<Node> massiveNodes = new Array<Node>();
+
+	private Label labelThrustThrottle;
+	private Label labelThrust;
+	private Label labelSpeed;
+	private Label labelWarpDrag;
+	private Label labelWarpDragSource;
+	private Label labelFps;
 
 	public ShipUserInterface (InfiniteSpaceGame game, Skin uiSkin, AbstractGameScreen screen, final Player player, Camera camera) {
 		this.game = game;
@@ -117,12 +121,12 @@ public class ShipUserInterface {
 		ScreenViewport viewportDirect = new ScreenViewport();
 		stageDirect = new Stage(viewportDirect);
 
-		labelStyle = new Label.LabelStyle(skin.getFont(FONT), Color.WHITE);
-
 		imageCenter = new Image(uiSkin, "crosshair-mini-white");
-		imageCenter.setPosition(Math.round(stageDirect.getWidth() / 2), Math.round(stageDirect.getHeight() / 2));
+		int centerX = Math.round(stageDirect.getWidth() / 2);
+		int centerY = Math.round(stageDirect.getHeight() / 2);
+		imageCenter.setPosition(centerX, centerY);
 		stageDirect.addActor(imageCenter);
-		
+				
 		touchpadStyle = new TouchpadStyle();
 		touchpadStyle.background = skin.getDrawable(TOUCH_BACKGROUND);
 		touchpadStyle.knob = skin.getDrawable(TOUCH_KNOB);
@@ -131,9 +135,6 @@ public class ShipUserInterface {
 		environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.1f, 0.1f, 0.1f, 1f));
 		environment.add(new DirectionalLight().set(Color.WHITE, -1, 0, 0));
 		
-		debugInfo = new Label("", labelStyle);
-		debugInfo.setBounds(0, skin.getFont(FONT).getLineHeight(), 0, 0);
-
 		InputMultiplexer inputMultiplexer = new InputMultiplexer();
 		
 		if (Config.useScreenControls) {
@@ -152,23 +153,63 @@ public class ShipUserInterface {
 				touchpadRightSecondary.setBounds(screenWidth-touchpadSize-touchpadMargin, touchpadMargin+touchpadSize, touchpadSize, touchpadSize);
 			}
 			
-			float buttonSize = thumbSize * 2;
-			float buttonX = touchpadMargin;
-			float buttonY = screenHeight-buttonSize;
-			buttonX = addButton("<", buttonX, buttonY, buttonSize, touchpadMargin, new ClickListener() {
-				@Override
-				public void clicked (InputEvent event, float x, float y) {
-					starSystemIndex--;
-				}
-			});
-			buttonX = addButton(">", buttonX, buttonY, buttonSize, touchpadMargin, new ClickListener() {
-				@Override
-				public void clicked (InputEvent event, float x, float y) {
-					starSystemIndex++;
-				}
-			});
+			Table rootTable = new Table(uiSkin);
+			stage.addActor(rootTable);
+			rootTable.top().left();
+			rootTable.defaults().left().space(10);
+			rootTable.setFillParent(true);
+			{
+				rootTable.row();
+				Table table = new Table(uiSkin);
+				rootTable.add(table);
+				table.row();
+				table.add(button("Prev", new ChangeListener() {
+					@Override
+					public void changed(ChangeEvent event, Actor actor) {
+						starSystemIndex--;
+					}
+				}));
+				table.add(button("Next", new ChangeListener() {
+					@Override
+					public void changed(ChangeEvent event, Actor actor) {
+						starSystemIndex++;
+					}
+				}));
+			}
+			{
+				rootTable.row();
+				Table table = new Table(uiSkin);
+				rootTable.add(table);
+
+				Label cellExample = new Label("888.88888", uiSkin);
+				cellExample.layout();
+				table.defaults().align(Align.left).spaceRight(50).width(cellExample.getWidth());
+
+				table.row();
+				table.add(new Label("Thrust", uiSkin));
+				labelThrustThrottle = new Label("", uiSkin);
+				table.add(labelThrustThrottle);
+				labelThrust = new Label("", uiSkin);
+				table.add(labelThrust);
+
+				table.row();
+				table.add(new Label("Warp Drag", uiSkin));
+				labelWarpDrag = new Label("", uiSkin);
+				table.add(labelWarpDrag);
+				labelWarpDragSource = new Label("", uiSkin);
+				table.add(labelWarpDragSource);
+
+				table.row();
+				table.add(new Label("Speed", uiSkin));
+				labelSpeed = new Label("", uiSkin);
+				table.add(labelSpeed);
+
+				table.row();
+				table.add(new Label("FPS", uiSkin));
+				labelFps = new Label("", uiSkin);
+				table.add(labelFps);
+			}
 			
-			stage.addActor(debugInfo);
 			if (Config.useTouchpadControls) {
 				stageDirect.addActor(touchpadLeft);
 				stageDirect.addActor(touchpadLeftSecondary);
@@ -188,6 +229,13 @@ public class ShipUserInterface {
 		Gdx.input.setInputProcessor(inputMultiplexer);
 	}
 	
+	private TextButton button(String text, ChangeListener changeListener) {
+		TextButton button = new TextButton(text, uiSkin);
+		
+		button.addListener(changeListener);
+		return button;
+	}
+	
 	private class InstanceSelector extends InputAdapter {
 		@Override
 		public boolean touchDown (int screenX, int screenY, int pointer, int button) {
@@ -197,18 +245,10 @@ public class ShipUserInterface {
 			Vector3 intersection = new Vector3();
 			boolean hit = Intersector.intersectRaySphere(ray, center, radius, intersection);
 			if (hit) {
-				debugInfo.setText("HIT " + intersection);
+				//debugInfo.setText("HIT " + intersection);
 			}
 			return hit;
 		}
-	}
-
-	private float addButton(String text, float x, float y, float size, float margin, ClickListener clickListener) {
-		TextButton buttonPrev = new TextButton(text, uiSkin, "ship");
-		buttonPrev.setBounds(x, y, size, size);
-		buttonPrev.addListener(clickListener);
-		stageDirect.addActor(buttonPrev);
-		return x + margin + size;
 	}
 
 	public void setUniverse (Iterable<Node> universe) {
@@ -313,6 +353,13 @@ public class ShipUserInterface {
 				button.setVisible(false);
 			}
 		}
+		
+		labelThrustThrottle.setText(Units.toString(player.thrustForwardThrottle.throttle));
+		labelThrust.setText(Units.toString(player.thrustForwardThrottle.value));
+		labelSpeed.setText(Units.toString(player.velocity));
+		labelWarpDrag.setText(Units.toString(player.warpDrag));
+		labelWarpDragSource.setText(player.warpDragNode == null ? null : player.warpDragNode.name);
+		labelFps.setText(Units.toString(Gdx.graphics.getFramesPerSecond()));
 	}
 	
 	private float getOrbit(Node node) {
@@ -381,10 +428,6 @@ public class ShipUserInterface {
 	public void dispose () {
 		stage.dispose();
 		stageDirect.dispose();
-	}
-
-	public void setDebugInfo (String text) {
-		debugInfo.setText(text);
 	}
 
 	public void resize (int width, int height) {
