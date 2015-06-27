@@ -1,5 +1,7 @@
 package ch.obermuhlner.infinitespace.ui.game;
 
+import java.util.Map;
+
 import ch.obermuhlner.infinitespace.GamePreferences;
 import ch.obermuhlner.infinitespace.GameState;
 import ch.obermuhlner.infinitespace.InfiniteSpaceGame;
@@ -34,7 +36,6 @@ public class GameScreen extends AbstractInfiniteSpaceGameScreen {
 	private Player player;
 	private PerspectiveCamera camera;
 
-	private final StringBuilder stringBuilder = new StringBuilder();
 	private ShipUserInterface shipUserInterface;
 
 	private final UniverseCoordinates coordinates = new UniverseCoordinates();
@@ -114,9 +115,6 @@ public class GameScreen extends AbstractInfiniteSpaceGameScreen {
 
 		modelBatch.begin(camera);
 
-		int visibleCount = 0;
-		int alwaysVisibleCount = 0;
-
 		{
 			camera.near = 100f;
 			camera.far = 900f;
@@ -136,29 +134,28 @@ public class GameScreen extends AbstractInfiniteSpaceGameScreen {
 	
 			// always render these instances
 			modelBatch.render(renderState.instancesAlways, renderState.environment);
-			alwaysVisibleCount += renderState.instancesAlways.size;
 	
 			modelBatch.flush();
 		}
 
 		{
-			camera.near = 0.001f;
+			camera.near = 0.0001f;
 			camera.far = 300f;
 			camera.update(true);
 	
 			// render these instances only if visible
 			if (USE_FRUSTUM_CULLING) {
-				for(Array<ModelInstance> nodeInstances : renderState.nodeToInstances.values()) {
+				for(Map.Entry<Node, Array<ModelInstance>> entry : renderState.nodeToInstances.entrySet()) {
+					Array<ModelInstance> nodeInstances = entry.getValue();
 					for (final ModelInstance instance : nodeInstances) {
 						if (isVisible(camera, instance)) {
 							modelBatch.render(instance, renderState.environment);
-							visibleCount++;
 						}
 					}
 				}
 			} else {
-				for(Array<ModelInstance> nodeInstances : renderState.nodeToInstances.values()) {
-					visibleCount += nodeInstances.size;
+				for(Map.Entry<Node, Array<ModelInstance>> entry : renderState.nodeToInstances.entrySet()) {
+					Array<ModelInstance> nodeInstances = entry.getValue();
 					modelBatch.render(nodeInstances, renderState.environment);
 				}
 			}
@@ -167,7 +164,6 @@ public class GameScreen extends AbstractInfiniteSpaceGameScreen {
 		
 		modelBatch.end();
 
-		shipUserInterface.setDebugInfo(getDebugInfo(visibleCount, alwaysVisibleCount));
 		shipUserInterface.render();
 	}
 	
@@ -207,18 +203,6 @@ public class GameScreen extends AbstractInfiniteSpaceGameScreen {
 	private boolean isVisible (final Camera cam, final ModelInstance instance) {
 		instance.transform.getTranslation(positionForIsVisible);
 		return cam.frustum.pointInFrustum(positionForIsVisible);
-	}
-
-	private String getDebugInfo (int visibleCount, int alwaysVisibleCount) {
-		stringBuilder.setLength(0);
-		stringBuilder.append("FPS=");
-		stringBuilder.append(Gdx.graphics.getFramesPerSecond());
-		stringBuilder.append(" visible=");
-		stringBuilder.append(visibleCount);
-		stringBuilder.append(" always visible=");
-		stringBuilder.append(alwaysVisibleCount);
-
-		return stringBuilder.toString();
 	}
 
 	@Override
