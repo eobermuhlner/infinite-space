@@ -58,6 +58,14 @@ public class Units {
 		new Unit(1, "m"),
 	};
 
+	private static Unit meterDistanceUnits[] = {
+		new Unit(LIGHT_YEAR, "lightyears"),
+		new Unit(LIGHT_SECOND, "lightseconds"),
+		new Unit(1000000, "Mm"),
+		new Unit(1000, "km"),
+		new Unit(1, "m"),
+	};
+
 	private static Unit alternateSizeUnits[] = {
 		new Unit(SUN_RADIUS, "sun radius"),
 		new Unit(JUPITER_RADIUS, "jupiter radius"),
@@ -106,6 +114,10 @@ public class Units {
 	
 	public static String meterOrbitToString(double value) {
 		return unitToString(value, meterUnits, alternate1OrbitUnits, alternate2OrbitUnits);
+	}
+	
+	public static String meterDistanceToString(double value) {
+		return unitToString(value, meterDistanceUnits);
 	}
 	
 	public static String secondsToString (double value) {
