@@ -42,27 +42,27 @@ public class Player {
 	}
 
 	public void addThrustForward(float value) {
-		//thrustForward = MathUtil.clamp(thrustForward + value, -1.0f, 1.0f);
+		//thrustForward = MathUtil.maybeZero(MathUtil.clamp(thrustForward + value, -1.0f, 1.0f));
 	}
 
 	public void addThrustUp(float value) {
-		thrustUp = MathUtil.clamp(thrustUp + value, -1.0f, 1.0f);
+		thrustUp = MathUtil.maybeZero(MathUtil.clamp(thrustUp + value, -1.0f, 1.0f));
 	}
 
 	public void addThrustRight(float value) {
-		thrustRight = MathUtil.clamp(thrustRight + value, -1.0f, 1.0f);
+		thrustRight = MathUtil.maybeZero(MathUtil.clamp(thrustRight + value, -1.0f, 1.0f));
 	}
 
 	public void addPitch(float value) {
-		pitch = MathUtil.clamp(pitch + value, -1.0f, 1.0f);
+		pitch = MathUtil.maybeZero(MathUtil.clamp(pitch + value, -1.0f, 1.0f));
 	}
 
 	public void addRoll(float value) {
-		roll = MathUtil.clamp(roll + value, -1.0f, 1.0f);
+		roll = MathUtil.maybeZero(MathUtil.clamp(roll + value, -1.0f, 1.0f));
 	}
 
 	public void addYaw(float value) {
-		yaw = MathUtil.clamp(yaw + value, -1.0f, 1.0f);
+		yaw = MathUtil.maybeZero(MathUtil.clamp(yaw + value, -1.0f, 1.0f));
 	}
 
 	public void update (float deltaTime) {
@@ -116,8 +116,6 @@ public class Player {
 	public void calculateHyperVelocity (Array<Node> massiveNodes) {
 		velocity = (float) (10000000E5 * Config.SIZE_FACTOR);
 
-		String strongestDebugInfo = "";
-		
 		float strongestDragFactor = 1f;
 		Node strongestDragNode = null;
 		for (int i = 0; i < massiveNodes.size; i++) {
@@ -135,7 +133,7 @@ public class Player {
 				SpaceStation spaceStation = (SpaceStation)node;
 				radius = NodeToRenderConverter.calculateSpaceStationRadius(spaceStation);
 			} else {
-				radius = 0.01f;
+				continue;
 			}
 			float distance = position.len();
 			float dot = position.nor().dot(camera.direction);
@@ -145,10 +143,9 @@ public class Player {
 
 			float drag = directionFactor / (1 + correctedDistance / HYPER_DRAG_RADII);
 			float dragFactor = 1f - MathUtil.clamp(drag, 0, 1.0f);
+			System.out.printf("dist=%10.6f radii=%10.6f corr=%15.6f dot=%10.6f dirFactor=%10.6f drag=%10.6f dragFactor=%10.6f %s\n", 
+					distance, (distance/radius), correctedDistance, dot, directionFactor, drag, dragFactor, node.toString());
 			if (dragFactor < strongestDragFactor) {
-//				System.out.printf("dist=%10.6f radii=%10.6f corr=%15.6f dot=%10.6f dirFactor=%10.6f drag=%10.6f dragFactor=%10.6f %s\n", 
-//						distance, radiiDistance, correctedDistance, dot, directionFactor, drag, dragFactor, node.toString());
-				strongestDebugInfo = node.name + " drag:" + dragFactor;
 				strongestDragNode = node;
 			}
 			strongestDragFactor = Math.min(strongestDragFactor, dragFactor);
@@ -157,6 +154,6 @@ public class Player {
 		warpDragNode = strongestDragNode;
 		velocity *= strongestDragFactor;
 		
-		//System.out.println();		
+		System.out.println();		
 	}
 }
