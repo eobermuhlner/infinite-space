@@ -41,7 +41,7 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
 public class ShipUserInterface {
-	private static final int CROSSHAIR_SIZE = 50;
+	private static final int CROSSHAIR_SIZE = 25;
 
 	private static final boolean ELITE_STYLE = true;
 	
@@ -88,7 +88,6 @@ public class ShipUserInterface {
 
 	final Array<Node> massiveNodes = new Array<Node>();
 
-	private Label labelThrustThrottle;
 	private Label labelThrust;
 	private Label labelSpeed;
 	private Label labelWarpDrag;
@@ -187,8 +186,6 @@ public class ShipUserInterface {
 
 				table.row();
 				table.add(new Label("Thrust", uiSkin));
-				labelThrustThrottle = new Label("", uiSkin);
-				table.add(labelThrustThrottle);
 				labelThrust = new Label("", uiSkin);
 				table.add(labelThrust);
 
@@ -330,8 +327,12 @@ public class ShipUserInterface {
 
 			Vector3 pos = new Vector3();
 			instance.transform.getTranslation(pos);
-			float distance = pos.dst(camera.position);
-			if (camera.frustum.pointInFrustum(pos)) {
+			Vector3 delta = new Vector3();
+			delta.set(pos);
+			delta.sub(camera.position);
+			
+			if (camera.direction.hasSameDirection(delta)) {
+				float distance = pos.dst(camera.position);
 				Vector3 screenPos = camera.project(pos);
 				crosshair.setPosition(screenPos.x-crosshair.getWidth()/2, screenPos.y-crosshair.getHeight()/2);
 				Node node = ((UserData) instance.userData).node;
@@ -353,7 +354,6 @@ public class ShipUserInterface {
 			}
 		}
 		
-		labelThrustThrottle.setText(Units.toString(player.thrustForwardThrottle.throttle));
 		labelThrust.setText(Units.toString(player.thrustForwardThrottle.value));
 		labelSpeed.setText(Units.toString(player.velocity));
 		labelWarpDrag.setText(Units.toString(player.warpDrag));
