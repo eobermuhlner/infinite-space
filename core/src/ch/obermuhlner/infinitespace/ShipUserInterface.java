@@ -335,16 +335,16 @@ public class ShipUserInterface {
 				Vector3 screenPos = camera.project(pos);
 				crosshair.setPosition(screenPos.x-crosshair.getWidth()/2, screenPos.y-crosshair.getHeight()/2);
 				Node node = ((UserData) instance.userData).node;
-				if (crosshair.button.isChecked()) {
-					crosshair.labelTop.setVisible(true);
-					crosshair.labelBottom.setVisible(true);
-				} else {
-					crosshair.labelTop.setVisible(false);
-					crosshair.labelBottom.setVisible(false);
-				}
+//				if (crosshair.button.isChecked()) {
+//					crosshair.labelTop.setVisible(true);
+//					crosshair.labelBottom.setVisible(true);
+//				} else {
+//					crosshair.labelTop.setVisible(false);
+//					crosshair.labelBottom.setVisible(false);
+//				}
 				if (crosshair.button.isChecked() || node instanceof Star || distance < getOrbit(node) * ORBIT_SELECTABLE_FACTOR) {
 					crosshair.setVisible(true);
-					crosshair.labelBottom.setText(Units.meterDistanceToString(distance/NodeToRenderConverter.SIZE_FACTOR)); // FIXME
+					crosshair.labelBottom.setText(Units.meterDistanceToString(distance/NodeToRenderConverter.SIZE_FACTOR));
 				} else {
 					crosshair.setVisible(false);
 				}
@@ -444,8 +444,7 @@ public class ShipUserInterface {
 			defaults().center();
 			
 			row();
-			labelTop = new Label(userData.node.name, skin);
-			labelTop.setColor(uiSkin.getColor("blue"));
+			labelTop = new Label(userData.node.name, skin, "crosshair");
 			add(labelTop);
 			
 			row();
@@ -460,8 +459,7 @@ public class ShipUserInterface {
 			add(button).size(CROSSHAIR_SIZE);
 
 			row();
-			labelBottom = new Label("", skin);
-			labelBottom.setColor(uiSkin.getColor("blue"));
+			labelBottom = new Label("", skin, "crosshair");
 			add(labelBottom);
 		}
 	}

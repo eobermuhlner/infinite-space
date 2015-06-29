@@ -1,5 +1,6 @@
 package ch.obermuhlner.infinitespace.game;
 
+import ch.obermuhlner.infinitespace.Config;
 import ch.obermuhlner.infinitespace.NodeToRenderConverter;
 import ch.obermuhlner.infinitespace.Throttle;
 import ch.obermuhlner.infinitespace.game.ship.Ship;
@@ -73,27 +74,47 @@ public class Player {
 		float maxThrustPitch = ship.pitchThrust / mass;
 		float maxThrustYaw = ship.yawThrust / mass;
 		
-		vec3.set(camera.direction).crs(camera.up).scl(deltaTime * thrustRight * velocity * maxThrustRight);
-		camera.position.add(vec3);
-
-		vec3.set(camera.direction).scl(deltaTime * thrustForwardThrottle.value * velocity * maxThrustForward);
-		camera.position.add(vec3);
+		boolean updateNeeded = false;
 		
-		vec3.set(camera.up).scl(deltaTime * thrustUp * velocity * maxThrustUp);
-		camera.position.add(vec3);
+		if (thrustRight != 0) {
+			vec3.set(camera.direction).crs(camera.up).scl(deltaTime * thrustRight * velocity * maxThrustRight);
+			camera.position.add(vec3);
+			updateNeeded = true;
+		}
+		if (thrustForwardThrottle.value != 0) {
+			vec3.set(camera.direction).scl(deltaTime * thrustForwardThrottle.value * velocity * maxThrustForward);
+			camera.position.add(vec3);
+			updateNeeded = true;
+		}
+		if (thrustUp != 0) {
+			vec3.set(camera.up).scl(deltaTime * thrustUp * velocity * maxThrustUp);
+			camera.position.add(vec3);
+			updateNeeded = true;
+		}
 		
 		float rotateAngle = 90;
-		camera.rotate(camera.up, deltaTime * -yaw * maxThrustYaw * rotateAngle);
-		vec3.set(camera.direction).crs(camera.up).nor();
-		camera.rotate(vec3, deltaTime * pitch * maxThrustPitch * rotateAngle);
-		vec3.set(camera.direction);
-		camera.rotate(vec3, deltaTime * roll * maxThrustRoll * rotateAngle);
+		if (yaw != 0) {
+			camera.rotate(camera.up, deltaTime * -yaw * maxThrustYaw * rotateAngle);
+			updateNeeded = true;
+		}
+		if (pitch != 0) {
+			vec3.set(camera.direction).crs(camera.up).nor();
+			camera.rotate(vec3, deltaTime * pitch * maxThrustPitch * rotateAngle);
+			updateNeeded = true;
+		}
+		if (roll != 0) {
+			vec3.set(camera.direction);
+			camera.rotate(vec3, deltaTime * roll * maxThrustRoll * rotateAngle);
+			updateNeeded = true;
+		}
 
-		camera.update(true);
+		if (updateNeeded) {
+			camera.update(true);
+		}
 	}
 
 	public void calculateHyperVelocity (Array<Node> massiveNodes) {
-		velocity = 100.0f;
+		velocity = (float) (10000000E5 * Config.SIZE_FACTOR);
 
 		String strongestDebugInfo = "";
 		

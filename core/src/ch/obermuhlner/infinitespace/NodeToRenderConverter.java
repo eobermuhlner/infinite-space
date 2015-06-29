@@ -58,10 +58,7 @@ public class NodeToRenderConverter {
 
 	private static final double AU = Units.ASTRONOMICAL_UNIT;
 	
-	public static double SIZE_FACTOR = 1 / 100000E5;
-	private static double SIZE_STAR_ZOOM_FACTOR = 1;
-	private static double SIZE_ZOOM_FACTOR = 1;
-	private static float SIZE_MOON_ORBIT_ZOOM_FACTOR = 1;
+	public static double SIZE_FACTOR = Config.SIZE_FACTOR;
 	
 	private static final int PLANET_SPHERE_DIVISIONS_U = 30;
 	private static final int PLANET_SPHERE_DIVISIONS_V = 30;
@@ -674,9 +671,9 @@ public class NodeToRenderConverter {
 
 			Random random = node.seed.getRandom();
 			
-			float width = (float)(node.width * SIZE_FACTOR * SIZE_ZOOM_FACTOR);
-			float height = (float)(node.height * SIZE_FACTOR * SIZE_ZOOM_FACTOR);
-			float length = (float)(node.length * SIZE_FACTOR * SIZE_ZOOM_FACTOR);
+			float width = (float)(node.width * SIZE_FACTOR);
+			float height = (float)(node.height * SIZE_FACTOR);
+			float length = (float)(node.length * SIZE_FACTOR);
 
 			if (showNodeBoundingBox && !realUniverse) {
 				instances.add(createBoundingBox(width, height, length,
@@ -705,7 +702,7 @@ public class NodeToRenderConverter {
 					TextureAttribute normalAttribute = new TextureAttribute(TextureAttribute.Normal, textureNormal);
 					materialPlainAttributes.add(normalAttribute);
 
-					plainTextureSize = (float)(100 * SIZE_FACTOR * SIZE_ZOOM_FACTOR); // m
+					plainTextureSize = (float)(100 * SIZE_FACTOR); // m
 				} else {
 					float grayLuminance = random.nextFloat(0.25f, 0.75f);
 					ColorAttribute grayAttribute = ColorAttribute.createDiffuse(new Color(grayLuminance, grayLuminance, grayLuminance, 1f));
@@ -722,11 +719,11 @@ public class NodeToRenderConverter {
 				if (random.nextBoolean(0.6)) {
 					textureEmissive = assetManager.get(InfiniteSpaceGame.getTexturePath("windows1.jpg"), Texture.class);
 					textureSpecular = assetManager.get(InfiniteSpaceGame.getTexturePath("windows1_specular.jpg"), Texture.class);
-					windowTextureSize = (float)(60 * SIZE_FACTOR * SIZE_ZOOM_FACTOR); // m
+					windowTextureSize = (float)(60 * SIZE_FACTOR); // m
 				} else {
 					textureEmissive = assetManager.get(InfiniteSpaceGame.getTexturePath("windows2.jpg"), Texture.class);
 					textureSpecular = assetManager.get(InfiniteSpaceGame.getTexturePath("windows2_specular.jpg"), Texture.class);
-					windowTextureSize = (float)(60 * SIZE_FACTOR * SIZE_ZOOM_FACTOR); // m
+					windowTextureSize = (float)(60 * SIZE_FACTOR); // m
 				}
 				materialWindowsAttributes.add(new TextureAttribute(TextureAttribute.Emissive, textureEmissive));
 				materialWindowsAttributes.add(new TextureAttribute(TextureAttribute.Specular, textureSpecular));
@@ -1165,7 +1162,7 @@ public class NodeToRenderConverter {
 	}
 
 	public static float calculateStarRadius(Star node) {
-		return (float)(node.radius * SIZE_FACTOR * SIZE_STAR_ZOOM_FACTOR);
+		return (float)(node.radius * SIZE_FACTOR);
 	}
 	
 	public static float calculatePlanetRadius(Planet node) {
@@ -1173,11 +1170,11 @@ public class NodeToRenderConverter {
 	}
 
 	public static float calculatePlanetRadius(double radius) {
-		return (float)(radius * SIZE_FACTOR * SIZE_ZOOM_FACTOR);
+		return (float)(radius * SIZE_FACTOR);
 	}
 
 	public static float calculateSpaceStationRadius (SpaceStation node) {
-		return (float) (Math.max(Math.max(node.width, node.height), node.length) / 2 * SIZE_FACTOR * SIZE_ZOOM_FACTOR);
+		return (float) (Math.max(Math.max(node.width, node.height), node.length) / 2 * SIZE_FACTOR);
 	}
 
 
@@ -1186,8 +1183,7 @@ public class NodeToRenderConverter {
 		if (node.parent instanceof OrbitingSpheroidNode) {
 			OrbitingSpheroidNode parent = (OrbitingSpheroidNode)node.parent;
 			if (parent instanceof Planet) {
-				orbitRadius *= SIZE_MOON_ORBIT_ZOOM_FACTOR;
-				orbitRadius += (float) (parent.radius * SIZE_FACTOR * SIZE_ZOOM_FACTOR - parent.radius * SIZE_FACTOR);
+				orbitRadius += (float) (parent.radius - parent.radius);
 			}
 		}
 		return orbitRadius;

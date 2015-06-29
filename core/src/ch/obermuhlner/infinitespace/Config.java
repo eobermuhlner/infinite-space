@@ -9,6 +9,8 @@ import com.badlogic.gdx.Gdx;
 
 public class Config {
 
+	public static double SIZE_FACTOR = 1 / 10000E5;
+	
 	public static final boolean DEBUG_PROFILING = false;
 	public static final boolean DEBUG_LINEAR_ORBITS = false;
 	public static final boolean DEBUG_ORBIT_LINEUP = false;
@@ -21,7 +23,7 @@ public class Config {
 	public static final Star.Type DEBUG_FORCE_STAR_TYPE = Star.Type.SOL_LIKE;
 	
 	public static final SpaceStation.Type DEBUG_FORCE_SPACE_STATION_TYPE = null;
-	//public static final SpaceStation.Type DEBUG_FORCE_SPACE_STATION_TYPE = SpaceStation.Type.BLOCKY;
+	//public static final SpaceStation.Type DEBUG_FORCE_SPACE_STATION_TYPE = SpaceStation.Type.CUBE;
 
 	public static final Locale LOCALE = Locale.US;
 	

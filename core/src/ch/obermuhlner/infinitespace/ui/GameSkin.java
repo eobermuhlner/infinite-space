@@ -15,9 +15,9 @@ public class GameSkin {
 	
 	public static Skin getSkin() {
 		if (skin == null) {
-			
 			skin = new Skin();
 			skin.addRegions(new TextureAtlas(Gdx.files.internal("data/uiskin.atlas")));
+			skin.add("small-font", generateFont("data/fonts/orbitron-medium.ttf", 16));
 			skin.add("default-font", generateFont("data/fonts/orbitron-medium.ttf", 20));
 			skin.add("large-font", generateFont("data/fonts/orbitron-medium.ttf", 26));
 			skin.load(Gdx.files.internal("data/uiskin.json"));			
