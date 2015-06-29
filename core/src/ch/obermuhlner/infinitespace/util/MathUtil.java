@@ -66,4 +66,14 @@ public class MathUtil {
 		}
 		return result;
 	}
+
+	private static final float ZERO_THRESHOLD = 1e-4f;
+	
+	public static float maybeZero(float value) {
+		return maybeZero(value, ZERO_THRESHOLD);
+	}
+	
+	public static float maybeZero(float value, float threshold) {
+		return value < ZERO_THRESHOLD && value > -ZERO_THRESHOLD ? 0 : value;
+	}
 }
