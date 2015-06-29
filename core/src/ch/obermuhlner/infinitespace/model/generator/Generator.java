@@ -1206,7 +1206,7 @@ public class Generator {
 		{
 			AsteroidBelt saturnRing = new AsteroidBelt(saturn, childIndex++);
 			saturnRing.name = "Saturn Ring";
-			saturnRing.orbitRadius = 80000E3; //FIXME real values of staturn ring
+			saturnRing.orbitRadius = 120000E3; //FIXME real values of staturn ring
 			saturnRing.orbitPeriod = 0;
 			saturnRing.averageRadius = 5;
 			saturnRing.rotation = 0;
