@@ -39,7 +39,7 @@ public class GameScreen extends AbstractInfiniteSpaceGameScreen {
 	private ShipUserInterface shipUserInterface;
 
 	private final UniverseCoordinates coordinates = new UniverseCoordinates();
-	private int starSystemIndex = Integer.MAX_VALUE;
+	private int starSystemIndex;
 
 	private boolean paused;
 
@@ -72,6 +72,7 @@ public class GameScreen extends AbstractInfiniteSpaceGameScreen {
 		
 		renderState.environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.1f, 0.1f, 0.1f, 1f));
 		
+		starSystemIndex = Integer.MAX_VALUE;
 		updateUniverse();
 		shipUserInterface.setZoomObject(renderState.nodeToInstances);
 	}
