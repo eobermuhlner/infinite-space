@@ -336,13 +336,13 @@ public class ShipUserInterface {
 				Vector3 screenPos = camera.project(pos);
 				crosshair.setPosition(screenPos.x-crosshair.getWidth()/2, screenPos.y-crosshair.getHeight()/2);
 				Node node = ((UserData) instance.userData).node;
-//				if (crosshair.button.isChecked()) {
-//					crosshair.labelTop.setVisible(true);
-//					crosshair.labelBottom.setVisible(true);
-//				} else {
-//					crosshair.labelTop.setVisible(false);
-//					crosshair.labelBottom.setVisible(false);
-//				}
+				
+				if (crosshair.button.isChecked()) {
+					crosshair.labelBottom.setVisible(true);
+				} else {
+					crosshair.labelBottom.setVisible(false);
+				}
+				
 				if (crosshair.button.isChecked() || node instanceof Star || distance < getOrbit(node) * ORBIT_SELECTABLE_FACTOR) {
 					crosshair.setVisible(true);
 					crosshair.labelBottom.setText(Units.meterDistanceToString(distance/NodeToRenderConverter.SIZE_FACTOR));
