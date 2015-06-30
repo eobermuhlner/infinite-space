@@ -137,16 +137,16 @@ public class Player {
 			}
 			float distance = position.len();
 			float dot = position.nor().dot(camera.direction);
-			float directionFactor = MathUtil.smoothstep(0f, 1f, Math.min(1f, MathUtil.transform(-1f, 1f, 0.2f, 1.01f, dot)));
+			float directionFactor = MathUtil.smoothstep(0f, 1f, Math.min(1f, MathUtil.transform(0f, 1f, 0.2f, 1.1f, dot)));
 			//directionFactor = directionFactor * directionFactor;
 			float correctedDistance = Math.max(0, distance - 3 * radius) / radius;
 
 			float drag = directionFactor / (1 + correctedDistance / HYPER_DRAG_RADII);
 			float dragFactor = 1f - MathUtil.clamp(drag, 0, 1.0f);
-			System.out.printf("dist=%10.6f radii=%10.6f corr=%15.6f dot=%10.6f dirFactor=%10.6f drag=%10.6f dragFactor=%10.6f %s\n", 
-					distance, (distance/radius), correctedDistance, dot, directionFactor, drag, dragFactor, node.toString());
 			if (dragFactor < strongestDragFactor) {
 				strongestDragNode = node;
+//				System.out.printf("dist=%10.6f radii=%10.6f corr=%15.6f dot=%10.6f dirFactor=%10.6f drag=%10.6f dragFactor=%10.6f %s\n", 
+//						distance, (distance/radius), correctedDistance, dot, directionFactor, drag, dragFactor, node.toString());
 			}
 			strongestDragFactor = Math.min(strongestDragFactor, dragFactor);
 		}
@@ -154,6 +154,6 @@ public class Player {
 		warpDragNode = strongestDragNode;
 		velocity *= strongestDragFactor;
 		
-		System.out.println();		
+//		System.out.println();		
 	}
 }
