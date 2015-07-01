@@ -36,7 +36,7 @@ public abstract class AbstractNodeStageScreen extends AbstractStageScreen {
 		
 		cameraInputController.translateUnits = radius;
 		
-		renderState.environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.1f, 0.1f, 0.1f, 1f));
+		renderState.environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.01f, 0.01f, 0.01f, 1f));
 		renderState.environment.add(new DirectionalLight().set(Color.WHITE, 1, 0, -1));
 		
 		infiniteSpaceGame.genericNodeConverter.convertNode(node, renderState);
