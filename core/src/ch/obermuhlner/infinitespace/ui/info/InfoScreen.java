@@ -101,7 +101,7 @@ public class InfoScreen extends AbstractNodeStageScreen {
 		}
 		
 		rootTable.row();
-		rootTable.add(new Label("Info " + node.getName(), skin, TITLE));
+		rootTable.add(new Label(node.getName(), skin, TITLE));
 
 		Array<String> modelInstanceNames = getModelInstanceNames();
 		if (modelInstanceNames.size > 0) {
