@@ -10,6 +10,7 @@ import ch.obermuhlner.infinitespace.ShipUserInterface;
 import ch.obermuhlner.infinitespace.UniverseCoordinates;
 import ch.obermuhlner.infinitespace.game.Player;
 import ch.obermuhlner.infinitespace.game.ship.ShipFactory;
+import ch.obermuhlner.infinitespace.graphics.CenterPerspectiveCamera;
 import ch.obermuhlner.infinitespace.model.Node;
 import ch.obermuhlner.infinitespace.render.UberShaderProvider;
 import ch.obermuhlner.infinitespace.ui.AbstractInfiniteSpaceGameScreen;
@@ -18,7 +19,6 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.g3d.ModelBatch;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
@@ -34,7 +34,7 @@ public class GameScreen extends AbstractInfiniteSpaceGameScreen {
 	private ModelBatch modelBatch;
 
 	private Player player;
-	private PerspectiveCamera camera;
+	private CenterPerspectiveCamera camera;
 
 	private ShipUserInterface shipUserInterface;
 
@@ -58,7 +58,7 @@ public class GameScreen extends AbstractInfiniteSpaceGameScreen {
 		music = createMusic();
 		modelBatch = new ModelBatch(UberShaderProvider.DEFAULT);
 
-		camera = new PerspectiveCamera(67f, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+		camera = new CenterPerspectiveCamera(67f, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		camera.position.set(GameState.INSTANCE.position);
 		camera.direction.set(GameState.INSTANCE.direction);
 		camera.up.set(GameState.INSTANCE.up);
@@ -82,6 +82,8 @@ public class GameScreen extends AbstractInfiniteSpaceGameScreen {
 		super.hide();
 		
 		GameState.INSTANCE.position.set(camera.position);
+		GameState.INSTANCE.position.add(camera.positionOffset);
+		
 		GameState.INSTANCE.direction.set(camera.direction);
 		GameState.INSTANCE.up.set(camera.up);
 		GameState.INSTANCE.starSystem = starSystemIndex;
@@ -116,14 +118,15 @@ public class GameScreen extends AbstractInfiniteSpaceGameScreen {
 
 		modelBatch.begin(camera);
 
+		Vector3 cameraPosition = new Vector3(camera.position).scl(-1);
+		camera.recenter();
+		renderState.recenter(cameraPosition);
+
 		{
 			camera.near = 100f;
 			camera.far = 900f;
 			camera.update(true);
 	
-			for (int i = 0; i < renderState.instancesFar.size; i++) {
-				renderState.instancesFar.get(i).transform.setToTranslation(camera.position);
-			}
 			modelBatch.render(renderState.instancesFar);
 			modelBatch.flush();
 		}
@@ -141,6 +144,7 @@ public class GameScreen extends AbstractInfiniteSpaceGameScreen {
 
 		{
 			camera.near = 0.0001f;
+			//camera.near = nearest.len() / 2;
 			camera.far = 300f;
 			camera.update(true);
 	

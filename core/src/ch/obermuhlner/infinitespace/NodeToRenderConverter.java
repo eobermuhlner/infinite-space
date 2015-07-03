@@ -118,7 +118,7 @@ public class NodeToRenderConverter {
 			
 			BaseLight light = nodeConverter.convertToLight(node, realUniverse);
 			if (light != null) {
-				renderState.environment.add(light);
+				renderState.addLight(light);
 			}
 			//System.out.println("Converting to render " + node + " in " + stopWatch);
 		}

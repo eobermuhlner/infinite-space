@@ -4,13 +4,13 @@ import ch.obermuhlner.infinitespace.Config;
 import ch.obermuhlner.infinitespace.NodeToRenderConverter;
 import ch.obermuhlner.infinitespace.Throttle;
 import ch.obermuhlner.infinitespace.game.ship.Ship;
+import ch.obermuhlner.infinitespace.graphics.CenterPerspectiveCamera;
 import ch.obermuhlner.infinitespace.model.Node;
 import ch.obermuhlner.infinitespace.model.universe.Planet;
 import ch.obermuhlner.infinitespace.model.universe.SpaceStation;
 import ch.obermuhlner.infinitespace.model.universe.Star;
 import ch.obermuhlner.infinitespace.util.MathUtil;
 
-import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 
@@ -18,7 +18,7 @@ public class Player {
 
 	private static final float HYPER_DRAG_RADII = 1000;
 	public Ship ship;
-	public Camera camera;
+	public CenterPerspectiveCamera camera;
 	
 	public float velocity = 1.0f;
 	public float warpDrag = 0.0f;
@@ -36,7 +36,7 @@ public class Player {
 	// optimization: temporary variable
 	private final Vector3 vec3 = new Vector3();
 
-	public Player (Ship ship, Camera camera) {
+	public Player (Ship ship, CenterPerspectiveCamera camera) {
 		this.ship = ship;
 		this.camera = camera;
 	}
@@ -122,6 +122,7 @@ public class Player {
 			Node node = massiveNodes.get(i);
 			Vector3 position = NodeToRenderConverter.calculatePosition(node);
 			position.sub(camera.position);
+			position.sub(camera.positionOffset);
 			float radius;
 			if (node instanceof Planet) {
 				Planet planet = (Planet)node;
@@ -145,8 +146,8 @@ public class Player {
 			float dragFactor = 1f - MathUtil.clamp(drag, 0, 1.0f);
 			if (dragFactor < strongestDragFactor) {
 				strongestDragNode = node;
-//				System.out.printf("dist=%10.6f radii=%10.6f corr=%15.6f dot=%10.6f dirFactor=%10.6f drag=%10.6f dragFactor=%10.6f %s\n", 
-//						distance, (distance/radius), correctedDistance, dot, directionFactor, drag, dragFactor, node.toString());
+				System.out.printf("dist=%10.6f radii=%10.6f corr=%15.6f dot=%10.6f dirFactor=%10.6f drag=%10.6f dragFactor=%10.6f %s\n", 
+						distance, (distance/radius), correctedDistance, dot, directionFactor, drag, dragFactor, node.toString());
 			}
 			strongestDragFactor = Math.min(strongestDragFactor, dragFactor);
 		}
@@ -154,6 +155,6 @@ public class Player {
 		warpDragNode = strongestDragNode;
 		velocity *= strongestDragFactor;
 		
-//		System.out.println();		
+		System.out.println();		
 	}
 }
