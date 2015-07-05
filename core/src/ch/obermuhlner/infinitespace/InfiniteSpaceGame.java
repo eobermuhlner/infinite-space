@@ -25,10 +25,21 @@ public class InfiniteSpaceGame extends Game {
 			textureParameter.minFilter = TextureFilter.MipMapLinearLinear;
 			textureParameter.magFilter = TextureFilter.MipMapLinearLinear;
 			for (String textureName : new String[] {
-				"mercury.jpg", "venus.jpg", "earth.jpg", "mars.jpg", "jupiter.jpg", "saturn.jpg",
+				"mercury.jpg", "venus.jpg", "earth.jpg", "mars.png", "jupiter.jpg", "saturn.jpg",
 				"uranus.jpg", "neptune.jpg", "ceres.jpg", "phobos.jpg", "deimos.jpg", "moon.jpg", "io.jpg", "ganymede.jpg", "europa.jpg", "callisto.jpg",
 				"mimas.jpg", "enceladus.jpg", "tethys.jpg", "dione.jpg", "rhea.jpg", "titan.jpg", "iapetus.jpg", "miranda.jpg", "ariel.jpg", "umbriel.jpg", "titania.jpg", "oberon.jpg", "triton.jpg",
-				"earth_normals.jpg", "moon_normals.jpg",
+				"earth_normals.jpg", "moon_normals.png", "mars_normals.png", "jupiter_normals.jpg",
+				"normals_area1.png", "normals_area2.png", "normals_area3.png",
+				"normals_crater_huge1.png", "normals_crater_huge2.png",
+				"normals_crater_big1.png", "normals_crater_big2.png",
+				"normals_crater_medium1.png", "normals_crater_medium2.png", "normals_crater_medium3.png",
+				"normals_crater_small1.png", "normals_crater_small2.png", "normals_crater_small3.png", "normals_crater_small4.png", "normals_crater_small5.png",
+				"normals_crater_tiny1.png", "normals_crater_tiny2.png", "normals_crater_tiny3.png",
+				"normals_mountain1.png", "normals_mountain2.png",  
+				"normals_vulcano_huge1.png",
+				"normals_vulcano_big1.png", "normals_vulcano_big2.png", "normals_vulcano_big3.png",  
+				"normals_vulcano_medium1.png", "normals_vulcano_medium2.png", "normals_vulcano_medium3.png", "normals_vulcano_medium4.png",    
+				"normals_soft1.png",
 				"clouds.png",
 				}) {
 				assetManager.load(InfiniteSpaceGame.getTexturePath(textureName), Texture.class, textureParameter);

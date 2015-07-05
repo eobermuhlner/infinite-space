@@ -914,7 +914,8 @@ public class Generator {
 			mars.orbitPeriod = 1.8808476 * Units.SECONDS_PER_YEAR;
 			mars.orbitStartAngle = random.nextDouble(2 * Math.PI);
 			mars.type = Planet.Type.STONE;
-			mars.textureName = "mars.jpg";
+			mars.textureName = "mars.png";
+			mars.textureNormalName = "mars_normals.png";
 			mars.radius = 3397.00E3;
 			mars.rotation = 1.02595675 * Units.SECONDS_PER_DAY;
 			mars.mass = 6.4191E23;
@@ -969,6 +970,7 @@ public class Generator {
 			jupiter.orbitStartAngle = random.nextDouble(2 * Math.PI);
 			jupiter.type = Planet.Type.GAS;
 			jupiter.textureName = "jupiter.jpg";
+			jupiter.textureNormalName = "jupiter_normals.jpg";
 			jupiter.radius = 71492.68E3;
 			jupiter.rotation = 0.41354 * Units.SECONDS_PER_DAY;
 			jupiter.mass = 1.8987E27;
@@ -1056,7 +1058,7 @@ public class Generator {
 			luna.childCount = 0;
 			luna.type = Planet.Type.STONE;
 			luna.textureName = "moon.jpg";
-			luna.textureNormalName = "moon_normals.jpg";
+			luna.textureNormalName = "moon_normals.png";
 			luna.radius = 1737.1E3;
 			luna.rotation = 27.321582 * Units.SECONDS_PER_DAY;
 			luna.mass = 7.3477E22;

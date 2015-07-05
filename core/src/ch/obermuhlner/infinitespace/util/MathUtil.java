@@ -10,6 +10,10 @@ public class MathUtil {
 		return 1.0 / Math.sin(x);
 	}
 	
+	public static float mix(float x, float y, float a) {
+		return x * (1-a) + y * a;
+	}
+	
 	public static float clamp(float value, float min, float max) {
 		if (value < min) {
 			return min;
@@ -50,6 +54,16 @@ public class MathUtil {
 	}
 	
 	public static float transform(float fromMin, float fromMax, float toMin, float toMax, float value) {
+		if (value < fromMin) {
+			return toMin;
+		}
+		if (value > fromMax) {
+			return toMax;
+		}
+		return (value - fromMin) / (fromMax - fromMin) * (toMax - toMin) + toMin;
+	}
+
+	public static double transform(double fromMin, double fromMax, double toMin, double toMax, double value) {
 		if (value < fromMin) {
 			return toMin;
 		}

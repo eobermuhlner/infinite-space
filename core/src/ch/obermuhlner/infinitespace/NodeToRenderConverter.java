@@ -1,6 +1,8 @@
 
 package ch.obermuhlner.infinitespace;
 
+import static ch.obermuhlner.infinitespace.model.random.Random.p;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -21,6 +23,7 @@ import ch.obermuhlner.infinitespace.util.MathUtil;
 import ch.obermuhlner.infinitespace.util.StopWatch;
 import ch.obermuhlner.infinitespace.util.Units;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
@@ -28,6 +31,7 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.VertexAttributes.Usage;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g3d.Attribute;
 import com.badlogic.gdx.graphics.g3d.Material;
 import com.badlogic.gdx.graphics.g3d.Model;
@@ -55,6 +59,8 @@ public class NodeToRenderConverter {
 	private static final boolean RENDER_PROCEDURAL_SHADERS_TO_TEXTURES = true;
 
 	private static final double LAVA_TEMPERATURE = Units.celsiusToKelvin(700);
+
+	private static final double ATMOSPHERE_PRESSURE_RELEVANT = 0.1;
 
 	private static final double AU = Units.ASTRONOMICAL_UNIT;
 	
@@ -242,6 +248,7 @@ public class NodeToRenderConverter {
 			
 			String textureName = node.textureName;
 			String textureNormalName = node.textureNormalName;
+			Texture textureNormal = null;
 			String shaderName = null;
 			Color[] planetColors = null;
 			Color specularColor = null;
@@ -269,7 +276,7 @@ public class NodeToRenderConverter {
 					}
 					
 					if (textureName == null) {
-						if (node.atmospherePressure > 0.1) {
+						if (node.atmospherePressure > ATMOSPHERE_PRESSURE_RELEVANT) {
 							if (node.breathableAtmosphere) {
 								if (node.hasLife) {
 									textureName = "terrestrial_colors.png";
@@ -299,7 +306,8 @@ public class NodeToRenderConverter {
 								//materialAttributes.add(TerrestrialPlanetFloatAttribute.createColorFrequency(random.nextFloat(15f, 25f)));
 								shaderName = UberShaderProvider.TERRESTRIAL_PLANET_SHADER;
 								specularColor = new Color(0.2f, 0.2f, 0.2f, 1.0f);
-								textureNormalName = "moon_normals.jpg";
+								//textureNormalName = "random_craters_v2_normals.png";
+								textureNormal = renderTextureNormalsCraters(node, random);
 							}
 						}
 					}
@@ -316,7 +324,8 @@ public class NodeToRenderConverter {
 						//materialAttributes.add(TerrestrialPlanetFloatAttribute.createColorFrequency(random.nextFloat(15f, 25f)));
 						shaderName = UberShaderProvider.TERRESTRIAL_PLANET_SHADER;
 						specularColor = new Color(0.2f, 0.2f, 0.2f, 1.0f);
-						textureNormalName = "moon_normals.jpg";
+						//textureNormalName = "random_craters_v2_normals.png";
+						textureNormal = renderTextureNormalsCraters(node, random);
 					}
 
 					if (textureName == null && node.radius < 1000E3) {
@@ -343,8 +352,10 @@ public class NodeToRenderConverter {
 					Texture textureDiffuse = assetManager.get(InfiniteSpaceGame.getTexturePath(textureName), Texture.class);
 					materialAttributes.add(new TextureAttribute(TextureAttribute.Diffuse, textureDiffuse));
 					
-					if (textureNormalName != null) {
-						Texture textureNormal = assetManager.get(InfiniteSpaceGame.getTexturePath(textureNormalName), Texture.class);
+					if (textureNormal == null && textureNormalName != null) {
+						textureNormal = assetManager.get(InfiniteSpaceGame.getTexturePath(textureNormalName), Texture.class);
+					}
+					if (textureNormal != null) {
 						materialAttributes.add(new TextureAttribute(TextureAttribute.Normal, textureNormal));
 					}
 					
@@ -376,7 +387,6 @@ public class NodeToRenderConverter {
 						
 						Texture textureDiffuse = renderTextureDiffuse(material, userData);
 						Texture textureSpecular = null;
-						Texture textureNormal = null;
 						if (specularColor == null && shaderName.equals(UberShaderProvider.TERRESTRIAL_PLANET_SHADER)) {
 							textureSpecular = renderTextureSpecular(material, userData);
 						}
@@ -634,11 +644,129 @@ public class NodeToRenderConverter {
 
 		model.dispose();
 		modelBatch.dispose();
-		//frameBuffer.dispose(); // FIXME
+		//frameBuffer.dispose(); // FIXME memory leak
 		
 		return texture;
 	}
+	
+	public Texture renderTextureNormalsCraters (Planet node, Random random) {
+		final int textureHeight = 1024;
+		final int textureWidth = 2048;
+		
+		int areaCount = 100;
+		int craterCount = random.nextInt(100, 100000);
+		float hugeCraterProbability = random.nextBoolean(0.6f) ? 2f : random.nextFloat(10, 500); 
+		float areaProbability = random.nextFloat(0, 10);
+		float vulcanoProbability = MathUtil.smoothstep(0.5f, 1.0f, random.nextFloat());
+		int softCount = 0;
+		if (node.atmospherePressure > ATMOSPHERE_PRESSURE_RELEVANT) {
+			softCount = random.nextInt(5, 50);
+			softCount += node.water;
+		}
 
+		System.out.println("Generating Normals craters=" + craterCount + " areaProb=" + areaProbability +" vulcanoProb=" + vulcanoProbability + " softCount=" + softCount);
+		
+		FrameBuffer frameBuffer = new FrameBuffer(Pixmap.Format.RGB888, textureWidth, textureHeight, false);
+		frameBuffer.begin();
+
+		Gdx.gl.glClearColor(0.5f, 0.5f, 1f, 1);
+		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+	       
+		SpriteBatch spriteBatch = new SpriteBatch();
+		spriteBatch.begin();
+		
+		Texture area1 = assetManager.get(InfiniteSpaceGame.getTexturePath("normals_area1.png"), Texture.class);
+		Texture area2 = assetManager.get(InfiniteSpaceGame.getTexturePath("normals_area2.png"), Texture.class);
+		Texture area3 = assetManager.get(InfiniteSpaceGame.getTexturePath("normals_area3.png"), Texture.class);
+		Texture craterHuge1 = assetManager.get(InfiniteSpaceGame.getTexturePath("normals_crater_huge1.png"), Texture.class);
+		Texture craterHuge2 = assetManager.get(InfiniteSpaceGame.getTexturePath("normals_crater_huge2.png"), Texture.class);
+		Texture craterBig1 = assetManager.get(InfiniteSpaceGame.getTexturePath("normals_crater_big1.png"), Texture.class);
+		Texture craterBig2 = assetManager.get(InfiniteSpaceGame.getTexturePath("normals_crater_big2.png"), Texture.class);
+		Texture craterMedium1 = assetManager.get(InfiniteSpaceGame.getTexturePath("normals_crater_medium1.png"), Texture.class);
+		Texture craterMedium2 = assetManager.get(InfiniteSpaceGame.getTexturePath("normals_crater_medium2.png"), Texture.class);
+		Texture craterMedium3 = assetManager.get(InfiniteSpaceGame.getTexturePath("normals_crater_medium3.png"), Texture.class);
+		Texture craterSmall1 = assetManager.get(InfiniteSpaceGame.getTexturePath("normals_crater_small1.png"), Texture.class);
+		Texture craterSmall2 = assetManager.get(InfiniteSpaceGame.getTexturePath("normals_crater_small2.png"), Texture.class);
+		Texture craterSmall3 = assetManager.get(InfiniteSpaceGame.getTexturePath("normals_crater_small3.png"), Texture.class);
+		Texture craterSmall4 = assetManager.get(InfiniteSpaceGame.getTexturePath("normals_crater_small4.png"), Texture.class);
+		Texture craterSmall5 = assetManager.get(InfiniteSpaceGame.getTexturePath("normals_crater_small5.png"), Texture.class);
+		Texture craterTiny1 = assetManager.get(InfiniteSpaceGame.getTexturePath("normals_crater_tiny1.png"), Texture.class);
+		Texture craterTiny2 = assetManager.get(InfiniteSpaceGame.getTexturePath("normals_crater_tiny2.png"), Texture.class);
+		Texture craterTiny3 = assetManager.get(InfiniteSpaceGame.getTexturePath("normals_crater_tiny3.png"), Texture.class);
+		Texture mountain1 = assetManager.get(InfiniteSpaceGame.getTexturePath("normals_mountain1.png"), Texture.class);
+		Texture mountain2 = assetManager.get(InfiniteSpaceGame.getTexturePath("normals_mountain2.png"), Texture.class);
+		Texture vulcanoHuge1 = assetManager.get(InfiniteSpaceGame.getTexturePath("normals_vulcano_huge1.png"), Texture.class);
+		Texture vulcanoBig1 = assetManager.get(InfiniteSpaceGame.getTexturePath("normals_vulcano_big1.png"), Texture.class);
+		Texture vulcanoBig2 = assetManager.get(InfiniteSpaceGame.getTexturePath("normals_vulcano_big2.png"), Texture.class);
+		Texture vulcanoBig3 = assetManager.get(InfiniteSpaceGame.getTexturePath("normals_vulcano_big3.png"), Texture.class);
+		Texture vulcanoMedium1 = assetManager.get(InfiniteSpaceGame.getTexturePath("normals_vulcano_medium1.png"), Texture.class);
+		Texture vulcanoMedium2 = assetManager.get(InfiniteSpaceGame.getTexturePath("normals_vulcano_medium2.png"), Texture.class);
+		Texture vulcanoMedium3 = assetManager.get(InfiniteSpaceGame.getTexturePath("normals_vulcano_medium3.png"), Texture.class);
+		Texture vulcanoMedium4 = assetManager.get(InfiniteSpaceGame.getTexturePath("normals_vulcano_medium4.png"), Texture.class);
+		Texture soft1 = assetManager.get(InfiniteSpaceGame.getTexturePath("normals_soft1.png"), Texture.class);
+
+		for (int i = 0; i < areaCount; i++) {
+			Texture texture = random.nextProbability(
+					p(5, area1),
+					p(10, area2),
+					p(10, area3));
+			float x = random.nextFloat(0, textureWidth - texture.getWidth());
+			float y = random.nextFloat(0, textureHeight - texture.getHeight());
+			spriteBatch.draw(area1, x, y);
+		}
+
+		for (int i = 0; i < craterCount; i++) {
+			Texture texture = random.nextProbability(
+					p(hugeCraterProbability, craterHuge1),
+					p(hugeCraterProbability, craterHuge2),
+					p(20, craterBig1),
+					p(20, craterBig2),
+					p(100, craterMedium1),
+					p(100, craterMedium2),
+					p(100, craterMedium3),
+					p(300, craterSmall1),
+					p(300, craterSmall2),
+					p(300, craterSmall3),
+					p(300, craterSmall4),
+					p(300, craterSmall5),
+					p(2000, craterTiny1),
+					p(3000, craterTiny2),
+					p(3000, craterTiny3),
+					p(500, mountain1),
+					p(50, mountain2),
+					p(vulcanoProbability * 1, vulcanoHuge1),
+					p(vulcanoProbability * 5, vulcanoBig1),
+					p(vulcanoProbability * 5, vulcanoBig2),
+					p(vulcanoProbability * 5, vulcanoBig3),
+					p(vulcanoProbability * 10, vulcanoMedium1),
+					p(vulcanoProbability * 10, vulcanoMedium2),
+					p(vulcanoProbability * 10, vulcanoMedium3),
+					p(vulcanoProbability * 10, vulcanoMedium4),
+					p(areaProbability, area2),
+					p(areaProbability, area3));
+			float x = random.nextFloat(0, textureWidth - texture.getWidth());
+			float y = random.nextFloat(0, textureHeight - texture.getHeight());
+			spriteBatch.draw(texture, x, y);
+		}
+
+		for (int i = 0; i < softCount; i++) {
+			Texture texture = soft1;
+			float x = random.nextFloat(0, textureWidth - texture.getWidth());
+			float y = random.nextFloat(0, textureHeight - texture.getHeight());
+			spriteBatch.draw(area1, x, y);
+		}
+
+		spriteBatch.end();
+
+		frameBuffer.end();
+		
+		Texture texture = frameBuffer.getColorBufferTexture();
+
+		//frameBuffer.dispose(); // FIXME memory leak
+		
+		return texture;
+	}
+	
 	public Color[] randomPlanetColors(Random random, Color[] colors) {
 		return new Color[] {
 			randomGasPlanetColor(random, colors),
