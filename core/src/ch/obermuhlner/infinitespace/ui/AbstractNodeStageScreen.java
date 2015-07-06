@@ -5,9 +5,8 @@ import ch.obermuhlner.infinitespace.NodeToRenderConverter;
 import ch.obermuhlner.infinitespace.RenderState;
 import ch.obermuhlner.infinitespace.model.Node;
 
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
-import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
+import com.badlogic.gdx.graphics.g3d.environment.PointLight;
 import com.badlogic.gdx.math.Vector3;
 
 public abstract class AbstractNodeStageScreen extends AbstractStageScreen {
@@ -37,7 +36,7 @@ public abstract class AbstractNodeStageScreen extends AbstractStageScreen {
 		cameraInputController.translateUnits = radius;
 		
 		renderState.environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.01f, 0.01f, 0.01f, 1f));
-		renderState.environment.add(new DirectionalLight().set(Color.WHITE, 1, 0, -1));
+		renderState.environment.add(new PointLight().set(1f, 1f, 1f, -10, 0, 10, 1f));
 		
 		infiniteSpaceGame.genericNodeConverter.convertNode(node, renderState);
 	}

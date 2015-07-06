@@ -30,7 +30,7 @@ public class InfiniteSpaceGame extends Game {
 				"mimas.jpg", "enceladus.jpg", "tethys.jpg", "dione.jpg", "rhea.jpg", "titan.jpg", "iapetus.jpg", "miranda.jpg", "ariel.jpg", "umbriel.jpg", "titania.jpg", "oberon.jpg", "triton.jpg",
 				"earth_normals.jpg", "moon_normals.png", "mars_normals.png", "jupiter_normals.jpg",
 				"normals_area1.png", "normals_area2.png", "normals_area3.png",
-				"normals_crater_area1.png",
+				"normals_crater_area1.png", "normals_crater_area2.png", "normals_crater_area3.png",
 				"normals_crater_huge1.png", "normals_crater_huge2.png",
 				"normals_crater_big1.png", "normals_crater_big2.png",
 				"normals_crater_medium1.png", "normals_crater_medium2.png", "normals_crater_medium3.png",

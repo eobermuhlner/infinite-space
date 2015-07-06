@@ -656,9 +656,10 @@ public class NodeToRenderConverter {
 		int areaCount = 100;
 		int craterCount = random.nextInt(100, 100000);
 		boolean fillWithCraters = craterCount > 10000;
+		craterCount = Math.max(20000, craterCount);
 		float hugeCraterProbability = random.nextBoolean(0.6f) ? 2f : random.nextFloat(10, 500); 
 		float areaProbability = random.nextFloat(0, 10);
-		float vulcanoProbability = MathUtil.smoothstep(0.5f, 1.0f, random.nextFloat());
+		float vulcanoProbability = Math.min(0, random.nextFloat(-10, 2));
 		int softCount = 0;
 		if (node.atmospherePressure > ATMOSPHERE_PRESSURE_RELEVANT) {
 			softCount = random.nextInt(5, 50);
@@ -680,6 +681,8 @@ public class NodeToRenderConverter {
 		Texture area2 = assetManager.get(InfiniteSpaceGame.getTexturePath("normals_area2.png"), Texture.class);
 		Texture area3 = assetManager.get(InfiniteSpaceGame.getTexturePath("normals_area3.png"), Texture.class);
 		Texture craterArea1 = assetManager.get(InfiniteSpaceGame.getTexturePath("normals_crater_area1.png"), Texture.class);
+		Texture craterArea2 = assetManager.get(InfiniteSpaceGame.getTexturePath("normals_crater_area2.png"), Texture.class);
+		Texture craterArea3 = assetManager.get(InfiniteSpaceGame.getTexturePath("normals_crater_area3.png"), Texture.class);
 		Texture craterHuge1 = assetManager.get(InfiniteSpaceGame.getTexturePath("normals_crater_huge1.png"), Texture.class);
 		Texture craterHuge2 = assetManager.get(InfiniteSpaceGame.getTexturePath("normals_crater_huge2.png"), Texture.class);
 		Texture craterBig1 = assetManager.get(InfiniteSpaceGame.getTexturePath("normals_crater_big1.png"), Texture.class);
@@ -721,12 +724,21 @@ public class NodeToRenderConverter {
 					spriteBatch.draw(texture, x, y);
 				}
 			}
+			for (int i = 0; i < areaCount; i++) {
+				texture = random.nextProbability(
+						p(10, craterArea2),
+						p(10, craterArea3));
+				float x = random.nextFloat(0, targetTextureWidth - texture.getWidth());
+				float y = random.nextFloat(0, targetTextureHeight - texture.getHeight());
+				spriteBatch.draw(texture, x, y);
+			}
 		} else {
 			for (int i = 0; i < areaCount; i++) {
 				Texture texture = random.nextProbability(
 						p(5, area1),
 						p(10, area2),
-						p(10, area3));
+						p(10, area3),
+						p(10, soft1));
 				float x = random.nextFloat(0, targetTextureWidth - texture.getWidth());
 				float y = random.nextFloat(0, targetTextureHeight - texture.getHeight());
 				spriteBatch.draw(texture, x, y);
@@ -752,7 +764,7 @@ public class NodeToRenderConverter {
 					p(3000, craterTiny2),
 					p(3000, craterTiny3),
 					p(500, mountain1),
-					p(50, mountain2),
+					p(100, mountain2),
 					p(vulcanoProbability * 1, vulcanoHuge1),
 					p(vulcanoProbability * 5, vulcanoBig1),
 					p(vulcanoProbability * 5, vulcanoBig2),
