@@ -650,11 +650,12 @@ public class NodeToRenderConverter {
 	}
 	
 	public Texture renderTextureNormalsCraters (Planet node, Random random) {
-		final int textureHeight = 1024;
-		final int textureWidth = 2048;
+		final int targetTextureHeight = 1024;
+		final int targetTextureWidth = 2048;
 		
 		int areaCount = 100;
 		int craterCount = random.nextInt(100, 100000);
+		boolean fillWithCraters = craterCount > 10000;
 		float hugeCraterProbability = random.nextBoolean(0.6f) ? 2f : random.nextFloat(10, 500); 
 		float areaProbability = random.nextFloat(0, 10);
 		float vulcanoProbability = MathUtil.smoothstep(0.5f, 1.0f, random.nextFloat());
@@ -664,9 +665,9 @@ public class NodeToRenderConverter {
 			softCount += node.water;
 		}
 
-		System.out.println("Generating Normals craters=" + craterCount + " areaProb=" + areaProbability +" vulcanoProb=" + vulcanoProbability + " softCount=" + softCount);
+		System.out.println("Generating Normals craters=" + craterCount + " craterFill=" + fillWithCraters + " areaProb=" + areaProbability +" vulcanoProb=" + vulcanoProbability + " softCount=" + softCount);
 		
-		FrameBuffer frameBuffer = new FrameBuffer(Pixmap.Format.RGB888, textureWidth, textureHeight, false);
+		FrameBuffer frameBuffer = new FrameBuffer(Pixmap.Format.RGB888, targetTextureWidth, targetTextureHeight, false);
 		frameBuffer.begin();
 
 		Gdx.gl.glClearColor(0.5f, 0.5f, 1f, 1);
@@ -678,6 +679,7 @@ public class NodeToRenderConverter {
 		Texture area1 = assetManager.get(InfiniteSpaceGame.getTexturePath("normals_area1.png"), Texture.class);
 		Texture area2 = assetManager.get(InfiniteSpaceGame.getTexturePath("normals_area2.png"), Texture.class);
 		Texture area3 = assetManager.get(InfiniteSpaceGame.getTexturePath("normals_area3.png"), Texture.class);
+		Texture craterArea1 = assetManager.get(InfiniteSpaceGame.getTexturePath("normals_crater_area1.png"), Texture.class);
 		Texture craterHuge1 = assetManager.get(InfiniteSpaceGame.getTexturePath("normals_crater_huge1.png"), Texture.class);
 		Texture craterHuge2 = assetManager.get(InfiniteSpaceGame.getTexturePath("normals_crater_huge2.png"), Texture.class);
 		Texture craterBig1 = assetManager.get(InfiniteSpaceGame.getTexturePath("normals_crater_big1.png"), Texture.class);
@@ -705,15 +707,32 @@ public class NodeToRenderConverter {
 		Texture vulcanoMedium4 = assetManager.get(InfiniteSpaceGame.getTexturePath("normals_vulcano_medium4.png"), Texture.class);
 		Texture soft1 = assetManager.get(InfiniteSpaceGame.getTexturePath("normals_soft1.png"), Texture.class);
 
-		for (int i = 0; i < areaCount; i++) {
-			Texture texture = random.nextProbability(
-					p(5, area1),
-					p(10, area2),
-					p(10, area3));
-			float x = random.nextFloat(0, textureWidth - texture.getWidth());
-			float y = random.nextFloat(0, textureHeight - texture.getHeight());
-			spriteBatch.draw(area1, x, y);
+		if (fillWithCraters) {
+			Texture texture = craterArea1;
+			
+			int nx = targetTextureWidth / texture.getWidth() * 2;
+			int ny = targetTextureHeight / texture.getHeight() * 2;
+			float stepx = (float)targetTextureWidth / nx;
+			float stepy = (float)targetTextureHeight / ny;
+			for (int iy = 0; iy < ny; iy++) {
+				for (int ix = 0; ix < nx; ix++) {
+					float x = ix * stepx + texture.getWidth() * random.nextFloat(-0.25f, 0.25f);
+					float y = iy * stepy + texture.getHeight() * random.nextFloat(-0.25f, 0.25f);;
+					spriteBatch.draw(texture, x, y);
+				}
+			}
+		} else {
+			for (int i = 0; i < areaCount; i++) {
+				Texture texture = random.nextProbability(
+						p(5, area1),
+						p(10, area2),
+						p(10, area3));
+				float x = random.nextFloat(0, targetTextureWidth - texture.getWidth());
+				float y = random.nextFloat(0, targetTextureHeight - texture.getHeight());
+				spriteBatch.draw(texture, x, y);
+			}
 		}
+
 
 		for (int i = 0; i < craterCount; i++) {
 			Texture texture = random.nextProbability(
@@ -744,15 +763,15 @@ public class NodeToRenderConverter {
 					p(vulcanoProbability * 10, vulcanoMedium4),
 					p(areaProbability, area2),
 					p(areaProbability, area3));
-			float x = random.nextFloat(0, textureWidth - texture.getWidth());
-			float y = random.nextFloat(0, textureHeight - texture.getHeight());
+			float x = random.nextFloat(0, targetTextureWidth - texture.getWidth());
+			float y = random.nextFloat(0, targetTextureHeight - texture.getHeight());
 			spriteBatch.draw(texture, x, y);
 		}
 
 		for (int i = 0; i < softCount; i++) {
 			Texture texture = soft1;
-			float x = random.nextFloat(0, textureWidth - texture.getWidth());
-			float y = random.nextFloat(0, textureHeight - texture.getHeight());
+			float x = random.nextFloat(0, targetTextureWidth - texture.getWidth());
+			float y = random.nextFloat(0, targetTextureHeight - texture.getHeight());
 			spriteBatch.draw(area1, x, y);
 		}
 
