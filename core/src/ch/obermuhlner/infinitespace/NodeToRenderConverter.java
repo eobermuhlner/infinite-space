@@ -115,7 +115,6 @@ public class NodeToRenderConverter {
 	}
 
 	private <T extends Node> void convertNode (T node, RenderState renderState, boolean realUniverse) {
-		@SuppressWarnings("unchecked")
 		NodeConverter<T> nodeConverter = (NodeConverter<T>)nodeConverters.get(node.getClass());
 		if (nodeConverter != null) {
 			//StopWatch stopWatch = new StopWatch();
@@ -713,21 +712,24 @@ public class NodeToRenderConverter {
 		Texture soft1 = assetManager.get(InfiniteSpaceGame.getTexturePath("normals_soft1.png"), Texture.class);
 
 		if (fillWithCraters) {
-			Texture texture = craterArea1;
-			
-			int nx = targetTextureWidth / texture.getWidth() * 2;
-			int ny = targetTextureHeight / texture.getHeight() * 2;
-			float stepx = (float)targetTextureWidth / nx;
-			float stepy = (float)targetTextureHeight / ny;
-			for (int iy = 0; iy < ny; iy++) {
-				for (int ix = 0; ix < nx; ix++) {
-					float x = ix * stepx + texture.getWidth() * random.nextFloat(-0.25f, 0.25f);
-					float y = iy * stepy + texture.getHeight() * random.nextFloat(-0.25f, 0.25f);;
-					spriteBatch.draw(texture, x, y);
+			{
+				Texture texture = craterArea1;
+				
+				int nx = targetTextureWidth / texture.getWidth() * 2;
+				int ny = targetTextureHeight / texture.getHeight() * 2;
+				float stepx = (float)targetTextureWidth / nx;
+				float stepy = (float)targetTextureHeight / ny;
+				for (int iy = 0; iy < ny; iy++) {
+					for (int ix = 0; ix < nx; ix++) {
+						float x = ix * stepx + texture.getWidth() * random.nextFloat(-0.25f, 0.25f);
+						float y = iy * stepy + texture.getHeight() * random.nextFloat(-0.25f, 0.25f);;
+						spriteBatch.draw(texture, x, y);
+					}
 				}
 			}
 			for (int i = 0; i < areaCount; i++) {
-				texture = random.nextProbability(
+				@SuppressWarnings("unchecked")
+				Texture texture = random.nextProbability(
 						p(10, craterArea2),
 						p(10, craterArea3));
 				float x = random.nextFloat(0, targetTextureWidth - texture.getWidth());
@@ -736,6 +738,7 @@ public class NodeToRenderConverter {
 			}
 		} else {
 			for (int i = 0; i < areaCount; i++) {
+				@SuppressWarnings("unchecked")
 				Texture texture = random.nextProbability(
 						p(5, area1),
 						p(10, area2),
@@ -749,6 +752,7 @@ public class NodeToRenderConverter {
 
 
 		for (int i = 0; i < craterCount; i++) {
+			@SuppressWarnings("unchecked")
 			Texture texture = random.nextProbability(
 					p(hugeCraterProbability, craterHuge1),
 					p(hugeCraterProbability, craterHuge2),
