@@ -5,9 +5,17 @@ import ch.obermuhlner.infinitespace.NodeToRenderConverter;
 import ch.obermuhlner.infinitespace.RenderState;
 import ch.obermuhlner.infinitespace.model.Node;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.PointLight;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Slider;
+import com.badlogic.gdx.scenes.scene2d.ui.Window;
+import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
+import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener.ChangeEvent;
+import com.badlogic.gdx.utils.Align;
 
 public abstract class AbstractNodeStageScreen extends AbstractStageScreen {
 
@@ -15,6 +23,10 @@ public abstract class AbstractNodeStageScreen extends AbstractStageScreen {
 
 	private Vector3 target = new Vector3();
 	protected float autoRotateAngle = 5.0f;
+	
+	private final PointLight pointLight = new PointLight();
+
+	private RenderState renderState2;
 	
 	public AbstractNodeStageScreen (InfiniteSpaceGame game, Node node) {
 		super(game);
@@ -24,6 +36,7 @@ public abstract class AbstractNodeStageScreen extends AbstractStageScreen {
 
 	@Override
 	protected void prepareRenderState (RenderState renderState) {
+		renderState2 = renderState;
 		super.prepareRenderState(renderState);
 		
 		float radius = NodeToRenderConverter.calculateRadius(node);
@@ -35,12 +48,81 @@ public abstract class AbstractNodeStageScreen extends AbstractStageScreen {
 		
 		cameraInputController.translateUnits = radius;
 		
-		renderState.environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.01f, 0.01f, 0.01f, 1f));
-		renderState.environment.add(new PointLight().set(1f, 1f, 1f, -10, 0, 10, 1f));
+		pointLight.set(1f, 1f, 1f, -5, 0, 5, 1f);
+		renderState.environment.add(pointLight);
 		
 		infiniteSpaceGame.genericNodeConverter.convertNode(node, renderState);
 	}
+
+	@Override
+	protected void prepareStage(Stage stage) {
+		super.prepareStage(stage);
+		
+		Window window = new Window("Light", skin);
+		
+		{
+			// ambientLight luminosity
+			final Slider slider = new Slider(0.0f, 1.0f, 0.01f, true, skin);
+			slider.setValue(0.0f);
+			setAmbientLightLuminosity(slider.getValue());
+			slider.addListener(new ChangeListener() {
+				@Override
+				public void changed(ChangeEvent event, Actor actor) {
+					setAmbientLightLuminosity(slider.getValue());
+				}
+			});
+			window.add(slider);
+		}
+
+		{
+			// pointLight luminosity
+			final Slider slider = new Slider(0.0f, 2.0f, 0.01f, true, skin);
+			slider.setValue(1.0f);
+			setPointLightLuminosity(slider.getValue());
+			slider.addListener(new ChangeListener() {
+				@Override
+				public void changed(ChangeEvent event, Actor actor) {
+					setPointLightLuminosity(slider.getValue());
+				}
+			});
+			window.add(slider);
+		}
+
+		{
+			// point light angle
+			final Slider slider = new Slider(0.0f, (float)(2*Math.PI), 0.01f, true, skin);
+			slider.setValue(0.0f);
+			updatePointLightAngle(slider.getValue());
+			slider.addListener(new ChangeListener() {
+				@Override
+				public void changed(ChangeEvent event, Actor actor) {
+					updatePointLightAngle(slider.getValue());
+				}
+			});
+			window.add(slider);
+		}
+
+		window.pack();
+		window.setPosition(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), Align.top | Align.right);
 	
+		stage.addActor(window);
+	}
+	
+	private void setPointLightLuminosity(float luminosity) {
+		pointLight.intensity = luminosity;
+	}
+	
+	private void updatePointLightAngle(float angle) {
+		float x = (float) (Math.sin(angle) * 5);
+		float y = 0;
+		float z = (float) (Math.cos(angle) * 5);
+		pointLight.position.set(x, y, z);
+	}
+	
+	private void setAmbientLightLuminosity(float luminosity) {
+		renderState2.environment.set(new ColorAttribute(ColorAttribute.AmbientLight, luminosity, luminosity, luminosity, 1f));
+	}
+
 	@Override
 	public void render (float delta) {
 		super.render(delta);
