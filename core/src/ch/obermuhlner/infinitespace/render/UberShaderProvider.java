@@ -44,7 +44,10 @@ public class UberShaderProvider extends BaseShaderProvider {
 		if (TERRESTRIAL_PLANET_SHADER.equals(name)) {
 			return new TerrestrialPlanetShader(renderable, vert, frag);
 		}
-		return new DefaultShader(renderable, new DefaultShader.Config(vert, frag));
+		DefaultShader.Config config = new DefaultShader.Config(vert, frag);
+		config.numDirectionalLights = 0;
+		config.numPointLights = 1;
+		return new DefaultShader(renderable, config);
 	}
 	
 	private Shader createShader2(Renderable renderable) {

@@ -35,11 +35,8 @@ varying vec2 v_texCoords0;
 #ifdef normalTextureFlag
 attribute vec2 a_texCoord1;
 varying vec2 v_texCoords1;
+varying vec3 v_lightVecTangent;
 #endif // normalTextureFlag
-
-#if defined(normalTextureFlag)
-varying vec3 v_viewVecTangent;
-#endif
 
 #ifdef boneWeight0Flag
 #define boneWeightsFlag
@@ -258,7 +255,7 @@ void main() {
 		v_shadowMapUv.z = min(spos.z * 0.5 + 0.5, 0.998);
 	#endif //shadowMapFlag
 	
-	#if defined(normalTextureFlag) || defined(specularFlag) 
+	#if defined(specularFlag) || defined(emissiveColorFlag) 
 		vec3 viewVec = normalize(u_cameraPosition.xyz - pos.xyz);
 	#endif
 	
@@ -269,15 +266,7 @@ void main() {
 			vec3 normal = normalize(u_normalMatrix * a_normal);
 		#endif
 
-		#if defined(normalTextureFlag)
-			// matrix to convert eye space into tangent space
-			vec3 n = normalize (gl_NormalMatrix * a_normal);
-			vec3 t = normalize (gl_NormalMatrix * a_tangent);
-			vec3 b = cross (n, t);
-			
-			// normalized vector from vertex position to camera position in tangent space - passed to fragment shader
-			v_viewVecTangent = normalize (vec3(dot (viewVec, t), dot (viewVec, b), dot (viewVec, n)));
-		#else
+		#if (!defined (normalTextureFlag))
 			v_normal = normal;
 		#endif
 	#endif // normalFlag
@@ -287,6 +276,10 @@ void main() {
         float fog = dot(flen, flen) * u_cameraPosition.w;
         v_fog = min(fog, 1.0);
     #endif
+
+	#if defined(normalTextureFlag)
+		vec3 strongestLightDir;// = vec3(0.0, 0.0, 1.0);
+	#endif // normalTextureFlag
 
 	#ifdef lightingFlag
 		#if	defined(ambientLightFlag)
@@ -332,16 +325,23 @@ void main() {
 		#endif // specularFlag
 		
 		#ifdef emissiveColorFlag
-			vec3 viewVecNorm = normalize(u_cameraPosition.xyz - pos.xyz);
-			float NdotL = clamp(dot(normal, viewVecNorm), 0.0, 1.0);
+			float NdotL = clamp(dot(normal, viewVec), 0.0, 1.0);
 			v_emissiveColor = u_emissiveColor * NdotL * 0.75 + u_emissiveColor * 0.25;
 		#endif // emissiveColorFlag
-			
+
+		#if defined(normalTextureFlag)
+			float strongestLightValue = 0.0;
+		#endif // normalTextureFlag
+					
 		#if defined(numDirectionalLights) && (numDirectionalLights > 0) && defined(normalFlag)
 			for (int i = 0; i < numDirectionalLights; i++) {
 				vec3 lightDir = -u_dirLights[i].direction;
 				float NdotL = clamp(dot(normal, lightDir), 0.0, 1.0);
 				vec3 value = u_dirLights[i].color * NdotL;
+				#if defined(normalTextureFlag)
+					//strongestLightValue = value; // TODO if value > strongestLightValue
+					strongestLightDir = normalize(lightDir);
+				#endif // normalTextureFlag
 				v_lightDiffuse += value;
 				#ifdef specularFlag
 					float halfDotView = max(0.0, dot(normal, normalize(lightDir + viewVec)));
@@ -353,6 +353,10 @@ void main() {
 		#if defined(numPointLights) && (numPointLights > 0) && defined(normalFlag)
 			for (int i = 0; i < numPointLights; i++) {
 				vec3 lightDir = u_pointLights[i].position - pos.xyz;
+				#if defined(normalTextureFlag)
+					//strongestLightValue = value; // TODO if value > strongestLightValue
+					strongestLightDir = normalize(lightDir);
+				#endif // normalTextureFlag
 				float dist2 = dot(lightDir, lightDir);
 				lightDir *= inversesqrt(dist2);
 				float NdotL = clamp(dot(normal, lightDir), 0.0, 1.0);
@@ -365,5 +369,20 @@ void main() {
 				#endif // specularFlag
 			}
 		#endif // numPointLights
+
 	#endif // lightingFlag
+
+	#if defined(normalTextureFlag)
+		// matrix to convert eye space into tangent space
+		vec3 n = normalize (gl_NormalMatrix * a_normal);
+		vec3 t = normalize (gl_NormalMatrix * a_tangent);
+		vec3 b = cross (n, t);
+		
+		//strongestLightDir = normalize(u_cameraPosition.xyz - pos.xyz);
+		//strongestLightDir = vec3(0.0, 0.0, 1.0);
+
+		// normalized vector from vertex position to light position in tangent space - passed to fragment shader
+		v_lightVecTangent = normalize (vec3(dot (strongestLightDir, t), dot (strongestLightDir, b), dot (strongestLightDir, n)));
+		//v_lightVecTangent = strongestLightDir;
+	#endif // normalTextureFlag
 }

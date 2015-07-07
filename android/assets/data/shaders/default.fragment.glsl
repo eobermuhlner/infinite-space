@@ -69,7 +69,7 @@ varying MED vec2 v_texCoords1;
 #endif
 
 #if defined(normalTextureFlag)
-varying vec3 v_viewVecTangent;
+varying vec3 v_lightVecTangent;
 #endif
 
 #ifdef lightingFlag
@@ -121,14 +121,14 @@ varying float v_fog;
 #endif // fogFlag
 
 void main() {
-	#if defined(normalTextureFlag)
-		vec3 normal = texture2D(u_normalTexture, v_texCoords1);
-	#elif defined(normalFlag)
-		vec3 normal = v_normal;
-	#endif
-	#if defined(normalTextureFlag)
-		normal = normalize(normal * 2.0 - 1.0);
-		float lambertFactor = clamp(dot(normal, v_viewVecTangent), 0.0, 1.0);
+	#if defined(normalFlag)
+		#if defined(normalTextureFlag)
+			vec3 normal = texture2D(u_normalTexture, v_texCoords1);
+			normal = normalize(normal * 2.0 - 1.0); // consider supporting different formats of normal texture
+			float lambertFactor = clamp(dot(normal, v_lightVecTangent), 0.0, 1.0);
+		#else
+			vec3 normal = v_normal;
+		#endif
 	#endif
 	
 	#if defined(emissiveTextureFlag) && defined(emissiveColorFlag) && defined(colorFlag)
@@ -251,4 +251,7 @@ void main() {
 		gl_FragColor.a = 1.0;
 	#endif
 
+	#if defined(normalTextureFlag)
+		//gl_FragColor.rgb = v_lightVecTangent;
+	#endif
 }
