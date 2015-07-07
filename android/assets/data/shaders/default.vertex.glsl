@@ -189,6 +189,42 @@ varying vec3 v_ambientLight;
 
 #endif // lightingFlag
 
+float when_eq(float x, float y) {
+  return 1.0 - abs(sign(x - y));
+}
+
+float when_neq(float x, float y) {
+  return abs(sign(x - y));
+}
+
+float when_gt(float x, float y) {
+  return max(sign(x - y), 0.0);
+}
+
+float when_lt(float x, float y) {
+  return min(1.0 - sign(x - y), 1.0);
+}
+
+float when_ge(float x, float y) {
+  return 1.0 - when_lt(x, y);
+}
+
+float when_le(float x, float y) {
+  return 1.0 - when_gt(x, y);
+}
+
+vec3 if_gt_then_else(float x, float y, vec3 trueValue, vec3 falseValue) {
+	vec3 result = vec3(0.0, 0.0, 0.0);
+	result += trueValue * when_gt(x, y);
+	result += falseValue * when_le(x, y);
+	return result;
+}
+
+// https://en.wikipedia.org/wiki/Relative_luminance
+float luminance(vec3 color) {
+	return (0.2126*color.r + 0.7152*color.g + 0.0722*color.b);
+}
+
 void main() {
 	#ifdef textureFlag
 		v_texCoords0 = a_texCoord0;
@@ -278,7 +314,7 @@ void main() {
     #endif
 
 	#if defined(normalTextureFlag)
-		vec3 strongestLightDir;// = vec3(0.0, 0.0, 1.0);
+		vec3 strongestLightDir = vec3(0.0, 0.0, 1.0);
 	#endif // normalTextureFlag
 
 	#ifdef lightingFlag
@@ -330,7 +366,7 @@ void main() {
 		#endif // emissiveColorFlag
 
 		#if defined(normalTextureFlag)
-			float strongestLightValue = 0.0;
+			float strongestLuminance = 0.0;
 		#endif // normalTextureFlag
 					
 		#if defined(numDirectionalLights) && (numDirectionalLights > 0) && defined(normalFlag)
@@ -339,8 +375,9 @@ void main() {
 				float NdotL = clamp(dot(normal, lightDir), 0.0, 1.0);
 				vec3 value = u_dirLights[i].color * NdotL;
 				#if defined(normalTextureFlag)
-					//strongestLightValue = value; // TODO if value > strongestLightValue
-					strongestLightDir = normalize(lightDir);
+					float lum = luminance(value);
+					strongestLightDir = if_gt_then_else(lum, strongestLuminance, normalize(lightDir), strongestLightDir);
+					strongestLuminance = max(lum, strongestLuminance);
 				#endif // normalTextureFlag
 				v_lightDiffuse += value;
 				#ifdef specularFlag
@@ -352,16 +389,18 @@ void main() {
 
 		#if defined(numPointLights) && (numPointLights > 0) && defined(normalFlag)
 			for (int i = 0; i < numPointLights; i++) {
-				vec3 lightDir = u_pointLights[i].position - pos.xyz;
-				#if defined(normalTextureFlag)
-					//strongestLightValue = value; // TODO if value > strongestLightValue
-					strongestLightDir = normalize(lightDir);
-				#endif // normalTextureFlag
+				vec3 lightDir1 = u_pointLights[i].position - pos.xyz;
+				vec3 lightDir = lightDir1;
 				float dist2 = dot(lightDir, lightDir);
 				lightDir *= inversesqrt(dist2);
 				float NdotL = clamp(dot(normal, lightDir), 0.0, 1.0);
 				vec3 value = u_pointLights[i].color * NdotL;
 				//vec3 value = u_pointLights[i].color * (NdotL / (1.0 + dist2));
+				#if defined(normalTextureFlag)
+					float lum = luminance(value);
+					strongestLightDir = if_gt_then_else(lum, strongestLuminance, normalize(lightDir1), strongestLightDir);
+					strongestLuminance = max(lum, strongestLuminance);
+				#endif // normalTextureFlag
 				v_lightDiffuse += value;
 				#ifdef specularFlag
 					float halfDotView = max(0.0, dot(normal, normalize(lightDir + viewVec)));
@@ -378,11 +417,7 @@ void main() {
 		vec3 t = normalize (gl_NormalMatrix * a_tangent);
 		vec3 b = cross (n, t);
 		
-		//strongestLightDir = normalize(u_cameraPosition.xyz - pos.xyz);
-		//strongestLightDir = vec3(0.0, 0.0, 1.0);
-
 		// normalized vector from vertex position to light position in tangent space - passed to fragment shader
 		v_lightVecTangent = normalize (vec3(dot (strongestLightDir, t), dot (strongestLightDir, b), dot (strongestLightDir, n)));
-		//v_lightVecTangent = strongestLightDir;
 	#endif // normalTextureFlag
 }
