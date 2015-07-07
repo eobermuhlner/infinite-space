@@ -657,7 +657,9 @@ public class NodeToRenderConverter {
 		int craterCount = random.nextInt(100, 100000);
 		boolean fillWithCraters = craterCount > 10000;
 		craterCount = Math.max(20000, craterCount);
-		float hugeCraterProbability = random.nextBoolean(0.6f) ? 2f : random.nextFloat(10, 500); 
+		float hugeCraterProbability = random.nextBoolean(0.6f) ? 2f : random.nextFloat(0, 100); 
+		float bigCraterProbability = random.nextBoolean(0.6f) ? 20f : random.nextFloat(0, 100); 
+		float mediumCraterProbability = random.nextBoolean(0.6f) ? 100f : random.nextFloat(0, 200); 
 		float areaProbability = random.nextFloat(0, 10);
 		float vulcanoProbability = Math.min(0, random.nextFloat(-10, 2));
 		int softCount = 0;
@@ -666,7 +668,7 @@ public class NodeToRenderConverter {
 			softCount += node.water;
 		}
 
-		System.out.println("Generating Normals craters=" + craterCount + " craterFill=" + fillWithCraters + " areaProb=" + areaProbability +" vulcanoProb=" + vulcanoProbability + " softCount=" + softCount);
+		System.out.println("Generating Normals craters=" + craterCount + " craterFill=" + fillWithCraters + " probHuge=" + hugeCraterProbability + " probBig=" + bigCraterProbability + " probMed=" + mediumCraterProbability + " areaProb=" + areaProbability +" vulcanoProb=" + vulcanoProbability + " softCount=" + softCount);
 		
 		FrameBuffer frameBuffer = new FrameBuffer(Pixmap.Format.RGB888, targetTextureWidth, targetTextureHeight, false);
 		frameBuffer.begin();
@@ -750,11 +752,11 @@ public class NodeToRenderConverter {
 			Texture texture = random.nextProbability(
 					p(hugeCraterProbability, craterHuge1),
 					p(hugeCraterProbability, craterHuge2),
-					p(20, craterBig1),
-					p(20, craterBig2),
-					p(100, craterMedium1),
-					p(100, craterMedium2),
-					p(100, craterMedium3),
+					p(bigCraterProbability, craterBig1),
+					p(bigCraterProbability, craterBig2),
+					p(mediumCraterProbability, craterMedium1),
+					p(mediumCraterProbability, craterMedium2),
+					p(mediumCraterProbability, craterMedium3),
 					p(300, craterSmall1),
 					p(300, craterSmall2),
 					p(300, craterSmall3),
