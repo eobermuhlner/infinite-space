@@ -90,7 +90,7 @@ public abstract class AbstractNodeStageScreen extends AbstractStageScreen {
 
 		{
 			// point light angle
-			final Slider slider = new Slider(0.0f, (float)(2*Math.PI), 0.01f, true, skin);
+			final Slider slider = new Slider((float)(-Math.PI), (float)(3*Math.PI), 0.01f, true, skin);
 			slider.setValue(0.0f);
 			updatePointLightAngle(slider.getValue());
 			slider.addListener(new ChangeListener() {
