@@ -375,9 +375,13 @@ void main() {
 				float NdotL = clamp(dot(normal, lightDir), 0.0, 1.0);
 				vec3 value = u_dirLights[i].color * NdotL;
 				#if defined(normalTextureFlag)
-					float lum = luminance(value);
-					strongestLightDir = if_gt_then_else(lum, strongestLuminance, normalize(lightDir), strongestLightDir);
-					strongestLuminance = max(lum, strongestLuminance);
+					#if numDirectionalLights == 1 && (!defined(numPointLights) || numPointLights == 0)
+						strongestLightDir = normalize(lightDir);
+					#else
+						float lum = luminance(value);
+						strongestLightDir = if_gt_then_else(lum, strongestLuminance, normalize(lightDir), strongestLightDir);
+						strongestLuminance = max(lum, strongestLuminance);
+					#endif
 				#endif // normalTextureFlag
 				v_lightDiffuse += value;
 				#ifdef specularFlag
@@ -397,9 +401,13 @@ void main() {
 				vec3 value = u_pointLights[i].color * NdotL;
 				//vec3 value = u_pointLights[i].color * (NdotL / (1.0 + dist2));
 				#if defined(normalTextureFlag)
-					float lum = luminance(value);
-					strongestLightDir = if_gt_then_else(lum, strongestLuminance, normalize(lightDir1), strongestLightDir);
-					strongestLuminance = max(lum, strongestLuminance);
+					#if numPointLights == 1 && (!defined (numDirectionalLights) || numDirectionalLights == 0)
+						strongestLightDir = normalize(lightDir);
+					#else
+						float lum = luminance(value);
+						strongestLightDir = if_gt_then_else(lum, strongestLuminance, normalize(lightDir1), strongestLightDir);
+						strongestLuminance = max(lum, strongestLuminance);
+					#endif
 				#endif // normalTextureFlag
 				v_lightDiffuse += value;
 				#ifdef specularFlag
