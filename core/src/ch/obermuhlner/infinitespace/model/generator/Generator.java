@@ -141,12 +141,12 @@ public class Generator {
 
 	/* Temperature
 	 * O	33,000 K or more	Zeta Ophiuchi
-	 * B	10,500–30,000 K	Rigel
-	 * A	7,500–10,000 K	Altair
-	 * F	6,000–7,200 K	Procyon A
-	 * G	5,500–6,000 K	Sun
-	 * K	4,000–5,250 K	Epsilon Indi
-	 * M	2,600–3,850 K	
+	 * B	10,500-30,000 K	Rigel
+	 * A	7,500-10,000 K	Altair
+	 * F	6,000-7,200 K	Procyon A
+	 * G	5,500-6,000 K	Sun
+	 * K	4,000-5,250 K	Epsilon Indi
+	 * M	2,600-3,850 K	
 	 */
 	@SuppressWarnings("unchecked")
 	public Star generateStar(StarSystem parent, long index) {

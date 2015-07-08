@@ -26,15 +26,15 @@ public enum Molecule {
 	/**
 	Density: 1.15 kg/m³
 	Formula: CO
-	Boiling point: -191.5 °C
+	Boiling point: -191.5 C
 	Molar mass: 28.01 g/mol
-	Melting point: -205 °C
+	Melting point: -205 C
 	 */
 	CO,
 	/**
 	Formula: CO2
-	Boiling point: -78.5 °C
-	Melting point: -55.6 °C
+	Boiling point: -78.5 C
+	Melting point: -55.6 C
 	Molar mass: 44.01 g/mol
 	*/
 	CO2,
