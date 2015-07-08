@@ -393,8 +393,7 @@ void main() {
 
 		#if defined(numPointLights) && (numPointLights > 0) && defined(normalFlag)
 			for (int i = 0; i < numPointLights; i++) {
-				vec3 lightDir1 = u_pointLights[i].position - pos.xyz;
-				vec3 lightDir = lightDir1;
+				vec3 lightDir = u_pointLights[i].position - pos.xyz;
 				float dist2 = dot(lightDir, lightDir);
 				lightDir *= inversesqrt(dist2);
 				float NdotL = clamp(dot(normal, lightDir), 0.0, 1.0);
@@ -405,7 +404,7 @@ void main() {
 						strongestLightDir = normalize(lightDir);
 					#else
 						float lum = luminance(value);
-						strongestLightDir = if_gt_then_else(lum, strongestLuminance, normalize(lightDir1), strongestLightDir);
+						strongestLightDir = if_gt_then_else(lum, strongestLuminance, normalize(lightDir), strongestLightDir);
 						strongestLuminance = max(lum, strongestLuminance);
 					#endif
 				#endif // normalTextureFlag
