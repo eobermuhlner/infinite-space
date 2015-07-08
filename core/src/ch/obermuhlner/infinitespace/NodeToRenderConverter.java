@@ -182,7 +182,7 @@ public class NodeToRenderConverter {
 			{
 				Material material = new Material(new ColorAttribute(ColorAttribute.Diffuse, r1, g1, b1, 1.0f), new ColorAttribute(ColorAttribute.Emissive, r2, g2, b2, 1.0f));
 				Model sphereModel = modelBuilder.createSphere(radius, radius, radius, PLANET_SPHERE_DIVISIONS_U, PLANET_SPHERE_DIVISIONS_V,
-					material, Usage.Position | Usage.Normal | Usage.Tangent | Usage.TextureCoordinates);
+					material, Usage.Position | Usage.Normal | Usage.TextureCoordinates);
 				ModelInstance sphere = new ModelInstance(sphereModel);
 				UserData userData = new UserData();
 				userData.node = node;
@@ -1381,7 +1381,7 @@ public class NodeToRenderConverter {
 	private ModelInstance createSphere(Planet node, String name, float radius, Material material) {
 		float size = radius * 2;
 		Model sphereModel = modelBuilder.createSphere(size, size, size, PLANET_SPHERE_DIVISIONS_U, PLANET_SPHERE_DIVISIONS_V,
-				material, Usage.Position | Usage.Normal | Usage.Tangent | Usage.TextureCoordinates);
+				material, Usage.Position | Usage.Normal | Usage.TextureCoordinates);
 		ModelInstance sphere = new ModelInstance(sphereModel);
 
 		UserData userData = new UserData();
