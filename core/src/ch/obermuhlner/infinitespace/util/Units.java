@@ -101,11 +101,7 @@ public class Units {
 	};
 
 	public static String toString(double value) {
-		String string = BigDecimal.valueOf(value).round(MC_SIGNIFICANT_DIGITS).toPlainString();
-		if (string.equals("0.0")) {
-			return "0";
-		}
-		return string;
+		return numberFormat.format(BigDecimal.valueOf(value).round(MC_SIGNIFICANT_DIGITS));
 	}
 	
 	public static String meterSizeToString(double value) {
