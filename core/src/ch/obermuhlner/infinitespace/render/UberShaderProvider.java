@@ -1,7 +1,6 @@
 package ch.obermuhlner.infinitespace.render;
 
 import ch.obermuhlner.infinitespace.UserData;
-import ch.obermuhlner.infinitespace.util.StopWatch;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g3d.Renderable;
@@ -49,27 +48,4 @@ public class UberShaderProvider extends BaseShaderProvider {
 		config.numPointLights = 1;
 		return new DefaultShader(renderable, config);
 	}
-	
-	private Shader createShader2(Renderable renderable) {
-		String name = shaderName;
-		
-		if (renderable.userData instanceof UserData) {
-			UserData userData = (UserData)renderable.userData;
-			if (userData.shaderName != null) {
-				name = userData.shaderName;
-			}
-		}
-		
-		String vert = Gdx.files.internal("data/shaders/" + name + ".vertex.glsl").readString();
-		String frag = Gdx.files.internal("data/shaders/" + name + ".fragment.glsl").readString();
-		
-		if (GAS_PLANET_SHADER.equals(name)) {
-			return new GasPlanetShader(vert, frag);
-		}
-		if (TERRESTRIAL_PLANET_SHADER.equals(name)) {
-			return new TerrestrialPlanetShader(renderable, vert, frag);
-		}
-		return new DefaultShader(renderable, new DefaultShader.Config(vert, frag));
-	}
-
 }
