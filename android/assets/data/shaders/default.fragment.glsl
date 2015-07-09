@@ -250,8 +250,4 @@ void main() {
 	#else
 		gl_FragColor.a = 1.0;
 	#endif
-
-	#if defined(normalTextureFlag)
-		//gl_FragColor.rgb = v_lightVecTangent;
-	#endif
 }
