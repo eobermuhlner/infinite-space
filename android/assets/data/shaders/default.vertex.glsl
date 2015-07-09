@@ -189,12 +189,17 @@ varying vec3 v_ambientLight;
 
 #endif // lightingFlag
 
-float when_eq(float x, float y) {
-  return 1.0 - abs(sign(x - y));
+// based on http://theorangeduck.com/page/avoiding-shader-conditionals
+float when_not(float condition) {
+  return 1.0 - condition;
 }
 
 float when_neq(float x, float y) {
   return abs(sign(x - y));
+}
+
+float when_eq(float x, float y) {
+  return 1.0 - when_neq(x, y);
 }
 
 float when_gt(float x, float y) {
@@ -213,10 +218,9 @@ float when_le(float x, float y) {
   return 1.0 - when_gt(x, y);
 }
 
-vec3 if_gt_then_else(float x, float y, vec3 trueValue, vec3 falseValue) {
-	vec3 result = vec3(0.0, 0.0, 0.0);
-	result += trueValue * when_gt(x, y);
-	result += falseValue * when_le(x, y);
+vec3 if_then_else(float condition, vec3 trueValue, vec3 falseValue) {
+	vec3 result = trueValue * condition;
+	result += falseValue * when_not(condition);
 	return result;
 }
 
@@ -375,11 +379,11 @@ void main() {
 				float NdotL = clamp(dot(normal, lightDir), 0.0, 1.0);
 				vec3 value = u_dirLights[i].color * NdotL;
 				#if defined(normalTextureFlag)
-					#if numDirectionalLights == 1 && (!defined(numPointLights) || numPointLights == 0)
+					#if (numDirectionalLights == 1) && (!defined(numPointLights) || numPointLights == 0)
 						strongestLightDir = normalize(lightDir);
 					#else
 						float lum = luminance(value);
-						strongestLightDir = if_gt_then_else(lum, strongestLuminance, normalize(lightDir), strongestLightDir);
+						strongestLightDir = if_then_else(when_gt(lum, strongestLuminance), normalize(lightDir), strongestLightDir);
 						strongestLuminance = max(lum, strongestLuminance);
 					#endif
 				#endif // normalTextureFlag
@@ -400,11 +404,11 @@ void main() {
 				vec3 value = u_pointLights[i].color * NdotL;
 				//vec3 value = u_pointLights[i].color * (NdotL / (1.0 + dist2));
 				#if defined(normalTextureFlag)
-					#if numPointLights == 1 && (!defined (numDirectionalLights) || numDirectionalLights == 0)
+					#if (numPointLights == 1) && (!defined (numDirectionalLights) || numDirectionalLights == 0)
 						strongestLightDir = normalize(lightDir);
 					#else
 						float lum = luminance(value);
-						strongestLightDir = if_gt_then_else(lum, strongestLuminance, normalize(lightDir), strongestLightDir);
+						strongestLightDir = if_then_else(when_gt(lum, strongestLuminance), normalize(lightDir), strongestLightDir);
 						strongestLuminance = max(lum, strongestLuminance);
 					#endif
 				#endif // normalTextureFlag
