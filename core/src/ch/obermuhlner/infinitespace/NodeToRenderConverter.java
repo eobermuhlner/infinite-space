@@ -1,4 +1,3 @@
-
 package ch.obermuhlner.infinitespace;
 
 import static ch.obermuhlner.infinitespace.model.random.Random.p;
@@ -389,8 +388,8 @@ public class NodeToRenderConverter {
 						if (specularColor == null && shaderName.equals(UberShaderProvider.TERRESTRIAL_PLANET_SHADER)) {
 							textureSpecular = renderTextureSpecular(material, userData);
 						}
-						if (textureNormalName == null && shaderName.equals(UberShaderProvider.TERRESTRIAL_PLANET_SHADER)) {
-							//textureNormal = renderTextureNormal(material, userData);
+						if (textureNormal == null && textureNormalName == null && shaderName.equals(UberShaderProvider.TERRESTRIAL_PLANET_SHADER)) {
+							//textureNormal = renderTextureNormal(material, userData); // FIXME
 						}
 						
 						materialAttributes.clear();
