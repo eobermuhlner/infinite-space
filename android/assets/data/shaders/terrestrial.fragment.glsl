@@ -215,27 +215,64 @@ float calculateHeight(vec2 P) {
 	return height;
 }
 
+// based on http://theorangeduck.com/page/avoiding-shader-conditionals
+float when_not(float condition) {
+  return 1.0 - condition;
+}
+
+float when_neq(float x, float y) {
+  return abs(sign(x - y));
+}
+
+float when_eq(float x, float y) {
+  return 1.0 - when_neq(x, y);
+}
+
+float when_gt(float x, float y) {
+  return max(sign(x - y), 0.0);
+}
+
+float when_lt(float x, float y) {
+  return min(1.0 - sign(x - y), 1.0);
+}
+
+float when_ge(float x, float y) {
+  return 1.0 - when_lt(x, y);
+}
+
+float when_le(float x, float y) {
+  return 1.0 - when_gt(x, y);
+}
+
+vec4 if_then_else(float condition, vec4 trueValue, vec4 falseValue) {
+	vec4 result = trueValue * condition;
+	result += falseValue * when_not(condition);
+	return result;
+}
+
+float dummyHeight(vec2 P) {
+	return sin(P.x * 100) * 0.5 + 0.5;
+}
+
 void main() {
 	vec2 r1 = vec2(u_random0+u_random5, u_random1+u_random4);
 
-	float height = calculateHeight(v_texCoords0);
-
 	#if defined(createNormalFlag)
-		float offset = 0.0001;
-		float heightDeltaX = calculateHeight(v_texCoords0 + vec2(offset, 0.0));
-		float heightDeltaY = calculateHeight(v_texCoords0 + vec2(0.0, offset));
+		float height = dummyHeight(v_texCoords0);
+		const float offset = 0.000001;
+		float heightDeltaX = dummyHeight(v_texCoords0 + vec2(offset, 0.0));
+		float heightDeltaY = dummyHeight(v_texCoords0 + vec2(0.0, offset));
 		float deltaX = height - heightDeltaX;
 		float deltaY = height - heightDeltaY;
-		//vec3 normal = normalize(cross(vec3(offset, 0.0, deltaX), vec3(0.0, offset, deltaY)));
-		vec3 normal = normalize(vec3(deltaX, deltaY, 0.0001));
-		gl_FragColor.rgb = normal;		
+		vec3 normal = normalize(vec3(deltaX / offset, deltaY / offset, -1.0));
+		gl_FragColor.rgb = clamp((normal + 1.0) / 2.0, 0.0, 1.0);
 	#elif defined(createSpecularFlag)
-		if (height > u_heightWater) {
-			gl_FragColor.rgb = vec4(0.2, 0.2, 0.2, 1.0);
-		} else {
-			gl_FragColor.rgb = vec4(0.8, 0.8, 0.8, 1.0);
-		}
+		float height = calculateHeight(v_texCoords0);
+
+		gl_FragColor.rgb = if_then_else(when_gt(height, u_heightWater), vec4(0.2, 0.2, 0.2, 1.0), vec4(0.8, 0.8, 0.8, 1.0));
 	#else
+		float height = calculateHeight(v_texCoords0);
+
 		float distEquator = abs(v_texCoords0.t - 0.5) * 2.0;
 		distEquator += pnoise2(v_texCoords0,  8) * 0.04;
 		distEquator += pnoise2(v_texCoords0, 16) * 0.02;
