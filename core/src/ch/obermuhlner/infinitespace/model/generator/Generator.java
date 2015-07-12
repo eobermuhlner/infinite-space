@@ -1206,15 +1206,16 @@ public class Generator {
 		childIndex = 0;
 
 		{
+			 
 			AsteroidBelt saturnRing = new AsteroidBelt(saturn, childIndex++);
 			saturnRing.name = "Saturn Ring";
-			saturnRing.orbitRadius = 120000E3; //FIXME real values of staturn ring
+			saturnRing.orbitRadius = 140000E3; // 66900km - 140180km
 			saturnRing.orbitPeriod = 0;
 			saturnRing.averageRadius = 5;
 			saturnRing.rotation = 0;
 			saturnRing.mass = 0;
-			saturnRing.width = saturnRing.orbitRadius * 0.1;
-			saturnRing.height = saturnRing.orbitRadius * 0.00001;
+			saturnRing.width = 80000E3;
+			saturnRing.height = 10000E3;
 			saturnRing.density = 0.9;
 			store(saturnRing);
 		}
