@@ -1066,6 +1066,11 @@ public class Generator {
 			luna.temperature = surfaceTemperature(luna);
 			generatePopulationAcceptablePlanet(luna, random);
 			store(luna);
+
+			int lunaChildIndex = 0;
+			store(generateSpaceStation(luna, lunaChildIndex++));
+			
+			luna.childCount = lunaChildIndex;
 		}
 		
 		store(generateSpaceStation(terra, childIndex++));
@@ -1348,6 +1353,8 @@ public class Generator {
 			store(iapetus);
 		}
 		
+		store(generateSpaceStation(saturn, childIndex++));
+
 		saturn.childCount = childIndex;
 
 		// moons of uranus
