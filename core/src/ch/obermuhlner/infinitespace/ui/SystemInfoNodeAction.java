@@ -1,6 +1,7 @@
 package ch.obermuhlner.infinitespace.ui;
 
 import ch.obermuhlner.infinitespace.InfiniteSpaceGame;
+import ch.obermuhlner.infinitespace.ShipUserInterface;
 import ch.obermuhlner.infinitespace.model.Node;
 import ch.obermuhlner.infinitespace.model.universe.StarSystem;
 import ch.obermuhlner.infinitespace.ui.game.StarSystemScreen;
@@ -15,7 +16,7 @@ public class SystemInfoNodeAction implements NodeAction {
 	}
 
 	@Override
-	public void execute (InfiniteSpaceGame game, Node node, AbstractGameScreen fromScreen) {
+	public void execute (InfiniteSpaceGame game, ShipUserInterface shipUserInterface, Node node, AbstractGameScreen fromScreen) {
 		StarSystem starSystem = findStarSystem(node);
 		if (starSystem != null) {
 			game.setScreen(new StarSystemScreen(game, starSystem));

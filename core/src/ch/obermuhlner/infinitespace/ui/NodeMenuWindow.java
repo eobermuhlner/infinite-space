@@ -1,6 +1,7 @@
 package ch.obermuhlner.infinitespace.ui;
 
 import ch.obermuhlner.infinitespace.InfiniteSpaceGame;
+import ch.obermuhlner.infinitespace.ShipUserInterface;
 import ch.obermuhlner.infinitespace.model.Node;
 
 import com.badlogic.gdx.scenes.scene2d.Actor;
@@ -15,14 +16,18 @@ public class NodeMenuWindow extends Window {
 
 	private AbstractGameScreen screen;
 
+	private ShipUserInterface shipUserInterface;
+
 	private Node node;
 	
 	private Skin skin;
 
-	public NodeMenuWindow (InfiniteSpaceGame game, AbstractGameScreen screen, Node node, Skin skin) {
+
+	public NodeMenuWindow (InfiniteSpaceGame game, AbstractGameScreen screen, ShipUserInterface shipUserInterface, Node node, Skin skin) {
 		super(getTitle(node), skin);
 		this.game = game;
 		this.screen = screen;
+		this.shipUserInterface = shipUserInterface;
 		this.node = node;
 		this.skin = skin;
 		
@@ -46,7 +51,7 @@ public class NodeMenuWindow extends Window {
 			textButton.addListener(new ChangeListener() {
 				@Override
 				public void changed (ChangeEvent event, Actor actor) {
-					nodeAction.execute(game, node, screen);
+					nodeAction.execute(game, shipUserInterface, node, screen);
 					remove();
 				}
 			});

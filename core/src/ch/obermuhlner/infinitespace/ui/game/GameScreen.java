@@ -143,7 +143,11 @@ public class GameScreen extends AbstractInfiniteSpaceGameScreen {
 		}
 
 		{
-			camera.near = 0.0001f;
+			if(shipUserInterface.hyperspaceMode) {
+				camera.near = 0.0001f;				
+			} else {
+				camera.near = 0.0000001f;
+			}
 			//camera.near = nearest.len() / 2;
 			camera.far = 300f;
 			camera.update(true);

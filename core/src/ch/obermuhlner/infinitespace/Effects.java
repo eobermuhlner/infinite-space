@@ -19,7 +19,7 @@ public class Effects {
 	private static final Action FADE_IN_ACTION = sequence(alpha(0), Actions.fadeIn(FADE_IN_TIME));
 	private static final Action FADE_OUT_ACTION = sequence(Actions.fadeOut(FADE_OUT_TIME));
 
-	private static final Action PULL_IN_ACTION = sequence(scaleTo(0, 1), scaleBy(1, 0, 0.2f));
+	private static final Action PULL_IN_ACTION = sequence(scaleTo(1, 0), scaleBy(0, 1, 0.2f));
 	
 	public static Action fadeIn() {
 		return FADE_IN_ACTION;

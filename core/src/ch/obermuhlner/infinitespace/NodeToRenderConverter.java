@@ -98,7 +98,8 @@ public class NodeToRenderConverter {
 		{
 			// create grid
 			Material material = new Material(ColorAttribute.createDiffuse(new Color(0, 0.2f, 0, 1f)));
-			Model gridModel = modelBuilder.createLineGrid(2000, 2000, 5f, 5f, material, Usage.Position);
+			float gridSize = meterToRenderUnit(10000000E3);
+			Model gridModel = modelBuilder.createLineGrid(2000, 2000, gridSize, gridSize, material, Usage.Position);
 			renderState.instancesAlways.add(new ModelInstance(gridModel));
 		}
 		
@@ -880,7 +881,7 @@ public class NodeToRenderConverter {
 				// windows: emissive + specular texture
 				Texture textureEmissive;
 				Texture textureSpecular;
-				if (random.nextBoolean(0.6)) {
+				if (random.nextBoolean(1.0)) { // TODO fix windows2
 					textureEmissive = assetManager.get(InfiniteSpaceGame.getTexturePath("windows1.jpg"), Texture.class);
 					textureSpecular = assetManager.get(InfiniteSpaceGame.getTexturePath("windows1_specular.jpg"), Texture.class);
 					windowTextureSize = (float)(60 * SIZE_FACTOR); // m
@@ -1326,7 +1327,7 @@ public class NodeToRenderConverter {
 	}
 
 	public static float calculateStarRadius(Star node) {
-		return (float)(node.radius * SIZE_FACTOR);
+		return meterToRenderUnit(node.radius);
 	}
 	
 	public static float calculatePlanetRadius(Planet node) {
@@ -1334,16 +1335,16 @@ public class NodeToRenderConverter {
 	}
 
 	public static float calculatePlanetRadius(double radius) {
-		return (float)(radius * SIZE_FACTOR);
+		return meterToRenderUnit(radius);
 	}
 
 	public static float calculateSpaceStationRadius (SpaceStation node) {
-		return (float) (Math.max(Math.max(node.width, node.height), node.length) / 2 * SIZE_FACTOR);
+		return meterToRenderUnit(Math.max(Math.max(node.width, node.height), node.length) / 2);
 	}
 
 
 	public static float calculateOrbitRadius(OrbitingNode node) {
-		float orbitRadius = (float) (node.orbitRadius * SIZE_FACTOR);
+		float orbitRadius = meterToRenderUnit(node.orbitRadius);
 		if (node.parent instanceof OrbitingSpheroidNode) {
 			OrbitingSpheroidNode parent = (OrbitingSpheroidNode)node.parent;
 			if (parent instanceof Planet) {
@@ -1351,6 +1352,10 @@ public class NodeToRenderConverter {
 			}
 		}
 		return orbitRadius;
+	}
+	
+	public static float meterToRenderUnit(double meters) {
+		return (float) (meters * SIZE_FACTOR);
 	}
 
 	private ModelInstance createSphereShell(Planet node, String name, float innerRadius, float outerRadius, float angleFrom, float angleTo, Material material) {

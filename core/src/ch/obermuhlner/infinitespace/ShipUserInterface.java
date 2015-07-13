@@ -52,7 +52,7 @@ public class ShipUserInterface {
 
 	private static final float ORBIT_SELECTABLE_FACTOR = 10;
 
-	private Player player;
+	public Player player;
 	
 	private Camera camera;
 
@@ -85,6 +85,8 @@ public class ShipUserInterface {
 	private Map<ModelInstance, CrossHair> modelInstanceToButtons = new HashMap<ModelInstance, CrossHair>();
 	
 	public int starSystemIndex;
+	
+	public boolean hyperspaceMode;
 
 	final Array<Node> massiveNodes = new Array<Node>();
 
@@ -93,6 +95,9 @@ public class ShipUserInterface {
 	private Label labelWarpDrag;
 	private Label labelWarpDragSource;
 	private Label labelFps;
+
+	private TextButton buttonHyperspace;
+	private Label labelHyperspaceMode;
 
 	public ShipUserInterface (InfiniteSpaceGame game, Skin uiSkin, AbstractGameScreen screen, final Player player, Camera camera) {
 		this.game = game;
@@ -174,6 +179,16 @@ public class ShipUserInterface {
 						starSystemIndex++;
 					}
 				}));
+				buttonHyperspace = button("Hyperspace", new ChangeListener() {
+					@Override
+					public void changed(ChangeEvent event, Actor actor) {
+						// TODO trigger animation
+						setHyperspaceMode(!hyperspaceMode);
+					}
+				});
+				table.add(buttonHyperspace);
+				labelHyperspaceMode = new Label("No", uiSkin);
+				table.add(labelHyperspaceMode);
 			}
 			{
 				rootTable.row();
@@ -298,19 +313,31 @@ public class ShipUserInterface {
 			}
 		}
 		
-		nodeMenu = new NodeMenuWindow(game, screen, node, uiSkin);
+		nodeMenu = new NodeMenuWindow(game, screen, this, node, uiSkin);
 		nodeMenu.pack();
-		nodeMenu.setPosition(0, Gdx.graphics.getHeight(), Align.top | Align.left);
-		nodeMenu.top().right();
-		nodeMenu.addAction(Effects.pullIn());
+		nodeMenu.setPosition(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), Align.top | Align.right);
+		//nodeMenu.addAction(Effects.fadeIn());
 		
 		stage.addActor(nodeMenu);
 	}
 
+	public void setHyperspaceMode(boolean mode) {
+		hyperspaceMode = mode;
+		
+		if (hyperspaceMode) {
+			labelHyperspaceMode.setText("Yes");
+		} else {
+			labelHyperspaceMode.setText("No");
+			player.setStandardVelocity();
+		}
+	}
+	
 	public void update() {
 		float deltaTime = Gdx.graphics.getDeltaTime();
 		
-		player.calculateHyperVelocity(massiveNodes);
+		if (hyperspaceMode) {
+			player.calculateHyperVelocity(massiveNodes);
+		}
 		
 		if (Config.useTouchpadControls) {
 			inputFromTouchpad(deltaTime);

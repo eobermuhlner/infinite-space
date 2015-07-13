@@ -20,7 +20,7 @@ public class Player {
 	public Ship ship;
 	public CenterPerspectiveCamera camera;
 	
-	public float velocity = 1.0f;
+	public float velocity;
 	public float warpDrag = 0.0f;
 	public Node warpDragNode;
 	
@@ -39,6 +39,8 @@ public class Player {
 	public Player (Ship ship, CenterPerspectiveCamera camera) {
 		this.ship = ship;
 		this.camera = camera;
+		
+		setStandardVelocity();
 	}
 
 	public void addThrustForward(float value) {
@@ -113,6 +115,10 @@ public class Player {
 		}
 	}
 
+	public void setStandardVelocity() {
+		velocity = 0.00001f;
+	}
+	
 	public void calculateHyperVelocity (Array<Node> massiveNodes) {
 		velocity = (float) (10000000E5 * Config.SIZE_FACTOR);
 
