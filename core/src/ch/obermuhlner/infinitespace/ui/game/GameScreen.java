@@ -80,7 +80,11 @@ public class GameScreen extends AbstractInfiniteSpaceGameScreen {
 	@Override
 	public void hide () {
 		super.hide();
-		
+
+		save();
+	}
+	
+	private void save() {
 		GameState.INSTANCE.position.set(camera.position);
 		GameState.INSTANCE.position.add(camera.positionOffset);
 		
@@ -90,7 +94,7 @@ public class GameScreen extends AbstractInfiniteSpaceGameScreen {
 		
 		GameState.INSTANCE.save();
 	}
-	
+
 	private Music createMusic () {
 		float volume = GamePreferences.INSTANCE.preferences.getFloat(GamePreferences.FLOAT_MUSIC_VOLUME);
 		if (volume == 0) {
