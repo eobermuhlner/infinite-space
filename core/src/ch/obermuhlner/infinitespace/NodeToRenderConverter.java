@@ -63,7 +63,7 @@ public class NodeToRenderConverter {
 
 	private static final double AU = Units.ASTRONOMICAL_UNIT;
 	
-	public static double SIZE_FACTOR = Config.SIZE_FACTOR;
+	public double sizeFactor;
 	
 	private static final int PLANET_SPHERE_DIVISIONS_U = 30;
 	private static final int PLANET_SPHERE_DIVISIONS_V = 30;
@@ -79,7 +79,8 @@ public class NodeToRenderConverter {
 
 	public boolean showNodeBoundingBox = Config.DEBUG_SHOW_NODE_BOUNDING_BOX;
 
-	public NodeToRenderConverter (AssetManager assetManager) {
+	public NodeToRenderConverter (AssetManager assetManager, double sizeFactor) {
+		this.sizeFactor = sizeFactor;
 		this.assetManager = assetManager;
 
 		nodeConverters.put(Star.class, new StarConverter());
@@ -550,7 +551,7 @@ public class NodeToRenderConverter {
 		}
 	}
 	
-	public static Vector3 calculatePosition(Node node) {
+	public Vector3 calculatePosition(Node node) {
 		float x = 0;
 		float y = 0;
 		float z = 0;
@@ -836,9 +837,9 @@ public class NodeToRenderConverter {
 
 			Random random = node.seed.getRandom();
 			
-			float width = (float)(node.width * SIZE_FACTOR);
-			float height = (float)(node.height * SIZE_FACTOR);
-			float length = (float)(node.length * SIZE_FACTOR);
+			float width = (float)(node.width * sizeFactor);
+			float height = (float)(node.height * sizeFactor);
+			float length = (float)(node.length * sizeFactor);
 
 			if (showNodeBoundingBox && !realUniverse) {
 				instances.add(createBoundingBox(width, height, length,
@@ -867,7 +868,7 @@ public class NodeToRenderConverter {
 					TextureAttribute normalAttribute = new TextureAttribute(TextureAttribute.Normal, textureNormal);
 					materialPlainAttributes.add(normalAttribute);
 
-					plainTextureSize = (float)(100 * SIZE_FACTOR); // m
+					plainTextureSize = (float)(100 * sizeFactor); // m
 				} else {
 					float grayLuminance = random.nextFloat(0.25f, 0.75f);
 					ColorAttribute grayAttribute = ColorAttribute.createDiffuse(new Color(grayLuminance, grayLuminance, grayLuminance, 1f));
@@ -884,11 +885,11 @@ public class NodeToRenderConverter {
 				if (random.nextBoolean(1.0)) { // TODO fix windows2
 					textureEmissive = assetManager.get(InfiniteSpaceGame.getTexturePath("windows1.jpg"), Texture.class);
 					textureSpecular = assetManager.get(InfiniteSpaceGame.getTexturePath("windows1_specular.jpg"), Texture.class);
-					windowTextureSize = (float)(60 * SIZE_FACTOR); // m
+					windowTextureSize = (float)(60 * sizeFactor); // m
 				} else {
 					textureEmissive = assetManager.get(InfiniteSpaceGame.getTexturePath("windows2.jpg"), Texture.class);
 					textureSpecular = assetManager.get(InfiniteSpaceGame.getTexturePath("windows2_specular.jpg"), Texture.class);
-					windowTextureSize = (float)(60 * SIZE_FACTOR); // m
+					windowTextureSize = (float)(60 * sizeFactor); // m
 				}
 				materialWindowsAttributes.add(new TextureAttribute(TextureAttribute.Emissive, textureEmissive));
 				materialWindowsAttributes.add(new TextureAttribute(TextureAttribute.Specular, textureSpecular));
@@ -1312,7 +1313,7 @@ public class NodeToRenderConverter {
 		return part;
 	}
 
-	public static float calculateRadius(Node node) {
+	public float calculateRadius(Node node) {
 		if (node instanceof Star) {
 			return calculateStarRadius((Star) node);
 		}
@@ -1326,24 +1327,24 @@ public class NodeToRenderConverter {
 		
 	}
 
-	public static float calculateStarRadius(Star node) {
+	public float calculateStarRadius(Star node) {
 		return meterToRenderUnit(node.radius);
 	}
 	
-	public static float calculatePlanetRadius(Planet node) {
+	public float calculatePlanetRadius(Planet node) {
 		return calculatePlanetRadius(node.radius);
 	}
 
-	public static float calculatePlanetRadius(double radius) {
+	public float calculatePlanetRadius(double radius) {
 		return meterToRenderUnit(radius);
 	}
 
-	public static float calculateSpaceStationRadius (SpaceStation node) {
+	public float calculateSpaceStationRadius (SpaceStation node) {
 		return meterToRenderUnit(Math.max(Math.max(node.width, node.height), node.length) / 2);
 	}
 
 
-	public static float calculateOrbitRadius(OrbitingNode node) {
+	public float calculateOrbitRadius(OrbitingNode node) {
 		float orbitRadius = meterToRenderUnit(node.orbitRadius);
 		if (node.parent instanceof OrbitingSpheroidNode) {
 			OrbitingSpheroidNode parent = (OrbitingSpheroidNode)node.parent;
@@ -1354,8 +1355,12 @@ public class NodeToRenderConverter {
 		return orbitRadius;
 	}
 	
-	public static float meterToRenderUnit(double meters) {
-		return (float) (meters * SIZE_FACTOR);
+	public float meterToRenderUnit(double meters) {
+		return (float) (meters * sizeFactor);
+	}
+
+	public double renderUnitToMeter(float renderUnits) {
+		return (float) (renderUnits) /  sizeFactor;
 	}
 
 	private ModelInstance createSphereShell(Planet node, String name, float innerRadius, float outerRadius, float angleFrom, float angleTo, Material material) {

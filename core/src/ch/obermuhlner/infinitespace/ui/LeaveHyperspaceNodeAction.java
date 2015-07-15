@@ -1,11 +1,12 @@
 package ch.obermuhlner.infinitespace.ui;
 
-import com.badlogic.gdx.math.Vector3;
-
 import ch.obermuhlner.infinitespace.InfiniteSpaceGame;
-import ch.obermuhlner.infinitespace.NodeToRenderConverter;
 import ch.obermuhlner.infinitespace.ShipUserInterface;
 import ch.obermuhlner.infinitespace.model.Node;
+import ch.obermuhlner.infinitespace.ui.game.GameScreen;
+import ch.obermuhlner.infinitespace.ui.game.GameScreen.RenderMode;
+
+import com.badlogic.gdx.math.Vector3;
 
 public class LeaveHyperspaceNodeAction implements NodeAction {
 
@@ -18,17 +19,17 @@ public class LeaveHyperspaceNodeAction implements NodeAction {
 
 	@Override
 	public void execute (InfiniteSpaceGame game, ShipUserInterface shipUserInterface, Node node, AbstractGameScreen fromScreen) {
-		float radius = NodeToRenderConverter.calculateRadius(node);
+		float radius = shipUserInterface.nodeToRenderConverter.calculateRadius(node);
 		
-		Vector3 nodePos = NodeToRenderConverter.calculatePosition(node);
+		Vector3 nodePos = shipUserInterface.nodeToRenderConverter.calculatePosition(node);
 		nodePos.sub(shipUserInterface.player.camera.positionOffset);
 		Vector3 playerPos = new Vector3(nodePos);
 		playerPos.add(0, 0, radius * 3);
 		shipUserInterface.player.camera.position.set(playerPos);
 		shipUserInterface.player.camera.lookAt(nodePos);
 		shipUserInterface.player.camera.update();
-
-		shipUserInterface.setHyperspaceMode(false);
+		
+		game.setScreen(new GameScreen(game, RenderMode.NORMALSPACE));
 	}
 
 }

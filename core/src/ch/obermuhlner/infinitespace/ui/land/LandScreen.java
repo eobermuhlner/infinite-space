@@ -8,6 +8,8 @@ import ch.obermuhlner.infinitespace.ui.AbstractNodeStageScreen;
 import ch.obermuhlner.infinitespace.ui.cargo.BuyCargoScreen;
 import ch.obermuhlner.infinitespace.ui.cargo.MarketInfoScreen;
 import ch.obermuhlner.infinitespace.ui.cargo.SellCargoScreen;
+import ch.obermuhlner.infinitespace.ui.game.GameScreen;
+import ch.obermuhlner.infinitespace.ui.game.GameScreen.RenderMode;
 import ch.obermuhlner.infinitespace.ui.info.InfoScreen;
 import ch.obermuhlner.infinitespace.ui.ship.ShipInfoScreen;
 
@@ -75,7 +77,7 @@ public class LandScreen extends AbstractNodeStageScreen {
 		rootTable.add(button(I18N.LAUNCH, new ChangeListener() {
 			@Override
 			public void changed (ChangeEvent event, Actor actor) {
-				showGameScreen();
+				infiniteSpaceGame.setScreen(new GameScreen(infiniteSpaceGame, RenderMode.NORMALSPACE));
 			}
 		}));
 

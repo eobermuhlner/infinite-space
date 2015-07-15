@@ -10,28 +10,36 @@ import com.badlogic.gdx.utils.Array;
 
 import ch.obermuhlner.infinitespace.GameState;
 import ch.obermuhlner.infinitespace.InfiniteSpaceGame;
+import ch.obermuhlner.infinitespace.NodeToRenderConverter;
 import ch.obermuhlner.infinitespace.RenderState;
 import ch.obermuhlner.infinitespace.model.Node;
 import ch.obermuhlner.infinitespace.model.universe.StarSystem;
 import ch.obermuhlner.infinitespace.render.UberShaderProvider;
 import ch.obermuhlner.infinitespace.ui.AbstractInfiniteSpaceGameScreen;
+import ch.obermuhlner.infinitespace.ui.game.GameScreen.RenderMode;
+import ch.obermuhlner.infinitespace.util.DoubleVector3;
 
 public class StarSystemScreen extends AbstractInfiniteSpaceGameScreen {
 
 	private final RenderState renderState = new RenderState();
 
+	private final NodeToRenderConverter nodeToRenderConverter;
+
 	private ModelBatch modelBatch;
 
 	private PerspectiveCamera camera;
 
+
 	public StarSystemScreen (InfiniteSpaceGame game, StarSystem starSystem) {
 		super(game);
 		
+		nodeToRenderConverter = new NodeToRenderConverter(game.assetManager, RenderMode.HYPERSPACE.sizeFactor);
+
 		loadNodes(starSystem);
 	}
 
 	private void loadNodes(Node node) {
-		infiniteSpaceGame.genericNodeConverter.convertNode(node, renderState);
+		nodeToRenderConverter.convertNode(node, renderState);
 		
 		int childCount = infiniteSpaceGame.universeModel.generator.getChildCount(node);
 		for (int i = 0; i < childCount; i++) {
@@ -46,9 +54,9 @@ public class StarSystemScreen extends AbstractInfiniteSpaceGameScreen {
 		modelBatch = new ModelBatch(UberShaderProvider.DEFAULT);
 
 		camera = new PerspectiveCamera(67f, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-		camera.position.set(GameState.INSTANCE.position);
-		camera.direction.set(GameState.INSTANCE.direction);
-		camera.up.set(GameState.INSTANCE.up);
+		DoubleVector3.setToVector3(camera.direction, GameState.INSTANCE.direction, nodeToRenderConverter.sizeFactor);
+		DoubleVector3.setToVector3(camera.direction, GameState.INSTANCE.direction);
+		DoubleVector3.setToVector3(camera.up, GameState.INSTANCE.up);
 		camera.near = 0.001f;
 		camera.far = 400f;
 		camera.update(true);

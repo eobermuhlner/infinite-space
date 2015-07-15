@@ -9,8 +9,8 @@ import com.badlogic.gdx.Gdx;
 
 public class Config {
 
-	public static double SIZE_FACTOR = 1 / 100E5; // good for normal space
-	//public static double SIZE_FACTOR = 1 / 100000E5; // good for hyperspace
+	public static double SIZE_FACTOR_NORMALSPACE = 1 / 100E5;
+	public static double SIZE_FACTOR_HYPERSPACE = 1 / 100000E5;
 	
 	public static final boolean DEBUG_PROFILING = false;
 	public static final boolean DEBUG_LINEAR_ORBITS = false;

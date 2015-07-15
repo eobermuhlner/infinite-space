@@ -1,7 +1,6 @@
 package ch.obermuhlner.infinitespace.ui;
 
 import ch.obermuhlner.infinitespace.InfiniteSpaceGame;
-import ch.obermuhlner.infinitespace.ui.game.GameScreen;
 import ch.obermuhlner.infinitespace.ui.welcome.OptionsScreen;
 import ch.obermuhlner.infinitespace.ui.welcome.WelcomeScreen;
 
@@ -22,10 +21,6 @@ public class AbstractInfiniteSpaceGameScreen extends AbstractGameScreen {
 
 	protected void showOptionsScreen() {
 		infiniteSpaceGame.setScreen(new OptionsScreen(infiniteSpaceGame));
-	}
-
-	protected void showGameScreen() {
-		infiniteSpaceGame.setScreen(new GameScreen(infiniteSpaceGame));
 	}
 
 }

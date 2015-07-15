@@ -4,6 +4,7 @@ import ch.obermuhlner.infinitespace.InfiniteSpaceGame;
 import ch.obermuhlner.infinitespace.NodeToRenderConverter;
 import ch.obermuhlner.infinitespace.RenderState;
 import ch.obermuhlner.infinitespace.model.Node;
+import ch.obermuhlner.infinitespace.ui.game.GameScreen.RenderMode;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
@@ -19,7 +20,9 @@ import com.badlogic.gdx.utils.Align;
 
 public abstract class AbstractNodeStageScreen extends AbstractStageScreen {
 
-	protected Node node;
+	private final NodeToRenderConverter nodeToRenderConverter;
+
+	protected final Node node;
 
 	private Vector3 target = new Vector3();
 	protected float autoRotateAngle = 5.0f;
@@ -31,6 +34,7 @@ public abstract class AbstractNodeStageScreen extends AbstractStageScreen {
 	public AbstractNodeStageScreen (InfiniteSpaceGame game, Node node) {
 		super(game);
 		
+		this.nodeToRenderConverter = new NodeToRenderConverter(game.assetManager, RenderMode.HYPERSPACE.sizeFactor);
 		this.node = node;
 	}
 
@@ -39,7 +43,7 @@ public abstract class AbstractNodeStageScreen extends AbstractStageScreen {
 		renderState2 = renderState;
 		super.prepareRenderState(renderState);
 		
-		float radius = NodeToRenderConverter.calculateRadius(node);
+		float radius = nodeToRenderConverter.calculateRadius(node);
 
 		camera.near = radius / 100;
 		camera.far = radius * 100;
@@ -51,7 +55,7 @@ public abstract class AbstractNodeStageScreen extends AbstractStageScreen {
 		pointLight.set(1f, 1f, 1f, -5, 0, 5, 1f);
 		renderState.environment.add(pointLight);
 		
-		infiniteSpaceGame.genericNodeConverter.convertNode(node, renderState);
+		nodeToRenderConverter.convertNode(node, renderState);
 	}
 
 	@Override

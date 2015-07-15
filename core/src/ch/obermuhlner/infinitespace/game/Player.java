@@ -119,26 +119,26 @@ public class Player {
 		velocity = 0.00001f;
 	}
 	
-	public void calculateHyperVelocity (Array<Node> massiveNodes) {
-		velocity = (float) (10000000E5 * Config.SIZE_FACTOR);
+	public void calculateHyperVelocity (NodeToRenderConverter nodeToRenderConverter, Array<Node> massiveNodes) {
+		velocity = (float) (10000000E5 * nodeToRenderConverter.sizeFactor);
 
 		float strongestDragFactor = 1f;
 		Node strongestDragNode = null;
 		for (int i = 0; i < massiveNodes.size; i++) {
 			Node node = massiveNodes.get(i);
-			Vector3 position = NodeToRenderConverter.calculatePosition(node);
+			Vector3 position = nodeToRenderConverter.calculatePosition(node);
 			position.sub(camera.position);
 			position.sub(camera.positionOffset);
 			float radius;
 			if (node instanceof Planet) {
 				Planet planet = (Planet)node;
-				radius = NodeToRenderConverter.calculatePlanetRadius(planet);
+				radius = nodeToRenderConverter.calculatePlanetRadius(planet);
 			} else if (node instanceof Star) {
 				Star star = (Star)node;
-				radius = NodeToRenderConverter.calculateStarRadius(star);
+				radius = nodeToRenderConverter.calculateStarRadius(star);
 			} else if (node instanceof SpaceStation) {
 				SpaceStation spaceStation = (SpaceStation)node;
-				radius = NodeToRenderConverter.calculateSpaceStationRadius(spaceStation);
+				radius = nodeToRenderConverter.calculateSpaceStationRadius(spaceStation);
 			} else {
 				continue;
 			}

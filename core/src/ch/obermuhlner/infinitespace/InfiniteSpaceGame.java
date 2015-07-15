@@ -15,7 +15,6 @@ public class InfiniteSpaceGame extends Game {
 	
 	public final AssetManager assetManager = new AssetManager();
 	public final UniverseModel universeModel = new UniverseModel();
-	public final NodeToRenderConverter genericNodeConverter = new NodeToRenderConverter(assetManager);
 
 	@Override
 	public void create () {

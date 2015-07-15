@@ -2,9 +2,11 @@ package ch.obermuhlner.infinitespace.ui.game;
 
 import java.util.Map;
 
+import ch.obermuhlner.infinitespace.Config;
 import ch.obermuhlner.infinitespace.GamePreferences;
 import ch.obermuhlner.infinitespace.GameState;
 import ch.obermuhlner.infinitespace.InfiniteSpaceGame;
+import ch.obermuhlner.infinitespace.NodeToRenderConverter;
 import ch.obermuhlner.infinitespace.RenderState;
 import ch.obermuhlner.infinitespace.ShipUserInterface;
 import ch.obermuhlner.infinitespace.UniverseCoordinates;
@@ -14,6 +16,7 @@ import ch.obermuhlner.infinitespace.graphics.CenterPerspectiveCamera;
 import ch.obermuhlner.infinitespace.model.Node;
 import ch.obermuhlner.infinitespace.render.UberShaderProvider;
 import ch.obermuhlner.infinitespace.ui.AbstractInfiniteSpaceGameScreen;
+import ch.obermuhlner.infinitespace.util.DoubleVector3;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Music;
@@ -45,8 +48,26 @@ public class GameScreen extends AbstractInfiniteSpaceGameScreen {
 
 	private Music music;
 
-	public GameScreen (InfiniteSpaceGame game) {
+	public enum RenderMode {
+		NORMALSPACE(Config.SIZE_FACTOR_NORMALSPACE),
+		HYPERSPACE(Config.SIZE_FACTOR_HYPERSPACE);
+		
+		public final double sizeFactor;
+		
+		private RenderMode(double sizeFactor) {
+			this.sizeFactor = sizeFactor;
+		}
+	}
+	
+	private final RenderMode renderMode;
+	
+	private final NodeToRenderConverter nodeToRenderConverter;
+
+	public GameScreen (InfiniteSpaceGame game, RenderMode renderMode) {
 		super(game);
+		
+		this.renderMode = renderMode;
+		nodeToRenderConverter = new NodeToRenderConverter(game.assetManager, renderMode.sizeFactor);
 	}
 
 	@Override
@@ -59,15 +80,15 @@ public class GameScreen extends AbstractInfiniteSpaceGameScreen {
 		modelBatch = new ModelBatch(UberShaderProvider.DEFAULT);
 
 		camera = new CenterPerspectiveCamera(67f, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-		camera.position.set(GameState.INSTANCE.position);
-		camera.direction.set(GameState.INSTANCE.direction);
-		camera.up.set(GameState.INSTANCE.up);
+		DoubleVector3.setToVector3(camera.position, GameState.INSTANCE.position, nodeToRenderConverter.sizeFactor);
+		DoubleVector3.setToVector3(camera.direction, GameState.INSTANCE.direction);
+		DoubleVector3.setToVector3(camera.up, GameState.INSTANCE.up);
 		camera.near = 0.001f;
 		camera.far = 400f;
 		camera.update(true);
 
 		player = new Player(ShipFactory.getStandardShip(), camera);
-		shipUserInterface = new ShipUserInterface(infiniteSpaceGame, skin, this, player, camera);
+		shipUserInterface = new ShipUserInterface(infiniteSpaceGame, renderMode, nodeToRenderConverter, skin, this, player, camera);
 		shipUserInterface.starSystemIndex = GameState.INSTANCE.starSystem;
 		
 		renderState.environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.1f, 0.1f, 0.1f, 1f));
@@ -87,6 +108,7 @@ public class GameScreen extends AbstractInfiniteSpaceGameScreen {
 	private void save() {
 		GameState.INSTANCE.position.set(camera.position);
 		GameState.INSTANCE.position.add(camera.positionOffset);
+		GameState.INSTANCE.position.mul(1.0 / nodeToRenderConverter.sizeFactor);
 		
 		GameState.INSTANCE.direction.set(camera.direction);
 		GameState.INSTANCE.up.set(camera.up);
@@ -147,10 +169,15 @@ public class GameScreen extends AbstractInfiniteSpaceGameScreen {
 		}
 
 		{
-			if(shipUserInterface.hyperspaceMode) {
+			switch(renderMode) {
+			case HYPERSPACE:
 				camera.near = 0.0001f;				
-			} else {
+				break;
+			case NORMALSPACE:
 				camera.near = 0.0000001f;
+				break;
+			default:
+				throw new IllegalStateException("Unknown: " + renderMode);
 			}
 			//camera.near = nearest.len() / 2;
 			camera.far = 300f;
@@ -192,8 +219,8 @@ public class GameScreen extends AbstractInfiniteSpaceGameScreen {
 
 			infiniteSpaceGame.universeModel.setStarSystemIndex(starSystemIndex);
 			Iterable<Node> universe = infiniteSpaceGame.universeModel.getUniverse();
-			infiniteSpaceGame.genericNodeConverter.convertNodes(universe, renderState);
-			infiniteSpaceGame.genericNodeConverter.createSkyBox(renderState);
+			nodeToRenderConverter.convertNodes(universe, renderState);
+			nodeToRenderConverter.createSkyBox(renderState);
 			shipUserInterface.setUniverse(universe);
 			shipUserInterface.setZoomObject(renderState.nodeToInstances);
 			changed = true;

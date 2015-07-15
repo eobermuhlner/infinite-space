@@ -9,6 +9,8 @@ import ch.obermuhlner.infinitespace.model.OrbitingNode;
 import ch.obermuhlner.infinitespace.model.universe.Star;
 import ch.obermuhlner.infinitespace.ui.AbstractGameScreen;
 import ch.obermuhlner.infinitespace.ui.NodeMenuWindow;
+import ch.obermuhlner.infinitespace.ui.game.GameScreen;
+import ch.obermuhlner.infinitespace.ui.game.GameScreen.RenderMode;
 import ch.obermuhlner.infinitespace.util.Units;
 
 import com.badlogic.gdx.Gdx;
@@ -74,8 +76,10 @@ public class ShipUserInterface {
 
 	private PlayerController playerController;
 
-	private InfiniteSpaceGame game;
-	private Skin uiSkin;
+	private final InfiniteSpaceGame game;
+	private final RenderMode renderMode;
+	public final NodeToRenderConverter nodeToRenderConverter;
+	private final Skin uiSkin;
 	private Skin skin;
 	private TouchpadStyle touchpadStyle;
 	
@@ -86,8 +90,6 @@ public class ShipUserInterface {
 	
 	public int starSystemIndex;
 	
-	public boolean hyperspaceMode;
-
 	final Array<Node> massiveNodes = new Array<Node>();
 
 	private Label labelThrust;
@@ -97,10 +99,11 @@ public class ShipUserInterface {
 	private Label labelFps;
 
 	private TextButton buttonHyperspace;
-	private Label labelHyperspaceMode;
 
-	public ShipUserInterface (InfiniteSpaceGame game, Skin uiSkin, AbstractGameScreen screen, final Player player, Camera camera) {
+	public ShipUserInterface (InfiniteSpaceGame game, final RenderMode renderMode, NodeToRenderConverter nodeToRenderConverter, Skin uiSkin, AbstractGameScreen screen, final Player player, Camera camera) {
 		this.game = game;
+		this.renderMode = renderMode;
+		this.nodeToRenderConverter = nodeToRenderConverter;
 		this.uiSkin = uiSkin;
 		this.screen = screen;
 		this.player = player;
@@ -179,16 +182,37 @@ public class ShipUserInterface {
 						starSystemIndex++;
 					}
 				}));
-				buttonHyperspace = button("Hyperspace", new ChangeListener() {
+				String hyperspaceButtonText;
+				switch (renderMode) {
+				case HYPERSPACE:
+					hyperspaceButtonText = "Leave Hyperspace";
+					break;
+				case NORMALSPACE:
+					hyperspaceButtonText = "Enter Hyperspace";
+					break;
+				default:
+					throw new IllegalStateException("Unknown: " + renderMode);
+				}
+				buttonHyperspace = button(hyperspaceButtonText, new ChangeListener() {
 					@Override
 					public void changed(ChangeEvent event, Actor actor) {
 						// TODO trigger animation
-						setHyperspaceMode(!hyperspaceMode);
+						
+						RenderMode targetRenderMode;
+						switch (renderMode) {
+						case HYPERSPACE:
+							targetRenderMode = RenderMode.NORMALSPACE;
+							break;
+						case NORMALSPACE:
+							targetRenderMode = RenderMode.HYPERSPACE;
+							break;
+						default:
+							throw new IllegalStateException("Unknown: " + renderMode);
+						}
+						ShipUserInterface.this.game.setScreen(new GameScreen(ShipUserInterface.this.game, targetRenderMode));
 					}
 				});
 				table.add(buttonHyperspace);
-				labelHyperspaceMode = new Label("No", uiSkin);
-				table.add(labelHyperspaceMode);
 			}
 			{
 				rootTable.row();
@@ -321,22 +345,11 @@ public class ShipUserInterface {
 		stage.addActor(nodeMenu);
 	}
 
-	public void setHyperspaceMode(boolean mode) {
-		hyperspaceMode = mode;
-		
-		if (hyperspaceMode) {
-			labelHyperspaceMode.setText("Yes");
-		} else {
-			labelHyperspaceMode.setText("No");
-			player.setStandardVelocity();
-		}
-	}
-	
 	public void update() {
 		float deltaTime = Gdx.graphics.getDeltaTime();
 		
-		if (hyperspaceMode) {
-			player.calculateHyperVelocity(massiveNodes);
+		if (renderMode == RenderMode.HYPERSPACE) {
+			player.calculateHyperVelocity(nodeToRenderConverter, massiveNodes);
 		}
 		
 		if (Config.useTouchpadControls) {
@@ -372,7 +385,8 @@ public class ShipUserInterface {
 				
 				if (crosshair.button.isChecked() || node instanceof Star || distance < getOrbit(node) * ORBIT_SELECTABLE_FACTOR) {
 					crosshair.setVisible(true);
-					crosshair.labelBottom.setText(Units.meterDistanceToString(distance/NodeToRenderConverter.SIZE_FACTOR));
+					double distanceMeters = nodeToRenderConverter.renderUnitToMeter(distance);
+					crosshair.labelBottom.setText(Units.meterDistanceToString(distanceMeters));
 				} else {
 					crosshair.setVisible(false);
 				}
@@ -390,7 +404,7 @@ public class ShipUserInterface {
 	
 	private float getOrbit(Node node) {
 		if (node instanceof OrbitingNode) {
-			return NodeToRenderConverter.calculateOrbitRadius((OrbitingNode) node);
+			return nodeToRenderConverter.calculateOrbitRadius((OrbitingNode) node);
 		}
 		return 0;
 	}
