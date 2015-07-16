@@ -43,7 +43,7 @@ public class DoubleVector3 {
 
 	@Override
 	public String toString() {
-		return "(" + x + ", " + y + ", " + z + ")";
+		return "[" + x + ", " + y + ", " + z + "]";
 	}
 
 	public static void setToVector3(Vector3 vector3, DoubleVector3 doubleVector3) {

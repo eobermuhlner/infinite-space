@@ -35,19 +35,31 @@ public class GameState {
 	}
 	
 	public void pullFromCamera(CenterPerspectiveCamera camera, double sizeFactor) {
+//		System.out.println("pullFromCamera()");
+//		System.out.println("  position       = " + camera.position);
+//		System.out.println("  positionOffset = " + camera.positionOffset);
+		
 		position.set(camera.position);
 		position.add(camera.positionOffset);
 		position.mul(1.0 / sizeFactor);
-		
+
+//		System.out.println("  game position  = " + position);
+
 		direction.set(camera.direction);
 		up.set(camera.up);
 	}
 	
 	public void pushToCamera(CenterPerspectiveCamera camera, double sizeFactor) {
+//		System.out.println("pushToCamera()");
+//		System.out.println("  game position  = " + position);
+		
 		DoubleVector3.setToVector3(camera.position, GameState.INSTANCE.position, sizeFactor);
 		camera.positionOffset.setZero();
 		DoubleVector3.setToVector3(camera.direction, GameState.INSTANCE.direction);
 		DoubleVector3.setToVector3(camera.up, GameState.INSTANCE.up);
+
+//		System.out.println("  position       = " + camera.position);
+//		System.out.println("  positionOffset = " + camera.positionOffset);
 	}
 	
 	private static double getDouble(Preferences preferences, String key, double defValue) {

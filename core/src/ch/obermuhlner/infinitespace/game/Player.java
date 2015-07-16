@@ -152,8 +152,8 @@ public class Player {
 			float dragFactor = 1f - MathUtil.clamp(drag, 0, 1.0f);
 			if (dragFactor < strongestDragFactor) {
 				strongestDragNode = node;
-				System.out.printf("dist=%10.6f radii=%10.6f corr=%15.6f dot=%10.6f dirFactor=%10.6f drag=%10.6f dragFactor=%10.6f %s\n", 
-						distance, (distance/radius), correctedDistance, dot, directionFactor, drag, dragFactor, node.toString());
+//				System.out.printf("dist=%10.6f radii=%10.6f corr=%15.6f dot=%10.6f dirFactor=%10.6f drag=%10.6f dragFactor=%10.6f %s\n", 
+//						distance, (distance/radius), correctedDistance, dot, directionFactor, drag, dragFactor, node.toString());
 			}
 			strongestDragFactor = Math.min(strongestDragFactor, dragFactor);
 		}
@@ -161,6 +161,6 @@ public class Player {
 		warpDragNode = strongestDragNode;
 		velocity *= strongestDragFactor;
 		
-		System.out.println();		
+//		System.out.println();		
 	}
 }
