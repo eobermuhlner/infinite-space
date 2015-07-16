@@ -1067,10 +1067,10 @@ public class Generator {
 			generatePopulationAcceptablePlanet(luna, random);
 			store(luna);
 
-			int lunaChildIndex = 0;
-			store(generateSpaceStation(luna, lunaChildIndex++));
+			int moonChildIndex = 0;
+			store(generateSpaceStation(luna, moonChildIndex++));
 			
-			luna.childCount = lunaChildIndex;
+			luna.childCount = moonChildIndex;
 		}
 		
 		store(generateSpaceStation(terra, childIndex++));
@@ -1162,6 +1162,11 @@ public class Generator {
 			europa.temperature = surfaceTemperature(europa); // ~50K - 125K => 102K
 			europa.childCount = 0;
 			store(europa);
+
+			int moonChildIndex = 0;
+			store(generateSpaceStation(europa, moonChildIndex++));
+			
+			europa.childCount = moonChildIndex;
 		}
 		
 		{
@@ -1181,6 +1186,11 @@ public class Generator {
 			ganymede.childCount = 0;
 			generatePopulationHorriblePlanet(ganymede, random);
 			store(ganymede);
+
+			int moonChildIndex = 0;
+			store(generateSpaceStation(ganymede, moonChildIndex++));
+			
+			ganymede.childCount = moonChildIndex;
 		}
 		
 		{
@@ -1211,7 +1221,6 @@ public class Generator {
 		childIndex = 0;
 
 		{
-			 
 			AsteroidBelt saturnRing = new AsteroidBelt(saturn, childIndex++);
 			saturnRing.name = "Saturn Ring";
 			saturnRing.orbitRadius = 140000E3; // 66900km - 140180km
@@ -1333,6 +1342,11 @@ public class Generator {
 			titan.temperature = surfaceTemperature(titan);
 			titan.childCount = 0;
 			store(titan);
+
+			int moonChildIndex = 0;
+			store(generateSpaceStation(titan, moonChildIndex++));
+			
+			titan.childCount = moonChildIndex;
 		}
 		
 		{
