@@ -1,6 +1,5 @@
 package ch.obermuhlner.infinitespace.game;
 
-import ch.obermuhlner.infinitespace.Config;
 import ch.obermuhlner.infinitespace.NodeToRenderConverter;
 import ch.obermuhlner.infinitespace.Throttle;
 import ch.obermuhlner.infinitespace.game.ship.Ship;
