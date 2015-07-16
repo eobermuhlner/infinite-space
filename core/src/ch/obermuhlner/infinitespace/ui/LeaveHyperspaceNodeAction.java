@@ -25,6 +25,7 @@ public class LeaveHyperspaceNodeAction implements NodeAction {
 		nodePos.sub(shipUserInterface.player.camera.positionOffset);
 		Vector3 playerPos = new Vector3(nodePos);
 		playerPos.add(0, 0, radius * 3);
+		
 		shipUserInterface.player.camera.position.set(playerPos);
 		shipUserInterface.player.camera.lookAt(nodePos);
 		shipUserInterface.player.camera.update();

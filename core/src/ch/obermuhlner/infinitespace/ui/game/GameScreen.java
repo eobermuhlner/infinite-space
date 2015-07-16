@@ -74,28 +74,19 @@ public class GameScreen extends AbstractInfiniteSpaceGameScreen {
 	public void show () {
 		super.show();
 		
-		GameState.INSTANCE.load();
-		
 		music = createMusic();
 		modelBatch = new ModelBatch(UberShaderProvider.DEFAULT);
 
 		camera = new CenterPerspectiveCamera(67f, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-		DoubleVector3.setToVector3(camera.position, GameState.INSTANCE.position, nodeToRenderConverter.sizeFactor);
-		DoubleVector3.setToVector3(camera.direction, GameState.INSTANCE.direction);
-		DoubleVector3.setToVector3(camera.up, GameState.INSTANCE.up);
-		camera.near = 0.001f;
-		camera.far = 400f;
-		camera.update(true);
 
 		player = new Player(ShipFactory.getStandardShip(), camera);
 		shipUserInterface = new ShipUserInterface(infiniteSpaceGame, renderMode, nodeToRenderConverter, skin, this, player, camera);
-		shipUserInterface.starSystemIndex = GameState.INSTANCE.starSystem;
 		
 		renderState.environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.1f, 0.1f, 0.1f, 1f));
 		
 		starSystemIndex = Integer.MAX_VALUE;
-		updateUniverse();
-		shipUserInterface.setZoomObject(renderState.nodeToInstances);
+		
+		load();
 	}
 	
 	@Override
@@ -105,13 +96,20 @@ public class GameScreen extends AbstractInfiniteSpaceGameScreen {
 		save();
 	}
 	
-	private void save() {
-		GameState.INSTANCE.position.set(camera.position);
-		GameState.INSTANCE.position.add(camera.positionOffset);
-		GameState.INSTANCE.position.mul(1.0 / nodeToRenderConverter.sizeFactor);
+	private void load() {
+		GameState.INSTANCE.load();
+		GameState.INSTANCE.pushToCamera(camera, nodeToRenderConverter.sizeFactor);
+		camera.near = 0.001f;
+		camera.far = 400f;
+		camera.update(true);
 		
-		GameState.INSTANCE.direction.set(camera.direction);
-		GameState.INSTANCE.up.set(camera.up);
+		shipUserInterface.starSystemIndex = GameState.INSTANCE.starSystem;
+		updateUniverse();
+		shipUserInterface.setZoomObject(renderState.nodeToInstances);
+	}
+	
+	private void save() {
+		GameState.INSTANCE.pullFromCamera(camera, nodeToRenderConverter.sizeFactor);
 		GameState.INSTANCE.starSystem = starSystemIndex;
 		
 		GameState.INSTANCE.save();

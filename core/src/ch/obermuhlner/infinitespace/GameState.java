@@ -5,6 +5,7 @@ import java.util.List;
 
 import ch.obermuhlner.infinitespace.game.ship.Ship;
 import ch.obermuhlner.infinitespace.game.ship.ShipFactory;
+import ch.obermuhlner.infinitespace.graphics.CenterPerspectiveCamera;
 import ch.obermuhlner.infinitespace.util.DoubleVector3;
 import ch.obermuhlner.infinitespace.util.Units;
 
@@ -31,6 +32,22 @@ public class GameState {
 	
 	private GameState () {
 		preferences = Gdx.app.getPreferences(GameState.class.getName());
+	}
+	
+	public void pullFromCamera(CenterPerspectiveCamera camera, double sizeFactor) {
+		position.set(camera.position);
+		position.add(camera.positionOffset);
+		position.mul(1.0 / sizeFactor);
+		
+		direction.set(camera.direction);
+		up.set(camera.up);
+	}
+	
+	public void pushToCamera(CenterPerspectiveCamera camera, double sizeFactor) {
+		DoubleVector3.setToVector3(camera.position, GameState.INSTANCE.position, sizeFactor);
+		camera.positionOffset.setZero();
+		DoubleVector3.setToVector3(camera.direction, GameState.INSTANCE.direction);
+		DoubleVector3.setToVector3(camera.up, GameState.INSTANCE.up);
 	}
 	
 	private static double getDouble(Preferences preferences, String key, double defValue) {

@@ -425,7 +425,7 @@ public class NodeToRenderConverter {
 							PartInfo coreInfo = node.core.get(i);
 							// TODO solve problem with cores z-fighting
 							if (coreInfo.radius != node.radius) {
-								float coreOuterRadius = calculatePlanetRadius(coreInfo.radius) * 0.95f; // make cores bit smaller to avoid z-fighting with surface 
+								float coreOuterRadius = meterToRenderUnit(coreInfo.radius) * 0.95f; // make cores bit smaller to avoid z-fighting with surface 
 								Material coreMaterial = new Material(temperatureToColorAttribute(coreInfo.temperature));
 								ModelInstance sphere; 
 								if (i == 0) {
@@ -449,7 +449,7 @@ public class NodeToRenderConverter {
 					
 					double gridSize = MathUtil.nextPowerOfTen(node.radius * 2) / 100;
 					int gridSteps = (int) Math.round(node.radius * 2 * 1.5 / gridSize);
-					float gridRenderSize = calculatePlanetRadius(gridSize);
+					float gridRenderSize = meterToRenderUnit(gridSize);
 					Material materialGrid = new Material(ColorAttribute.createDiffuse(new Color(0, 0.2f, 0, 1f)));
 					Model gridModel = modelBuilder.createLineGrid(gridSteps, gridSteps, gridRenderSize, gridRenderSize, materialGrid, Usage.Position);
 					ModelInstance gridInstance = new ModelInstance(gridModel);
@@ -1323,7 +1323,7 @@ public class NodeToRenderConverter {
 		if (node instanceof SpaceStation) {
 			return calculateSpaceStationRadius((SpaceStation) node);
 		}
-		return 0.0001f;
+		return meterToRenderUnit(100);
 		
 	}
 
@@ -1332,11 +1332,7 @@ public class NodeToRenderConverter {
 	}
 	
 	public float calculatePlanetRadius(Planet node) {
-		return calculatePlanetRadius(node.radius);
-	}
-
-	public float calculatePlanetRadius(double radius) {
-		return meterToRenderUnit(radius);
+		return meterToRenderUnit(node.radius);
 	}
 
 	public float calculateSpaceStationRadius (SpaceStation node) {

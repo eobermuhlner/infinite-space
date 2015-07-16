@@ -116,7 +116,7 @@ public class Player {
 	}
 
 	public void setStandardVelocity() {
-		velocity = 0.00001f;
+		velocity = 0.0001f;
 	}
 	
 	public void calculateHyperVelocity (NodeToRenderConverter nodeToRenderConverter, Array<Node> massiveNodes) {
