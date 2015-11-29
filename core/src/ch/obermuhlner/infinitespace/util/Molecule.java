@@ -24,7 +24,7 @@ public enum Molecule {
 	 */
 	NH4SH,
 	/**
-	Density: 1.15 kg/m³
+	Density: 1.15 kg/m
 	Formula: CO
 	Boiling point: -191.5 C
 	Molar mass: 28.01 g/mol

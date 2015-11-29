@@ -1,4 +1,4 @@
-package ch.obermuhlner.infinitespace.tool;
+package ch.obermuhlner.infinitespace.util;
 
 import java.io.BufferedReader;
 import java.io.File;

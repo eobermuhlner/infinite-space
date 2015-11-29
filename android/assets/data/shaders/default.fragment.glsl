@@ -9,6 +9,8 @@ precision mediump float;
 #define HIGH
 #endif
 
+varying vec3 v_debug_vec3;
+
 #if defined(specularTextureFlag) || defined(specularColorFlag)
 #define specularFlag
 #endif
@@ -123,7 +125,7 @@ varying float v_fog;
 void main() {
 	#if defined(normalFlag)
 		#if defined(normalTextureFlag)
-			vec3 normal = texture2D(u_normalTexture, v_texCoords1);
+			vec3 normal = texture2D(u_normalTexture, v_texCoords1).rgb;
 			normal = normalize(normal * 2.0 - 1.0); // consider supporting different formats of normal texture
 			float lambertFactor = clamp(dot(normal, v_lightVecTangent), 0.0, 1.0);
 		#else
@@ -250,4 +252,7 @@ void main() {
 	#else
 		gl_FragColor.a = 1.0;
 	#endif
+	
+	// for debugging:
+	//gl_FragColor.rgb = v_debug_vec3;
 }

@@ -1,3 +1,5 @@
+varying vec3 v_debug_vec3;
+
 #if defined(diffuseTextureFlag) || defined(emissiveTextureFlag) || defined(specularTextureFlag)
 #define textureFlag
 #endif
@@ -154,7 +156,6 @@ uniform vec4 u_cameraPosition;
 varying float v_fog;
 #endif // fogFlag
 
-
 #if defined(numDirectionalLights) && (numDirectionalLights > 0)
 struct DirectionalLight
 {
@@ -230,6 +231,8 @@ float luminance(vec3 color) {
 }
 
 void main() {
+	v_debug_vec3 = vec3(0.0, 0.0, 0.0);
+
 	#ifdef textureFlag
 		v_texCoords0 = a_texCoord0;
 	#endif // textureFlag
@@ -424,11 +427,12 @@ void main() {
 
 	#if defined(normalTextureFlag)
 		// matrix to convert eye space into tangent space
-		vec3 n = normalize (gl_NormalMatrix * a_normal);
-		vec3 t = normalize (gl_NormalMatrix * a_tangent);
+		vec3 n = normalize (a_normal);
+		vec3 t = normalize (a_tangent);
 		vec3 b = cross (n, t);
 		
 		// normalized vector from vertex position to light position in tangent space - passed to fragment shader
 		v_lightVecTangent = normalize (vec3(dot (strongestLightDir, t), dot (strongestLightDir, b), dot (strongestLightDir, n)));
+		v_debug_vec3 = vec3(t);
 	#endif // normalTextureFlag
 }

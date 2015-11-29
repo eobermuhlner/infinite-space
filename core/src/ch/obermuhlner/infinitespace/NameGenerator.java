@@ -9,7 +9,7 @@ import ch.obermuhlner.infinitespace.model.random.Random;
 import ch.obermuhlner.infinitespace.model.universe.Planet;
 import ch.obermuhlner.infinitespace.model.universe.SpaceStation;
 import ch.obermuhlner.infinitespace.model.universe.Star;
-import ch.obermuhlner.infinitespace.tool.WordStatistics.WordGenerator;
+import ch.obermuhlner.infinitespace.util.WordStatistics.WordGenerator;
 
 import static ch.obermuhlner.infinitespace.model.random.Random.p;
 
