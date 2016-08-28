@@ -578,6 +578,7 @@ public class Generator {
 
 		station.name = getNameGenerator().generateNodeName(random, station);
 		station.orbitRadius = calculateOrbitRadius(parent, parentRandom, 3); // always at third orbit (similar to earth orbit)
+		station.orbitStartAngle = random.nextDouble(2 * Math.PI);
 		
 		if (parent instanceof Star) {
 			station.starport = true;
@@ -1074,6 +1075,8 @@ public class Generator {
 		}
 		
 		store(generateSpaceStation(terra, childIndex++));
+		store(generateSpaceStation(terra, childIndex++));
+		store(generateSpaceStation(terra, childIndex++));
 		
 		terra.childCount = childIndex;
 
@@ -1119,6 +1122,7 @@ public class Generator {
 		}
 		
 		store(generateSpaceStation(mars, childIndex++));
+		store(generateSpaceStation(mars, childIndex++));
 
 		mars.childCount = childIndex;
 
@@ -1142,6 +1146,11 @@ public class Generator {
 			io.childCount = 0;
 			generatePopulationHorriblePlanet(io, random);
 			store(io);
+
+			int moonChildIndex = 0;
+			store(generateSpaceStation(io, moonChildIndex++));
+			
+			io.childCount = moonChildIndex;
 		}
 		
 		{
@@ -1164,6 +1173,7 @@ public class Generator {
 			store(europa);
 
 			int moonChildIndex = 0;
+			store(generateSpaceStation(europa, moonChildIndex++));
 			store(generateSpaceStation(europa, moonChildIndex++));
 			
 			europa.childCount = moonChildIndex;
