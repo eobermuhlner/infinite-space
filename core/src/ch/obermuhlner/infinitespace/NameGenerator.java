@@ -9,6 +9,7 @@ import ch.obermuhlner.infinitespace.model.random.Random;
 import ch.obermuhlner.infinitespace.model.universe.Planet;
 import ch.obermuhlner.infinitespace.model.universe.SpaceStation;
 import ch.obermuhlner.infinitespace.model.universe.Star;
+import ch.obermuhlner.infinitespace.util.Units;
 import ch.obermuhlner.infinitespace.util.WordStatistics.WordGenerator;
 
 import static ch.obermuhlner.infinitespace.model.random.Random.p;
@@ -51,15 +52,15 @@ public class NameGenerator {
 	}
 
 	public String generateGenericName(Random random) {
-		return firstToUppercase(wordGenerator.createWord(random));
+		return Units.toFirstUpperRestLowerCaseString(wordGenerator.createWord(random));
 	}
 	
 	public String generateMaleFirstName(Random random) {
-		return firstToUppercase(wordGeneratorFirstNamesMale.createWord(random, 3, 20));
+		return Units.toFirstUpperRestLowerCaseString(wordGeneratorFirstNamesMale.createWord(random, 3, 20));
 	}
 	
 	public String generateFemaleFirstName(Random random) {
-		return firstToUppercase(wordGeneratorFirstNamesFemale.createWord(random, 3, 20));
+		return Units.toFirstUpperRestLowerCaseString(wordGeneratorFirstNamesFemale.createWord(random, 3, 20));
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -95,7 +96,7 @@ public class NameGenerator {
 				p(1, "Epsilon "),
 				p(20, ""));
 		} else if (node instanceof Planet) {
-			// Use star name + roman number if no population
+			// TODO Use star name + roman number if no population
 			prefix = random.nextProbability(
 				p(3, "Neu "),
 				p(2, "Nieuw "),
@@ -118,11 +119,7 @@ public class NameGenerator {
 	}
 
 	public String generateLastName(Random random) {
-		return firstToUppercase(wordGeneratorLastNames.createWord(random, 3, 20));
-	}
-	
-	public static String firstToUppercase (String string) {
-		return Character.toUpperCase(string.charAt(0)) + string.substring(1);
+		return Units.toFirstUpperRestLowerCaseString(wordGeneratorLastNames.createWord(random, 3, 20));
 	}
 
 }

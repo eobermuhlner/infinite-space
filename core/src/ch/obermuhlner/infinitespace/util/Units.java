@@ -180,15 +180,15 @@ public class Units {
 	}
 
 	public static String toString(Enum<?> value) {
-		return toFirstUpperRestLowerCaseString(value.name());
+		return toFirstUpperRestLowerCaseString(value.name().replace('_', ' '));
 	}
 	
-	private static String toFirstUpperRestLowerCaseString(String name) {
+	public static String toFirstUpperRestLowerCaseString(String name) {
 		if (name.length() < 2) {
 			return name.toUpperCase();
 		}
 		
-		return name.substring(0, 1).toUpperCase() + name.substring(1).toLowerCase().replace('_', ' ');
+		return (name.substring(0, 1).toUpperCase() + name.substring(1).toLowerCase());
 	}
 
 	public static String atmosphereToString(Map<Molecule, Double> atmosphere) {
