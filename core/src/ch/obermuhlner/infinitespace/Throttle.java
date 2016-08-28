@@ -14,6 +14,9 @@ public class Throttle {
 	
 	public float value;
 	
+	public float minThrottle = -1.0f;
+	public float maxThrottle = 1.0f;
+	
 	private final float throttleThreshold = 0.7f;
 	
 	public void start() {
@@ -37,7 +40,7 @@ public class Throttle {
 			float oldSign = Math.signum(value);
 			
 			value += throttle * throttleFactor * deltaTime;
-			value = MathUtil.clamp(value, -1.0f, 1.0f);
+			value = MathUtil.clamp(value, minThrottle, maxThrottle);
 			
 			if (Math.abs(throttle) > throttleThreshold) {
 				float newSign = Math.signum(value);
@@ -46,6 +49,8 @@ public class Throttle {
 					value = 0;
 				}
 			}
+		} else {
+			value = MathUtil.clamp(value, minThrottle, maxThrottle);
 		}
 	}
 }
