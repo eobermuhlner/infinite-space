@@ -577,7 +577,7 @@ public class Generator {
 		Random parentRandom = seed.getRandom();
 
 		station.name = getNameGenerator().generateNodeName(random, station);
-		station.orbitRadius = calculateOrbitRadius(parent, parentRandom, 3); // always at third orbit (similar to earth orbit)
+		station.orbitRadius = calculateOrbitRadius(parent, parentRandom, random.nextInt(0, 3));
 		station.orbitStartAngle = random.nextDouble(2 * Math.PI);
 		
 		if (parent instanceof Star) {
