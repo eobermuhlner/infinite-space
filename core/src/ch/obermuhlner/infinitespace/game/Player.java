@@ -15,12 +15,13 @@ import com.badlogic.gdx.utils.Array;
 
 public class Player {
 
-	private static final float HYPER_DRAG_RADII = 1000;
+	private static final float HYPER_DRAG_RADII = 100;
 	public Ship ship;
 	public CenterPerspectiveCamera camera;
 	
 	public float velocity;
 	public float warpDrag = 0.0f;
+	public float warpDragDirection = 0.0f;
 	public Node warpDragNode;
 	
 	public Throttle thrustForwardThrottle = new Throttle();
@@ -119,9 +120,10 @@ public class Player {
 	}
 	
 	public void calculateHyperVelocity (NodeToRenderConverter nodeToRenderConverter, Array<Node> massiveNodes) {
-		velocity = (float) (10000000E5 * nodeToRenderConverter.sizeFactor);
+		velocity = (float) (1000000E5 * nodeToRenderConverter.sizeFactor);
 
 		float strongestDragFactor = 1f;
+		float strongestDragDirection = 0f;
 		Node strongestDragNode = null;
 		for (int i = 0; i < massiveNodes.size; i++) {
 			Node node = massiveNodes.get(i);
@@ -143,23 +145,27 @@ public class Player {
 			}
 			float distance = position.len();
 			float dot = position.nor().dot(camera.direction);
-			float directionFactor = MathUtil.smoothstep(0f, 1f, Math.min(1f, MathUtil.transform(0f, 1f, 0.2f, 1.1f, dot)));
+			float correctedDistance = Math.max(0, distance - 0 * radius) / radius;
+			float directionFactor = MathUtil.clamp(MathUtil.transform(0f, 1f-1f/correctedDistance, 0f, 1f, dot), 0f, 1f);
 			//directionFactor = directionFactor * directionFactor;
-			float correctedDistance = Math.max(0, distance - 3 * radius) / radius;
-
-			float drag = directionFactor / (1 + correctedDistance / HYPER_DRAG_RADII);
-			float dragFactor = 1f - MathUtil.clamp(drag, 0, 1.0f);
+			float drag = directionFactor / (1f + correctedDistance / HYPER_DRAG_RADII);
+			drag = MathUtil.transform(0f, 1f-1f/correctedDistance, 0f, 1f, drag);
+			float dragFactor = MathUtil.smoothstep(0, 1, 1f - MathUtil.clamp(drag, 0, 1.0f));
+			//dragFactor = dragFactor * dragFactor;
 			if (dragFactor < strongestDragFactor) {
 				strongestDragNode = node;
+				strongestDragDirection = directionFactor;
 //				System.out.printf("dist=%10.6f radii=%10.6f corr=%15.6f dot=%10.6f dirFactor=%10.6f drag=%10.6f dragFactor=%10.6f %s\n", 
 //						distance, (distance/radius), correctedDistance, dot, directionFactor, drag, dragFactor, node.toString());
 			}
 			strongestDragFactor = Math.min(strongestDragFactor, dragFactor);
 		}
 		warpDrag = strongestDragFactor;
+		warpDragDirection = strongestDragDirection;
 		warpDragNode = strongestDragNode;
-		velocity *= strongestDragFactor;
-		
+		//velocity *= strongestDragFactor;
+		thrustForwardThrottle.maxThrottle = strongestDragFactor; 
+				
 //		System.out.println();		
 	}
 }
