@@ -10,7 +10,7 @@ public class DesktopLauncher {
 	public static void main (String[] arg) {
 		Config.useTouchpadControls = false;
 		Config.useKeyControls = true;
-		Config.screenDensityFactor = 1.4f;
+		Config.screenDensityFactor = 2.0f;
 		
 		LwjglApplicationConfiguration config = new LwjglApplicationConfiguration();
 		config.width = 1200;
