@@ -67,7 +67,7 @@ public class BuyCargoScreen extends AbstractNodeStageScreen {
 					
 					table.row();
 					table.add(new Label(item.name, skin));
-					table.add(new Label(item.commodity.toString(), skin));
+					table.add(new Label(Units.toString(item.commodity), skin));
 					commodityItemUserInterface.labelAvailableAmount = new Label("", skin);
 					table.add(new Label(Units.toString(item.amount), skin)).right();
 					table.add(new Label(Units.moneyToString(item.priceSell), skin)).right();

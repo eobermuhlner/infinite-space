@@ -150,13 +150,13 @@ public class InfoScreen extends AbstractNodeStageScreen {
 
 		if (node instanceof Star) {
 			Star star = (Star)node;
-			addRow(tablePhysics, "Type", star.type);
+			addRow(tablePhysics, "Type", Units.toString(star.type));
 			addRow(tablePhysics, "Temperature", Units.kelvinToString(star.temperature));
 		}
 		
 		if (node instanceof Planet) {
 			Planet planet = (Planet)node;
-			addRow(tablePhysics, "Type", planet.type);
+			addRow(tablePhysics, "Type", Units.toString(planet.type));
 			addRow(tablePhysics, "Temperature", Units.kelvinToString(planet.temperature));
 			addRow(tablePhysics, "Atmosphere", Units.atmosphereToString(planet.atmosphere));
 			addRow(tablePhysics, "Atmosphere Pressure", Units.pascalToString(planet.atmospherePressure));
@@ -176,7 +176,7 @@ public class InfoScreen extends AbstractNodeStageScreen {
 
 		if (node instanceof SpaceStation) {
 			SpaceStation spaceStation = (SpaceStation)node;
-			addRow(tablePhysics, "Type", spaceStation.type);
+			addRow(tablePhysics, "Type", Units.toString(spaceStation.type));
 			addRow(tablePhysics, "Width", Units.meterSizeToString(spaceStation.width));
 			addRow(tablePhysics, "Height", Units.meterSizeToString(spaceStation.height));
 			addRow(tablePhysics, "Length", Units.meterSizeToString(spaceStation.length));
@@ -196,10 +196,10 @@ public class InfoScreen extends AbstractNodeStageScreen {
 			addRow(tablePhysics, "Rotation Period", Units.secondsToString(orbitingNode.rotation));
 			if (orbitingNode.population != null) {
 				addRow(tablePopulation, "Population", Units.toString(orbitingNode.population.population));
-				addRow(tablePopulation, "TechLevel", orbitingNode.population.techLevel.toString());
+				addRow(tablePopulation, "TechLevel", Units.toString(orbitingNode.population.techLevel));
 				for (Industry industry : Industry.values()) {
 					if (orbitingNode.population.industry.containsKey(industry)) {
-						addRow(tablePopulation, industry.toString(), Units.percentToString(orbitingNode.population.industry.get(industry)));
+						addRow(tablePopulation, Units.toString(industry), Units.percentToString(orbitingNode.population.industry.get(industry)));
 					}
 				}
 			}

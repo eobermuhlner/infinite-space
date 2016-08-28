@@ -178,7 +178,19 @@ public class Units {
 		}
 		return null;
 	}
+
+	public static String toString(Enum<?> value) {
+		return toFirstUpperRestLowerCaseString(value.name());
+	}
 	
+	private static String toFirstUpperRestLowerCaseString(String name) {
+		if (name.length() < 2) {
+			return name.toUpperCase();
+		}
+		
+		return name.substring(0, 1).toUpperCase() + name.substring(1).toLowerCase().replace('_', ' ');
+	}
+
 	public static String atmosphereToString(Map<Molecule, Double> atmosphere) {
 		StringBuilder stringBuilder = new StringBuilder();
 		

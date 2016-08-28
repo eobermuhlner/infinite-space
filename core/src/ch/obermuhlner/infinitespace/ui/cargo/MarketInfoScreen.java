@@ -46,7 +46,7 @@ public class MarketInfoScreen extends AbstractNodeStageScreen {
 				for(Commodity commodity : Commodity.values()) {
 					if (population.hasCommodity(commodity)) {
 						table.row();
-						table.add(new Label(commodity.name(), skin, HEADER));
+						table.add(new Label(Units.toString(commodity), skin, HEADER));
 						table.add(new Label(Units.percentToString(Generator.calculateSupply(commodity, node, population)), skin)).right();
 						table.add(new Label(Units.percentToString(Generator.calculateDemand(commodity, node, population)), skin)).right();
 						int calculatePrice = (int) (Generator.calculatePrice(commodity, node, population) + 0.5);

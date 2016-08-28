@@ -785,7 +785,7 @@ public class Generator {
 		default:
 			// do nothing
 		}
-		return NameGenerator.firstToUppercase(commodity.toString());
+		return Units.toString(commodity);
 	}
 
 	public static double calculateSupply(Commodity commodity, Node node, Population population) {
