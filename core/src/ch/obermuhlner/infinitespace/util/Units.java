@@ -191,6 +191,66 @@ public class Units {
 		return (name.substring(0, 1).toUpperCase() + name.substring(1).toLowerCase());
 	}
 
+	private static String[] ROMAN_DIGITS_HUNDREDS = {
+		"",
+		"C",
+		"CC",
+		"CCC",
+		"CD",
+		"D",
+		"DC",
+		"DCC",
+		"DCCC",
+		"CM"
+	};
+
+	private static String[] ROMAN_DIGITS_TENS = {
+		"",
+		"X",
+		"XX",
+		"XXX",
+		"XL",
+		"L",
+		"LX",
+		"LXX",
+		"LXXX",
+		"XC"
+	};
+
+	private static String[] ROMAN_DIGITS_ONES = {
+		"",
+		"I",
+		"II",
+		"III",
+		"IV",
+		"V",
+		"VI",
+		"VII",
+		"VIII",
+		"IX"
+	};
+	
+	public static String toRomanNumberString(int value) {
+		StringBuilder roman = new StringBuilder();
+		
+		while (value >= 1000) {
+			roman.append('M');
+			value -= 1000;
+		}
+
+		int hundreds = value / 100;
+		roman.append(ROMAN_DIGITS_HUNDREDS[hundreds]);
+		value -= hundreds * 100;
+
+		int tens = value / 10;
+		roman.append(ROMAN_DIGITS_TENS[tens]);
+		value -= tens * 10;
+
+		roman.append(ROMAN_DIGITS_ONES[value]);
+
+		return roman.toString();
+	}
+
 	public static String atmosphereToString(Map<Molecule, Double> atmosphere) {
 		StringBuilder stringBuilder = new StringBuilder();
 		
