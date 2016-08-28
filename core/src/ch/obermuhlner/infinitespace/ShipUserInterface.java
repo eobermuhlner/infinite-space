@@ -397,7 +397,7 @@ public class ShipUserInterface {
 		
 		labelThrust.setText(Units.toString(player.thrustForwardThrottle.value));
 		labelSpeed.setText(Units.toString(player.velocity));
-		labelWarpDrag.setText(Units.toString(player.warpDrag));
+		labelWarpDrag.setText(Units.toString(player.warpDrag) + "   " + Units.toString(player.warpDragDirection));
 		labelWarpDragSource.setText(player.warpDragNode == null ? null : player.warpDragNode.name);
 		labelFps.setText(Units.toString(Gdx.graphics.getFramesPerSecond()));
 	}
