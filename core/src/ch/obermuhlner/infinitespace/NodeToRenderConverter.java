@@ -609,7 +609,7 @@ public class NodeToRenderConverter {
 	}
 	
 	public Texture renderTextureDiffuse (Material material, UserData userData) {
-		final int textureSize = GamePreferences.INSTANCE.preferences.getInteger(GamePreferences.INT_GENERATED_TEXTURES_SIZE);
+		final int textureSize = GamePreferences.INSTANCE.preferences.getInteger(GamePreferences.INT_GENERATED_TEXTURES_SIZE, 1024);
 		
 		final int rectSize = 1;
 		Model model;
