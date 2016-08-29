@@ -1,6 +1,8 @@
 # infinite-space
 
-A 3-D space game.
+A 3-D space game in an infinite universe.
+
+All content (stars, planets, space stations, alien races, ...) is procedurally generated.
 
 ## Setup Eclipse Development
 
